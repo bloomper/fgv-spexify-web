@@ -25,7 +25,7 @@ import type {AlbumInput, TrackInput} from "@/gql/graphql";
 import {withPolicyAction} from "@/utils/route.server";
 import {Policies} from "@/utils/policy.server";
 
-const ID = /^\d{1,19}$/;
+const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const UPLOAD = /^[0-9a-f-]{36}$/;
 
 function requireId(id: string) {

@@ -1,3 +1,4 @@
+import {uuidOf} from "./constants";
 import {expect, test} from "./fixtures";
 
 test.describe("Playlists", () => {
@@ -15,7 +16,7 @@ test.describe("Playlists", () => {
     });
 
     test("adds a track to a playlist and to a new one, and removes it again", async ({page}) => {
-        await page.goto("/albums/1");
+        await page.goto(`/albums/${uuidOf(1)}`);
         await page.getByRole("button", {name: "Mer för Kärleksduetten"}).click();
         await page.getByRole("menuitem", {name: "Lägg till i Favoriter"}).click();
         await expect(page.getByText("Tillagd i spellistan")).toBeVisible();
@@ -49,7 +50,7 @@ test.describe("Playlists", () => {
         await page.goto("/playlists");
         await expect(page.getByText("Musikservern svarar inte just nu.")).toBeVisible();
 
-        await page.goto("/albums/1");
+        await page.goto(`/albums/${uuidOf(1)}`);
         await page.getByRole("button", {name: "Spela allt"}).click();
         await expect(page.getByRole("region", {name: "Spelare"})).toContainText("Ouvertyr");
     });

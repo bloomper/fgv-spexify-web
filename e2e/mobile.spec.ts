@@ -1,3 +1,4 @@
+import {uuidOf} from "./constants";
 import {expect, test} from "./fixtures";
 
 const WIDTH = 375;
@@ -9,10 +10,10 @@ test.describe("Phone width: no page scrolls sideways", () => {
 
     test("the listening pages fit the screen, with the player open", async ({page, loginAs}) => {
         await loginAs("listener");
-        await page.goto("/albums/1");
+        await page.goto(`/albums/${uuidOf(1)}`);
         await page.getByRole("button", {name: "Spela allt"}).click();
 
-        for (const path of ["/", "/albums", "/albums/1", "/apps", "/starred", "/search?q=duett"]) {
+        for (const path of ["/", "/albums", `/albums/${uuidOf(1)}`, "/apps", "/starred", "/search?q=duett"]) {
             await page.goto(path);
             await page.getByRole("heading", {level: 1}).first().waitFor();
             expect(await page.evaluate(() => document.documentElement.scrollWidth), path).toBeLessThanOrEqual(WIDTH);
@@ -23,7 +24,7 @@ test.describe("Phone width: no page scrolls sideways", () => {
         await page.setViewportSize({width: WIDTH, height: 812});
         await loginAs("admin");
 
-        for (const path of ["/manage/albums", "/manage/albums/1", "/manage/trash", "/manage/audit", "/admin/users", "/admin/library", "/admin/settings"]) {
+        for (const path of ["/manage/albums", `/manage/albums/${uuidOf(1)}`, "/manage/trash", "/manage/audit", "/admin/users", "/admin/library", "/admin/settings"]) {
             await page.goto(path);
             await page.getByRole("heading", {level: 1}).first().waitFor();
             expect(await page.evaluate(() => document.documentElement.scrollWidth), path).toBeLessThanOrEqual(WIDTH);

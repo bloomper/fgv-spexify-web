@@ -14,7 +14,7 @@ import {Policies} from "@/utils/policy.server";
 import {withPolicyPage} from "@/utils/route.server";
 import {isEditor} from "@/utils/auth";
 
-const ID = /^\d{1,19}$/;
+const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function AlbumPage({params}: { params: Promise<{ id: string }> }) {
     return withPolicyPage(Policies.app.requireAccess, async (authz) => {

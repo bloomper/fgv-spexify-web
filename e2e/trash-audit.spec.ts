@@ -1,9 +1,10 @@
+import {uuidOf} from "./constants";
 import {expect, test} from "./fixtures";
 
 test.describe("The trash", () => {
     test("an editor trashes an album and a track and restores them, but cannot delete", async ({page, loginAs, mock}) => {
         await loginAs("editor");
-        await page.goto("/manage/albums/1");
+        await page.goto(`/manage/albums/${uuidOf(1)}`);
         await page.getByRole("button", {name: "Mer för Kärleksduetten"}).click();
         await page.getByRole("menuitem", {name: "Lägg i papperskorgen"}).click();
         await expect(page.getByText("Lagt i papperskorgen")).toBeVisible();
@@ -17,15 +18,15 @@ test.describe("The trash", () => {
         await expect(page.getByRole("button", {name: "Radera"})).toHaveCount(0);
         await page.getByRole("button", {name: "Återställ"}).first().click();
         await expect(page.getByText("Nobel", {exact: true})).toHaveCount(0);
-        expect((await mock.state()).albums.find(album => album.id === "1")?.trashedAt).toBeNull();
+        expect((await mock.state()).albums.find(album => album.id === uuidOf(1))?.trashedAt).toBeNull();
     });
 
     test("an admin deletes from the trash and empties it", async ({page, loginAs, mock}) => {
         await loginAs("admin");
-        await page.goto("/manage/albums/2");
+        await page.goto(`/manage/albums/${uuidOf(2)}`);
         page.on("dialog", dialog => dialog.accept());
         await page.getByRole("button", {name: "Lägg i papperskorgen"}).click();
-        await page.goto("/manage/albums/1");
+        await page.goto(`/manage/albums/${uuidOf(1)}`);
         await page.getByRole("button", {name: "Mer för Ouvertyr"}).click();
         await page.getByRole("menuitem", {name: "Lägg i papperskorgen"}).click();
         await expect(page.getByText("Lagt i papperskorgen")).toBeVisible();
@@ -42,7 +43,7 @@ test.describe("The trash", () => {
 test.describe("The change log", () => {
     test("shows editors their own changes and admins everyone's", async ({page, loginAs}) => {
         await loginAs("editor");
-        await page.goto("/manage/albums/2");
+        await page.goto(`/manage/albums/${uuidOf(2)}`);
         await page.getByRole("switch").first().click();
         await expect(page.getByText("Publicerat", {exact: true})).toBeVisible();
 
@@ -51,7 +52,7 @@ test.describe("The change log", () => {
         await expect(page.getByText("Erik Redaktör").first()).toBeVisible();
 
         await loginAs("admin");
-        await page.goto("/manage/albums/1");
+        await page.goto(`/manage/albums/${uuidOf(1)}`);
         await page.getByRole("switch").first().click();
         await expect(page.getByText("Opublicerat", {exact: true}).first()).toBeVisible();
         await page.goto("/manage/audit");

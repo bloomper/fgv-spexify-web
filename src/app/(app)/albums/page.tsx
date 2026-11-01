@@ -6,13 +6,13 @@ import {Policies} from "@/utils/policy.server";
 import {withPolicyPage} from "@/utils/route.server";
 import {cn} from "@/utils/utils";
 
-const NUMBER = /^\d{1,19}$/;
+const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function AlbumsPage({searchParams}: { searchParams: Promise<{ category?: string; year?: string }> }) {
     return withPolicyPage(Policies.app.requireAccess, async () => {
         const t = await getTranslations("Albums");
         const {category, year} = await searchParams;
-        const categoryId = category && NUMBER.test(category) ? category : null;
+        const categoryId = category && ID.test(category) ? category : null;
         const yearNumber = year && /^\d{4}$/.test(year) ? Number(year) : null;
         const data = await getAlbums({categoryId, year: yearNumber});
         const link = (params: { category?: string | null; year?: number | null }) => {
