@@ -1,3 +1,4 @@
+import {uuidOf} from "./constants";
 import {expect, test} from "./fixtures";
 
 test.describe("Language", () => {
@@ -8,7 +9,7 @@ test.describe("Language", () => {
 
         await expect(page.getByRole("link", {name: "Albums", exact: true}).first()).toBeVisible();
         await expect(page.getByRole("link", {name: "My apps"})).toBeVisible();
-        await page.goto("/albums/1");
+        await page.goto(`/albums/${uuidOf(1)}`);
         await expect(page.getByRole("button", {name: "Play all"})).toBeVisible();
 
         await page.getByRole("button", {name: "Change language"}).click();

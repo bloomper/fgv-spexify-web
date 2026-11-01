@@ -6,7 +6,7 @@ import {Policies} from "@/utils/policy.server";
 import {withPolicyPage} from "@/utils/route.server";
 import {AlbumEditor} from "./album-editor.client";
 
-const ID = /^\d{1,19}$/;
+const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function EditAlbumPage({params}: { params: Promise<{ id: string }> }) {
     return withPolicyPage(Policies.editor.requireEditor, async () => {

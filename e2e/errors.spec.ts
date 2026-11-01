@@ -1,3 +1,4 @@
+import {uuidOf} from "./constants";
 import {expect, test} from "./fixtures";
 
 test.describe("When something is unavailable", () => {
@@ -8,14 +9,14 @@ test.describe("When something is unavailable", () => {
         await page.getByLabel("Spex", {exact: true}).fill("Nob");
 
         await expect(page.getByText("Spexregistret går inte att nå just nu. Försök igen om en stund.")).toBeVisible();
-        await page.goto("/albums/1");
+        await page.goto(`/albums/${uuidOf(1)}`);
         await expect(page.getByRole("heading", {level: 1, name: "Nobel"})).toBeVisible();
     });
 
     test("a failed server call is shown, and the page keeps working", async ({page, loginAs, mock}) => {
         await mock.failNext("AlbumPublish", "INTERNAL_ERROR");
         await loginAs("editor");
-        await page.goto("/manage/albums/2");
+        await page.goto(`/manage/albums/${uuidOf(2)}`);
         await page.getByRole("switch").first().click();
 
         await expect(page.getByText("Något gick fel.")).toBeVisible();
@@ -26,7 +27,7 @@ test.describe("When something is unavailable", () => {
 
     test("an album that does not exist is not found", async ({page, loginAs}) => {
         await loginAs("listener");
-        await page.goto("/albums/999");
+        await page.goto(`/albums/${uuidOf(999)}`);
         await expect(page.getByRole("heading", {name: "Sidan finns inte"})).toBeVisible();
     });
 });

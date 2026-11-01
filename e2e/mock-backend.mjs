@@ -34,11 +34,14 @@ class GraphQLError extends Error {
     }
 }
 
-const SPEX = {id: "1", title: "Nobel", year: 1975, revival: false, categoryId: "1", categoryName: "Chalmersspexet"};
+/** The UUID the server would give the entity numbered n here. */
+const uuidOf = n => `00000000-0000-7000-8000-${String(n).padStart(12, "0")}`;
+
+const SPEX = {id: uuidOf(1), title: "Nobel", year: 1975, revival: false, categoryId: uuidOf(1), categoryName: "Chalmersspexet"};
 
 function track(id, albumId, albumTitle, number, title, extra = {}) {
     return {
-        id, uuid: randomUUID(), albumId, albumTitle, discNumber: 1, trackNumber: number, title,
+        id, albumId, albumTitle, discNumber: 1, trackNumber: number, title,
         performers: "Kungen, Drottningen", melody: "Dancing Queen (ABBA)", lyricsAuthor: null, arranger: null,
         lyrics: "[00:00.50]Här står vi nu på scenen", lyricsSynced: true, format: "FLAC", fileSize: 1000000,
         durationMs: 61000, bitrate: 900, published: true, listed: true, trashedAt: null, navidromeId: `nd-${id}`,
@@ -52,20 +55,20 @@ function resetState() {
     state = {
         nextId: 100,
         albums: [
-            {id: "1", uuid: randomUUID(), title: "Nobel", year: 1975, kind: "SHOW", description: "Inspelat 1975.", hasCover: false,
+            {id: uuidOf(1), title: "Nobel", year: 1975, kind: "SHOW", description: "Inspelat 1975.", hasCover: false,
                 published: true, publishedAt: "2026-10-01T10:00:00Z", trashedAt: null, navidromeId: "al-1",
                 createdAt: "2026-10-01T10:00:00Z", lastModifiedAt: null, spex: SPEX},
-            {id: "2", uuid: randomUUID(), title: "Opublicerat album", year: 2026, kind: "STUDIO", description: null, hasCover: false,
+            {id: uuidOf(2), title: "Opublicerat album", year: 2026, kind: "STUDIO", description: null, hasCover: false,
                 published: false, publishedAt: null, trashedAt: null, navidromeId: null,
                 createdAt: "2026-10-02T10:00:00Z", lastModifiedAt: null, spex: null},
         ],
         tracks: [
-            track("11", "1", "Nobel", 1, "Ouvertyr"),
-            track("12", "1", "Nobel", 2, "Kärleksduetten"),
-            track("21", "2", "Opublicerat album", 1, "Hemlig låt", {published: false, listed: false, navidromeId: null}),
+            track(uuidOf(11), uuidOf(1), "Nobel", 1, "Ouvertyr"),
+            track(uuidOf(12), uuidOf(1), "Nobel", 2, "Kärleksduetten"),
+            track(uuidOf(21), uuidOf(2), "Opublicerat album", 1, "Hemlig låt", {published: false, listed: false, navidromeId: null}),
         ],
         starred: [],
-        playlists: [{id: "pl-1", name: "Favoriter", entries: ["nd-11"]}],
+        playlists: [{id: "pl-1", name: "Favoriter", entries: [`nd-${uuidOf(11)}`]}],
         appPasswords: [],
         apiKeys: [],
         users: [
@@ -174,12 +177,12 @@ const resolvers = {
     }),
     Home: persona => ({
         recentAlbums: state.albums.filter(album => album.published && !album.trashedAt).map(album => withCounts(persona, album)),
-        categories: [{id: "1", name: "Chalmersspexet", albumCount: 1}],
+        categories: [{id: uuidOf(1), name: "Chalmersspexet", albumCount: 1}],
         years: [1975],
     }),
     Albums: (persona, {filter}) => ({
         albums: visibleAlbums(persona).filter(album => album.published || filter?.includeUnpublished).map(album => withCounts(persona, album)),
-        categories: [{id: "1", name: "Chalmersspexet", albumCount: 1}],
+        categories: [{id: uuidOf(1), name: "Chalmersspexet", albumCount: 1}],
         years: [1975],
     }),
     Album: (persona, {id}) => {
@@ -201,7 +204,7 @@ const resolvers = {
         settings: state.settings,
     }),
     AppPasswordCreate: (persona, {name}) => {
-        const created = {id: String(state.nextId++), name, createdAt: new Date().toISOString(), lastUsedAt: null,
+        const created = {id: uuidOf(state.nextId++), name, createdAt: new Date().toISOString(), lastUsedAt: null,
             expiresAt: new Date(Date.now() + 365 * 86400000).toISOString(), expired: false};
 
         state.appPasswords.push(created);
@@ -216,7 +219,7 @@ const resolvers = {
             throw forbidden();
         }
 
-        const album = {id: String(state.nextId++), uuid: randomUUID(), title: input.title || SPEX.title, year: input.year ?? SPEX.year,
+        const album = {id: uuidOf(state.nextId++), title: input.title || SPEX.title, year: input.year ?? SPEX.year,
             kind: input.kind, description: input.description, hasCover: false, published: false, publishedAt: null,
             trashedAt: null, navidromeId: null, createdAt: new Date().toISOString(), lastModifiedAt: null,
             spex: input.spexId ? SPEX : null};
@@ -306,7 +309,7 @@ const resolvers = {
         const album = albumById(albumId);
         const upload = trackFromUpload(persona, albumId, uploadId);
         const number = state.tracks.filter(t => t.albumId === albumId && !t.trashedAt).length + 1;
-        const created = track(String(state.nextId++), albumId, album.title, number, upload.name.replace(/^\d+\s*/, "").replace(/\.[^.]+$/, ""),
+        const created = track(uuidOf(state.nextId++), albumId, album.title, number, upload.name.replace(/^\d+\s*/, "").replace(/\.[^.]+$/, ""),
             {performers: null, melody: null, lyrics: null, lyricsSynced: false, fileSize: upload.length, published: true});
 
         state.tracks.push(created);
@@ -415,7 +418,7 @@ const resolvers = {
         return {userCredentialsRevoke: null};
     },
     ApiKeyCreate: (persona, {name}) => {
-        const created = {id: String(state.nextId++), name, createdAt: new Date().toISOString(), lastUsedAt: null};
+        const created = {id: uuidOf(state.nextId++), name, createdAt: new Date().toISOString(), lastUsedAt: null};
 
         state.apiKeys.push(created);
         return {apiKeyCreate: {key: "e2e-api-key-0123456789abcdef", apiKey: created}};
@@ -711,7 +714,7 @@ async function handle(req, res, chunks) {
             res.writeHead(204).end();
         } else if (req.method === "GET" && path === "/__state") {
             res.writeHead(200, {"content-type": "application/json"}).end(JSON.stringify({
-                uploads: state.uploads.size, scanRequested: state.scanRequested,
+                uploads: state.uploads.size, scanRequested: state.scanRequested, starred: state.starred,
                 tracks: state.tracks.map(({id, albumId, title, trackNumber, published, listed, trashedAt}) =>
                     ({id, albumId, title, trackNumber, published, listed, trashedAt})),
                 albums: state.albums.map(({id, title, published, hasCover, trashedAt}) => ({id, title, published, hasCover, trashedAt})),

@@ -36,11 +36,11 @@ const AlbumsQuery = graphql(`
 const AlbumQuery = graphql(`
     query Album($id: ID!) {
         album(id: $id) {
-            id uuid title year kind description hasCover published publishedAt trashedAt navidromeId trackCount durationMs
+            id title year kind description hasCover published publishedAt trashedAt navidromeId trackCount durationMs
             createdAt lastModifiedAt
             spex { id title year revival categoryId categoryName }
             tracks {
-                id uuid albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
+                id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
                 lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing
                 videoLinks { videoId videoTitle chapterTitle startSeconds }
             }
@@ -56,7 +56,7 @@ const SearchQuery = graphql(`
                 spex { id title year revival categoryId categoryName }
             }
             tracks {
-                id uuid albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
+                id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
                 lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing
             }
         }
@@ -72,7 +72,7 @@ const SpexSearchQuery = graphql(`
 const TracksByNavidromeIdsQuery = graphql(`
     query TracksByNavidromeIds($ids: [String!]!) {
         tracksByNavidromeIds(ids: $ids) {
-            id uuid albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
+            id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
             lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing
         }
     }

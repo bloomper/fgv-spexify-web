@@ -23,11 +23,12 @@ describe("sameOrigin", () => {
 });
 
 describe("ID", () => {
-    it("takes database ids only", () => {
-        expect(ID.test("123")).toBe(true);
-        expect(ID.test("1;drop")).toBe(false);
-        expect(ID.test("../1")).toBe(false);
-        expect(ID.test("12345678901234567890")).toBe(false);
+    it("takes uuids only", () => {
+        expect(ID.test("01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e")).toBe(true);
+        expect(ID.test("01933F2A-7C3E-7B1A-9D2E-4F5A6B7C8D9E")).toBe(true);
+        expect(ID.test("123")).toBe(false);
+        expect(ID.test("01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e;drop")).toBe(false);
+        expect(ID.test("../01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e")).toBe(false);
     });
 });
 
