@@ -56,7 +56,7 @@ export default async function AlbumPage({params}: { params: Promise<{ id: string
                         )}
                         <div className="flex flex-wrap gap-2 pt-1">
                             <PlayAllButtons tracks={rows}/>
-                            <Button variant="outline" nativeButton={false} render={<a href={`/api/download/album/${album.id}`} download/>}>
+                            <Button variant="outline" nativeButton={false} render={<a href={`/api/download/album/${album.id}`} download data-umami-event="album-download"/>}>
                                 <Download/>{t("downloadAlbum")}
                             </Button>
                             {isEditor(authz.roles) && (

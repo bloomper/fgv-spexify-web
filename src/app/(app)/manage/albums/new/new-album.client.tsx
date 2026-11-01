@@ -5,6 +5,7 @@ import {useTranslations} from "next-intl";
 import {toast} from "sonner";
 import {AlbumForm} from "@/components/album/album-form.client";
 import {createAlbumAction} from "@/app/(app)/manage/actions.server";
+import {track} from "@/utils/umami";
 
 export function NewAlbum() {
     const t = useTranslations("Manage");
@@ -15,6 +16,7 @@ export function NewAlbum() {
             const result = await createAlbumAction(input);
 
             if (result.ok && result.data) {
+                track("album-create", {kind: input.kind});
                 router.push(`/manage/albums/${result.data}`);
                 return true;
             }

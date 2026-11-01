@@ -50,25 +50,22 @@ describe("auth.server", () => {
 
     it("refuses a user without the required role", async () => {
         loggedIn(["EDITOR"]);
-        const {requireAnyRole, requireAllRoles} = await import("@/utils/auth.server");
+        const {requireAnyRole} = await import("@/utils/auth.server");
 
         expect(await requireAnyRole(["USER"])).toEqual({ok: false, status: 403, message: "Not authorized"});
-        expect(await requireAllRoles(["USER", "EDITOR"])).toMatchObject({ok: false, status: 403});
     });
 
     it("refuses anyone who is not logged in with 401", async () => {
         getSession.mockResolvedValue(null as never);
-        const {requireAnyRole, requireAllRoles} = await import("@/utils/auth.server");
+        const {requireAnyRole} = await import("@/utils/auth.server");
 
         expect(await requireAnyRole(["USER"])).toMatchObject({ok: false, status: 401});
-        expect(await requireAllRoles(["USER"])).toMatchObject({ok: false, status: 401});
     });
 
     it("accepts a user with the role", async () => {
         loggedIn(["USER", "EDITOR"]);
-        const {requireAnyRole, requireAllRoles} = await import("@/utils/auth.server");
+        const {requireAnyRole} = await import("@/utils/auth.server");
 
         expect(await requireAnyRole(["USER"])).toEqual({ok: true, roles: ["USER", "EDITOR"]});
-        expect(await requireAllRoles(["USER", "EDITOR"])).toEqual({ok: true, roles: ["USER", "EDITOR"]});
     });
 });

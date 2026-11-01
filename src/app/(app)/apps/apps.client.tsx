@@ -11,6 +11,7 @@ import {Label} from "@/components/ui/label";
 import {Badge} from "@/components/ui/badge";
 import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
 import {createApiKeyAction, createAppPasswordAction, revokeApiKeyAction, revokeAppPasswordAction} from "./actions.server";
+import {track} from "@/utils/umami";
 
 type Credential = { id: string; name: string; createdAt: string; lastUsedAt?: string | null; expiresAt?: string; expired?: boolean };
 
@@ -56,6 +57,7 @@ export function AppsManager({serverUrl, username, passwords, apiKeys}: {
 
             if (result.ok && result.data) {
                 setCreated({password: result.data.password});
+                track("app-password-create");
                 setName("");
             } else if (!result.ok) {
                 toast.error(result.message);
@@ -70,6 +72,7 @@ export function AppsManager({serverUrl, username, passwords, apiKeys}: {
 
             if (result.ok && result.data) {
                 setCreated({key: result.data});
+                track("api-key-create");
                 setKeyName("");
             } else if (!result.ok) {
                 toast.error(result.message);

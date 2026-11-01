@@ -78,17 +78,3 @@ export async function requireAnyRole(required: Role[]): Promise<AuthzResult> {
 
     return {ok: true, roles};
 }
-
-export async function requireAllRoles(required: Role[]): Promise<AuthzResult> {
-    const {session, roles} = await requireUser();
-
-    if (!session) {
-        return notAuthenticated();
-    }
-
-    if (!required.every(role => roles.includes(role))) {
-        return notAuthorized();
-    }
-
-    return {ok: true, roles};
-}

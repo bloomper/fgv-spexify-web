@@ -10,8 +10,8 @@ export default function manifest(): MetadataRoute.Manifest {
         description: "Spexens musik",
         start_url: "/",
         display: "standalone",
-        background_color: "#140f0f",
-        theme_color: "#b3261e",
+        background_color: "#ffffff",
+        theme_color: "#1447e6",
         icons: [{src: "/icon.svg", sizes: "any", type: "image/svg+xml"}],
     };
 }

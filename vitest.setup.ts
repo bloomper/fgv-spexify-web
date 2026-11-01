@@ -55,7 +55,7 @@ class MockIntersectionObserver implements IntersectionObserver {
 
 vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
 
-// jsdom ships no ResizeObserver, and cmdk (the command palette) constructs one on mount.
+// jsdom ships no ResizeObserver, which Base UI's popups construct on mount.
 class MockResizeObserver implements ResizeObserver {
     observe = () => {
     };
@@ -67,10 +67,10 @@ class MockResizeObserver implements ResizeObserver {
 
 vi.stubGlobal("ResizeObserver", MockResizeObserver);
 
-// cmdk also scrolls the highlighted item into view. jsdom has no layout, so this is a no-op.
+// Menus scroll the highlighted item into view. jsdom has no layout, so this is a no-op.
 Element.prototype.scrollIntoView = vi.fn();
 
-// Base UI's ScrollArea waits out the viewport's running animations. jsdom has no Web Animations API.
+// Base UI waits out running animations before it unmounts a popup. jsdom has no Web Animations API.
 Element.prototype.getAnimations = vi.fn(() => []);
 
 vi.stubGlobal(

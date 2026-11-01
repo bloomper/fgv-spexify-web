@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import {useMemo} from "react";
 import {Drama, House, Library, ListMusic, type LucideIcon, Pencil, Settings, Smartphone, Star, Wrench} from "lucide-react";
 
@@ -18,7 +17,8 @@ import {
     SidebarMenuItem,
     useSidebar
 } from "@/components/ui/sidebar";
-import {SpexifyMark, SpexifyWordmark} from "@/components/brand/spexify-mark";
+import {Logo} from "@/components/logo";
+import {LogoText} from "@/components/logo-text";
 import {Role} from "@/types/auth";
 import {isAdmin, isEditor} from "@/utils/auth";
 import {usePathname} from "next/navigation";
@@ -119,18 +119,20 @@ export function AppSidebar({roles, accountUrl, ...props}: AppSidebarProps) {
                         <SidebarMenuButton
                             size="lg"
                             render={
-                                <Link
-                                    href="/"
+                                <a
+                                    href="https://www.fgv.nu"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="flex items-center gap-3 flex-nowrap bg-transparent! hover:bg-transparent! active:bg-transparent! focus:bg-transparent!"
                                 />
                             }
                         >
                             <div
                                 className="flex aspect-square size-10 shrink-0 items-center justify-center rounded-lg group-data-[collapsible=icon]:size-8">
-                                <SpexifyMark/>
+                                <Logo/>
                             </div>
-                            <div className="min-w-0 flex-1 overflow-hidden pl-1">
-                                <SpexifyWordmark className="text-2xl"/>
+                            <div className="min-w-0 flex-1 overflow-hidden pl-4">
+                                <LogoText className="h-10 w-auto text-foreground"/>
                             </div>
                         </SidebarMenuButton>
                     </SidebarMenuItem>

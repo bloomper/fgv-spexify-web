@@ -67,7 +67,7 @@
   },
   "NotFound": {
     "title": "Sidan finns inte",
-    "text": "Sidan eller nyuppsättningen finns inte, eller så har du inte tillgång till den.",
+    "text": "Sidan eller albumet finns inte, eller så har du inte tillgång till den.",
     "home": "Till startsidan"
   },
   "Error": {
@@ -78,7 +78,7 @@
   "Errors": {
     "CONFLICT": "Någon annan har ändrat detta. Ladda om och försök igen.",
     "FORBIDDEN": "Du har inte behörighet att göra det.",
-    "NOT_FOUND": "Spexifyen finns inte.",
+    "NOT_FOUND": "Albumet finns inte.",
     "BAD_REQUEST": "Uppgifterna är inte giltiga.",
     "SPEXREGISTER_UNAVAILABLE": "Spexregistret är tillfälligt otillgängligt. Försök igen om en stund.",
     "UNAUTHORIZED": "Du är inte inloggad.",
@@ -89,7 +89,6 @@
   "Validation": {
     "spexRequired": "Välj ett spex.",
     "yearRange": "Året måste vara mellan 1948 och 2100.",
-    "premiereYear": "Premiären måste ligga samma år som nyuppsättningen.",
     "showDateBeforePremiere": "En föreställning får inte ligga före premiären.",
     "showDateWithoutPremiere": "Ange premiärdatum innan föreställningar.",
     "dateInvalid": "Ange ett datum.",

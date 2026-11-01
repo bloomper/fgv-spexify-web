@@ -67,7 +67,7 @@
   },
   "NotFound": {
     "title": "Page not found",
-    "text": "The page or revival does not exist, or you do not have access to it.",
+    "text": "The page or the album does not exist, or you do not have access to it.",
     "home": "Go to the start page"
   },
   "Error": {
@@ -78,7 +78,7 @@
   "Errors": {
     "CONFLICT": "Someone else has changed this. Reload and try again.",
     "FORBIDDEN": "You are not allowed to do that.",
-    "NOT_FOUND": "The revival does not exist.",
+    "NOT_FOUND": "The album does not exist.",
     "BAD_REQUEST": "The details are not valid.",
     "SPEXREGISTER_UNAVAILABLE": "Spexregister is temporarily unavailable. Try again in a moment.",
     "UNAUTHORIZED": "You are not logged in.",
@@ -89,7 +89,6 @@
   "Validation": {
     "spexRequired": "Pick a spex.",
     "yearRange": "The year must be between 1948 and 2100.",
-    "premiereYear": "The premiere must be in the revival's year.",
     "showDateBeforePremiere": "A show must not be before the premiere.",
     "showDateWithoutPremiere": "Set the premiere date before shows.",
     "dateInvalid": "Enter a date.",

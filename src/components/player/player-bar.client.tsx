@@ -38,7 +38,7 @@ export function PlayerBar() {
                 value={player.time}
                 onChange={event => player.seek(Number(event.target.value))}
                 aria-label={t("seek")}
-                className="block h-1 w-full cursor-pointer accent-primary"
+                className="block h-4 w-full cursor-pointer accent-primary sm:h-1"
             />
             <div className="flex items-center gap-3 px-3 py-2 sm:px-4">
                 <Link href={`/albums/${current.albumId}`} className="flex min-w-0 flex-1 items-center gap-3">
@@ -104,6 +104,21 @@ export function PlayerBar() {
                         ) : (
                             <p className="whitespace-pre-line text-base leading-relaxed">{current.lyrics}</p>
                         ))}
+                        {panel === "queue" && (
+                            // Shuffle and repeat have no room in the bar on a phone, so they are offered here
+                            <div className="mb-3 flex gap-2 sm:hidden">
+                                <Button variant="outline" size="sm" onClick={() => player.setShuffle(!player.shuffle)}
+                                        aria-pressed={player.shuffle}>
+                                    <Shuffle className={cn(player.shuffle && "text-primary")}/>
+                                    {t("shuffle")}
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={player.cycleRepeat}>
+                                    {player.repeat === "one" ? <Repeat1 className="text-primary"/> :
+                                        <Repeat className={cn(player.repeat === "all" && "text-primary")}/>}
+                                    {t(`repeat.${player.repeat}`)}
+                                </Button>
+                            </div>
+                        )}
                         {panel === "queue" && (
                             <ol className="space-y-1">
                                 {player.queue.map((track, i) => (

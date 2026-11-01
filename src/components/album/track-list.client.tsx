@@ -19,6 +19,7 @@ import {type PlayerTrack, usePlayer} from "@/components/player/player-provider.c
 import {formatDuration} from "@/components/player/lyrics";
 import {addToPlaylistAction, removeFromPlaylistAction, starAction} from "@/app/(app)/actions.server";
 import {cn} from "@/utils/utils";
+import {track as trackEvent} from "@/utils/umami";
 
 export type TrackRow = PlayerTrack & {
     discNumber: number;
@@ -72,7 +73,9 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
         startTransition(async () => {
             const result = await starAction(id, next);
 
-            if (!result.ok) {
+            if (result.ok) {
+                trackEvent("track-star", {starred: next});
+            } else {
                 toast.error(t("starFailed"));
             }
         });
@@ -92,6 +95,7 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
             const result = await addToPlaylistAction(playlistId, name, [track.navidromeId!]);
 
             if (result.ok) {
+                trackEvent("playlist-add", {created: !playlistId});
                 toast.success(t("addedToPlaylist"));
             } else {
                 toast.error(result.message);
@@ -177,7 +181,7 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
                                         </>
                                     )}
                                     <DropdownMenuSeparator/>
-                                    <DropdownMenuItem render={<a href={`/api/download/track/${track.id}`} download/>} disabled={track.fileMissing}>
+                                    <DropdownMenuItem render={<a href={`/api/download/track/${track.id}`} download data-umami-event="track-download"/>} disabled={track.fileMissing}>
                                         <Download/>{t("download")}
                                     </DropdownMenuItem>
                                     {playlistId && (

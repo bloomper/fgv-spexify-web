@@ -43,7 +43,14 @@ export async function streamFromApi(request: NextRequest, path: string, extra: R
         headers.set("Range", range);
     }
 
-    const upstream = await apiFetch(path, {headers});
+    // Aborted with the browser's request, e.g. when the player seeks or skips, so the server stops sending at once
+    const upstream = await apiFetch(path, {headers, signal: request.signal});
+
+    if (!upstream.ok && upstream.status !== 206) {
+        await upstream.body?.cancel();
+        return NextResponse.json({error: "Not available"}, {status: upstream.status});
+    }
+
     const out = new Headers(extra);
 
     for (const name of PASSED_HEADERS) {
@@ -54,8 +61,5 @@ export async function streamFromApi(request: NextRequest, path: string, extra: R
         }
     }
     out.set("X-Content-Type-Options", "nosniff");
-    if (!upstream.ok && upstream.status !== 206) {
-        return NextResponse.json({error: "Not available"}, {status: upstream.status});
-    }
     return new Response(upstream.body, {status: upstream.status, headers: out});
 }

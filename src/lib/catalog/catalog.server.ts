@@ -78,11 +78,6 @@ const TracksByNavidromeIdsQuery = graphql(`
     }
 `);
 
-const TracksByIdsQuery = graphql(`
-    query TracksByIds($ids: [ID!]!) {
-        tracksByIds(ids: $ids) { id title discNumber trackNumber albumId albumTitle spexId }
-    }
-`);
 
 const AlbumCreateMutation = graphql(`
     mutation AlbumCreate($input: AlbumInput!) { albumCreate(input: $input) { id } }
@@ -156,10 +151,6 @@ export async function searchSpex(q: string) {
 
 export async function getTracksByNavidromeIds(ids: string[]) {
     return ids.length === 0 ? [] : (await runQuery(TracksByNavidromeIdsQuery, {ids}))?.tracksByNavidromeIds ?? [];
-}
-
-export async function getTracksByIds(ids: string[]) {
-    return ids.length === 0 ? [] : (await runQuery(TracksByIdsQuery, {ids}))?.tracksByIds ?? [];
 }
 
 export const albumCreate = async (input: AlbumInput) => (await runMutation(AlbumCreateMutation, {input}))?.albumCreate;

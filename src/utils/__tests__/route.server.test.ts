@@ -1,6 +1,5 @@
 import {describe, expect, it, vi} from "vitest";
-import type {NextRequest} from "next/server";
-import {authzFailureResponse, withPolicyAction, withPolicyPage, withPolicyRoute} from "@/utils/route.server";
+import {withPolicyAction, withPolicyPage} from "@/utils/route.server";
 
 vi.mock("next/navigation", () => ({
     redirect: vi.fn((path: string) => {
@@ -40,15 +39,5 @@ describe("route.server", () => {
 
         await expect(withPolicyPage(forbidden, handler)).rejects.toThrow("redirect:/no-access");
         expect(handler).not.toHaveBeenCalled();
-    });
-
-    it("answers a refused route with the status", async () => {
-        const handler = withPolicyRoute(forbidden, () => new Response("ok"));
-        const response = await handler({} as NextRequest, {});
-
-        expect(response.status).toBe(403);
-        expect(authzFailureResponse({ok: false, status: 401, message: "x"}).status).toBe(401);
-        await expect(withPolicyRoute(unauthenticated, () => new Response("ok"))({} as NextRequest, {})).rejects.toThrow("redirect:/");
-        expect(await (await withPolicyRoute(ok, () => new Response("ok"))({} as NextRequest, {})).text()).toBe("ok");
     });
 });

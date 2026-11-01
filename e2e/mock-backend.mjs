@@ -1,5 +1,5 @@
-// A stand-in for Spexify Server and Keycloak in E2E tests: GraphQL for the catalogue and the user's app passwords, the
-// media and Subsonic endpoints the web calls, and a mini-Keycloak (discovery, authorize, token, JWKS, userinfo, logout).
+// A stand-in for Spexify Server and Keycloak in E2E tests: GraphQL for the catalogue, editing, administration and the
+// user's app passwords, tus uploads, covers, the media and Subsonic endpoints the web calls (stars and playlists), and a mini-Keycloak (discovery, authorize, token, JWKS, userinfo, logout).
 // All data is fictitious.
 
 import {createServer} from "node:http";
@@ -20,6 +20,12 @@ const PERSONAS = {
 };
 const bySub = Object.fromEntries(Object.values(PERSONAS).map(persona => [persona.sub, persona]));
 let currentPersona = "admin";
+
+// As Spexify Server words them
+const MESSAGES = {
+    CONFLICT: "Någon annan har ändrat detta. Ladda om sidan och försök igen.",
+    SPEXREGISTER_UNAVAILABLE: "Spexregistret går inte att nå just nu. Försök igen om en stund.",
+};
 
 class GraphQLError extends Error {
     constructor(classification, message) {
@@ -59,8 +65,23 @@ function resetState() {
             track("21", "2", "Opublicerat album", 1, "Hemlig låt", {published: false, listed: false, navidromeId: null}),
         ],
         starred: [],
+        playlists: [{id: "pl-1", name: "Favoriter", entries: ["nd-11"]}],
         appPasswords: [],
         apiKeys: [],
+        users: [
+            {id: "u-1", username: "lisa@example.org", displayName: "Lisa Lyssnare", lastSeenAt: "2026-10-30T10:00:00Z",
+                appPasswordCount: 2, apiKeyCount: 0, locked: false},
+            {id: "u-2", username: "olle@example.org", displayName: "Olle Spärrad", lastSeenAt: "2026-10-29T10:00:00Z",
+                appPasswordCount: 0, apiKeyCount: 1, locked: true},
+        ],
+        settings: {welcomeSv: null, welcomeEn: null, appPasswordExpiryMonths: 12, lockoutAttempts: 10, lockoutMinutes: 15},
+        audit: [],
+        uploads: new Map(),
+        scanRequested: false,
+        spexregisterUp: true,
+        navidromeUp: true,
+        // Operation name -> classification of the error its next call answers with
+        failNext: new Map(),
     };
 }
 
@@ -80,18 +101,76 @@ function requireUser(persona) {
 }
 
 const visibleAlbums = persona => state.albums.filter(album => !album.trashedAt && (album.published || isEditor(persona)));
-const tracksOf = (persona, albumId) => state.tracks.filter(t => t.albumId === albumId && (isEditor(persona) ? !t.trashedAt : t.listed));
+const tracksOf = (persona, albumId) => state.tracks
+    .filter(t => t.albumId === albumId && (isEditor(persona) ? !t.trashedAt : t.listed))
+    .sort((a, b) => a.discNumber - b.discNumber || a.trackNumber - b.trackNumber);
 const withCounts = (persona, album) => {
     const tracks = tracksOf(persona, album.id);
 
     return {...album, trackCount: tracks.length, durationMs: tracks.reduce((sum, t) => sum + t.durationMs, 0)};
 };
-const settings = {welcomeSv: null, welcomeEn: null, appPasswordExpiryMonths: 12, lockoutAttempts: 10, lockoutMinutes: 15};
+const isAdmin = persona => persona.roles.includes("ADMIN");
+
+function requireEditor(persona) {
+    if (!isEditor(persona)) {
+        throw forbidden();
+    }
+}
+
+function requireAdmin(persona) {
+    if (!isAdmin(persona)) {
+        throw forbidden();
+    }
+}
+
+function audit(persona, action, entityType, entityId, summary) {
+    state.audit.unshift({id: String(state.nextId++), at: new Date().toISOString(), actorName: persona.name, action, entityType,
+        entityId, summary, actor: persona.sub});
+}
+
+const albumById = id => {
+    const album = state.albums.find(candidate => candidate.id === id);
+
+    if (!album) {
+        throw new GraphQLError("NOT_FOUND", "Albumet finns inte.");
+    }
+    return album;
+};
+const trackById = id => {
+    const found = state.tracks.find(candidate => candidate.id === id);
+
+    if (!found) {
+        throw new GraphQLError("NOT_FOUND", "Låten finns inte.");
+    }
+    return found;
+};
+// A track is listed when it, and its album, are published and neither is in the trash
+const relist = () => state.tracks.forEach(t => {
+    const album = state.albums.find(candidate => candidate.id === t.albumId);
+
+    t.listed = Boolean(t.published && !t.trashedAt && album?.published && !album?.trashedAt);
+    t.navidromeId = t.listed ? `nd-${t.id}` : null;
+});
+const renumber = albumId => state.tracks.filter(t => t.albumId === albumId && !t.trashedAt)
+    .sort((a, b) => a.trackNumber - b.trackNumber)
+    .forEach((t, index) => t.trackNumber = index + 1);
+const trackFromUpload = (persona, albumId, uploadId) => {
+    const upload = state.uploads.get(uploadId);
+
+    if (!upload || upload.offset < upload.length) {
+        throw new GraphQLError("BAD_REQUEST", "Uppladdningen är inte klar.");
+    }
+    if (!/\.(flac|mp3|m4a|aac|ogg|oga|opus|wav)$/i.test(upload.name)) {
+        throw new GraphQLError("BAD_REQUEST", "Filen är inte ljud i ett format som stöds.");
+    }
+    state.uploads.delete(uploadId);
+    return upload;
+};
 
 const resolvers = {
     Me: persona => ({
         me: {username: persona.email, displayName: persona.name, roles: persona.roles, spexflixUser: false},
-        settings,
+        settings: state.settings,
     }),
     Home: persona => ({
         recentAlbums: state.albums.filter(album => album.published && !album.trashedAt).map(album => withCounts(persona, album)),
@@ -119,7 +198,7 @@ const resolvers = {
         me: {username: persona.email, displayName: persona.name},
         appPasswords: state.appPasswords,
         apiKeys: state.apiKeys,
-        settings,
+        settings: state.settings,
     }),
     AppPasswordCreate: (persona, {name}) => {
         const created = {id: String(state.nextId++), name, createdAt: new Date().toISOString(), lastUsedAt: null,
@@ -143,6 +222,7 @@ const resolvers = {
             spex: input.spexId ? SPEX : null};
 
         state.albums.push(album);
+        audit(persona, "CREATE", "ALBUM", album.id, `Skapade albumet ${album.title}`);
         return {albumCreate: {id: album.id}};
     },
     AlbumPublish: (persona, {id, published}) => {
@@ -153,11 +233,14 @@ const resolvers = {
         const album = state.albums.find(candidate => candidate.id === id);
 
         album.published = published;
+        relist();
+        audit(persona, published ? "PUBLISH" : "UNPUBLISH", "ALBUM", id, `${published ? "Publicerade" : "Avpublicerade"} albumet ${album.title}`);
         return {albumPublish: {id, published}};
     },
     SpexSearch: persona => {
-        if (!isEditor(persona)) {
-            throw forbidden();
+        requireEditor(persona);
+        if (!state.spexregisterUp) {
+            throw new GraphQLError("SPEXREGISTER_UNAVAILABLE", MESSAGES.SPEXREGISTER_UNAVAILABLE);
         }
         return {spexSearch: [{id: SPEX.id, title: SPEX.title, year: SPEX.year, revival: false, categoryName: SPEX.categoryName}]};
     },
@@ -165,14 +248,194 @@ const resolvers = {
         if (!persona.roles.includes("ADMIN")) {
             throw forbidden();
         }
-        return {libraryStatus: {navidromeAvailable: true, scanning: false, scanPending: false, lastScanAt: "2026-10-31T10:00:00Z",
-            lastScanError: null, trackCount: 3, listedTrackCount: 2}};
+        return {libraryStatus: {navidromeAvailable: state.navidromeUp, scanning: false, scanPending: state.scanRequested,
+            lastScanAt: "2026-10-31T10:00:00Z", lastScanError: null, trackCount: state.tracks.length,
+            listedTrackCount: state.tracks.filter(t => t.listed).length}};
     },
+    LibraryRescan: persona => {
+        requireAdmin(persona);
+        state.scanRequested = true;
+        return {libraryRescan: null};
+    },
+    AlbumUpdate: (persona, {id, input}) => {
+        requireEditor(persona);
+
+        const album = albumById(id);
+
+        Object.assign(album, {title: input.title || album.title, year: input.year ?? album.year, kind: input.kind,
+            description: input.description ?? null, lastModifiedAt: new Date().toISOString()});
+        state.tracks.filter(t => t.albumId === id).forEach(t => t.albumTitle = album.title);
+        audit(persona, "UPDATE", "ALBUM", id, `Ändrade albumet ${album.title}`);
+        return {albumUpdate: {id}};
+    },
+    AlbumTrash: (persona, {id}) => {
+        requireEditor(persona);
+
+        const album = albumById(id);
+
+        album.trashedAt = new Date().toISOString();
+        relist();
+        audit(persona, "TRASH", "ALBUM", id, `Lade albumet ${album.title} i papperskorgen`);
+        return {albumTrash: {id}};
+    },
+    AlbumRestore: (persona, {id}) => {
+        requireEditor(persona);
+        albumById(id).trashedAt = null;
+        relist();
+        return {albumRestore: {id}};
+    },
+    AlbumDelete: (persona, {id}) => {
+        requireAdmin(persona);
+        state.albums = state.albums.filter(album => album.id !== id);
+        state.tracks = state.tracks.filter(t => t.albumId !== id);
+        return {albumDelete: null};
+    },
+    AlbumCoverRemove: (persona, {id}) => {
+        requireEditor(persona);
+        albumById(id).hasCover = false;
+        return {albumCoverRemove: {id}};
+    },
+    TracksReorder: (persona, {albumId, trackIds}) => {
+        requireEditor(persona);
+        trackIds.forEach((id, index) => trackById(id).trackNumber = index + 1);
+        return {tracksReorder: {id: albumId}};
+    },
+    TrackCreate: (persona, {albumId, uploadId}) => {
+        requireEditor(persona);
+
+        const album = albumById(albumId);
+        const upload = trackFromUpload(persona, albumId, uploadId);
+        const number = state.tracks.filter(t => t.albumId === albumId && !t.trashedAt).length + 1;
+        const created = track(String(state.nextId++), albumId, album.title, number, upload.name.replace(/^\d+\s*/, "").replace(/\.[^.]+$/, ""),
+            {performers: null, melody: null, lyrics: null, lyricsSynced: false, fileSize: upload.length, published: true});
+
+        state.tracks.push(created);
+        relist();
+        audit(persona, "CREATE", "TRACK", created.id, `Laddade upp ${created.title} till ${album.title}`);
+        return {trackCreate: {id: created.id, title: created.title}};
+    },
+    TrackUpdate: (persona, {id, input}) => {
+        requireEditor(persona);
+
+        const found = trackById(id);
+
+        Object.assign(found, input);
+        audit(persona, "UPDATE", "TRACK", id, `Ändrade ${found.title}`);
+        return {trackUpdate: {id}};
+    },
+    TrackReplaceAudio: (persona, {id, uploadId}) => {
+        requireEditor(persona);
+
+        const found = trackById(id);
+        const upload = trackFromUpload(persona, found.albumId, uploadId);
+
+        Object.assign(found, {fileSize: upload.length, fileMissing: false, format: upload.name.split(".").pop().toUpperCase()});
+        audit(persona, "UPDATE", "TRACK", id, `Bytte ljudfil för ${found.title}`);
+        return {trackReplaceAudio: {id}};
+    },
+    TrackPublish: (persona, {id, published}) => {
+        requireEditor(persona);
+        trackById(id).published = published;
+        relist();
+        return {trackPublish: {id, published}};
+    },
+    TrackTrash: (persona, {id}) => {
+        requireEditor(persona);
+
+        const found = trackById(id);
+
+        found.trashedAt = new Date().toISOString();
+        relist();
+        renumber(found.albumId);
+        return {trackTrash: {id}};
+    },
+    TrackRestore: (persona, {id}) => {
+        requireEditor(persona);
+
+        const found = trackById(id);
+
+        found.trashedAt = null;
+        found.trackNumber = 999;
+        renumber(found.albumId);
+        relist();
+        return {trackRestore: {id}};
+    },
+    TrackDelete: (persona, {id}) => {
+        requireAdmin(persona);
+        state.tracks = state.tracks.filter(t => t.id !== id);
+        return {trackDelete: null};
+    },
+    TrashEmpty: persona => {
+        requireAdmin(persona);
+
+        const trashedAlbums = new Set(state.albums.filter(album => album.trashedAt).map(album => album.id));
+
+        state.albums = state.albums.filter(album => !trashedAlbums.has(album.id));
+        state.tracks = state.tracks.filter(t => !t.trashedAt && !trashedAlbums.has(t.albumId));
+        return {trashEmpty: null};
+    },
+    Trash: persona => {
+        requireEditor(persona);
+
+        const trashedAlbums = state.albums.filter(album => album.trashedAt);
+
+        return {trash: {
+            albums: trashedAlbums.map(album => ({...album, trackCount: state.tracks.filter(t => t.albumId === album.id).length})),
+            tracks: state.tracks.filter(t => t.trashedAt && !trashedAlbums.some(album => album.id === t.albumId)),
+        }};
+    },
+    AuditLog: (persona, {page = 0, size = 50}) => {
+        requireEditor(persona);
+
+        const entries = state.audit.filter(entry => isAdmin(persona) || entry.actor === persona.sub);
+
+        return {auditLog: {entries: entries.slice(page * size, (page + 1) * size), totalCount: entries.length, page, size}};
+    },
+    Settings: () => ({settings: state.settings}),
+    SettingsUpdate: (persona, {input}) => {
+        requireAdmin(persona);
+        if (input.lockoutAttempts < 1 || input.appPasswordExpiryMonths < 1) {
+            throw new GraphQLError("BAD_REQUEST", "Uppgifterna är inte giltiga.");
+        }
+        state.settings = {...input};
+        return {settingsUpdate: state.settings};
+    },
+    Users: persona => {
+        requireAdmin(persona);
+        return {users: state.users};
+    },
+    UserUnlock: (persona, {userId}) => {
+        requireAdmin(persona);
+        state.users.find(user => user.id === userId).locked = false;
+        return {userUnlock: null};
+    },
+    UserCredentialsRevoke: (persona, {userId}) => {
+        requireAdmin(persona);
+        Object.assign(state.users.find(user => user.id === userId), {appPasswordCount: 0, apiKeyCount: 0});
+        return {userCredentialsRevoke: null};
+    },
+    ApiKeyCreate: (persona, {name}) => {
+        const created = {id: String(state.nextId++), name, createdAt: new Date().toISOString(), lastUsedAt: null};
+
+        state.apiKeys.push(created);
+        return {apiKeyCreate: {key: "e2e-api-key-0123456789abcdef", apiKey: created}};
+    },
+    ApiKeyRevoke: (persona, {id}) => {
+        state.apiKeys = state.apiKeys.filter(key => key.id !== id);
+        return {apiKeyRevoke: null};
+    },
+    TracksByIds: (persona, {ids}) => ({
+        tracksByIds: ids.map(id => state.tracks.find(t => t.id === id && t.listed)).filter(Boolean)
+            .map(t => ({...t, spexId: state.albums.find(album => album.id === t.albumId)?.spex?.id ?? null})),
+    }),
 };
 
 function subsonic(res, payload) {
     res.writeHead(200, {"content-type": "application/json"}).end(JSON.stringify({"subsonic-response": {status: "ok", version: "1.16.1", ...payload}}));
 }
+
+const playlistOf = playlist => ({id: playlist.id, name: playlist.name, songCount: playlist.entries.length,
+    duration: playlist.entries.length * 61, created: "2026-10-01T10:00:00Z", changed: "2026-10-01T10:00:00Z"});
 
 function handleRest(url, res) {
     const endpoint = url.pathname.slice("/rest/".length);
@@ -187,7 +450,28 @@ function handleRest(url, res) {
         state.starred = state.starred.filter(candidate => candidate !== id);
         subsonic(res, {});
     } else if (endpoint === "getPlaylists") {
-        subsonic(res, {playlists: {playlist: []}});
+        subsonic(res, {playlists: {playlist: state.playlists.map(playlistOf)}});
+    } else if (endpoint === "getPlaylist") {
+        const playlist = state.playlists.find(candidate => candidate.id === id);
+
+        if (!playlist) {
+            res.writeHead(200, {"content-type": "application/json"}).end(JSON.stringify({"subsonic-response": {status: "failed",
+                version: "1.16.1", error: {code: 70, message: "Playlist not found"}}}));
+            return;
+        }
+        subsonic(res, {playlist: {...playlistOf(playlist), entry: playlist.entries.map(navidromeId => ({id: navidromeId, title: "", album: "", albumId: ""}))}});
+    } else if (endpoint === "createPlaylist") {
+        state.playlists.push({id: `pl-${state.nextId++}`, name: url.searchParams.get("name"), entries: url.searchParams.getAll("songId")});
+        subsonic(res, {});
+    } else if (endpoint === "updatePlaylist") {
+        const playlist = state.playlists.find(candidate => candidate.id === url.searchParams.get("playlistId"));
+
+        playlist.entries.push(...url.searchParams.getAll("songIdToAdd"));
+        url.searchParams.getAll("songIndexToRemove").map(Number).sort((a, b) => b - a).forEach(index => playlist.entries.splice(index, 1));
+        subsonic(res, {});
+    } else if (endpoint === "deletePlaylist") {
+        state.playlists = state.playlists.filter(candidate => candidate.id !== id);
+        subsonic(res, {});
     } else {
         subsonic(res, {});
     }
@@ -225,6 +509,12 @@ function handleGraphql(req, body, res) {
     }
     try {
         const persona = requireUser(personaOf(req));
+        const failure = state.failNext.get(op);
+
+        if (failure) {
+            state.failNext.delete(op);
+            throw new GraphQLError(failure, MESSAGES[failure] ?? "Något gick fel.");
+        }
         res.end(JSON.stringify({data: resolver(persona, payload.variables || {})}));
     } catch (error) {
         if (error instanceof GraphQLError) {
@@ -325,13 +615,68 @@ async function handleToken(body, res) {
     }));
 }
 
+// A 1×1 PNG, for covers
+const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64");
+
+// --- tus ------------------------------------------------------------------------------------------------------------
+
+function handleTus(req, path, body, res) {
+    const headers = {"tus-resumable": "1.0.0"};
+    const id = path.split("/")[3];
+    const persona = personaOf(req);
+
+    if (req.method === "OPTIONS") {
+        res.writeHead(204, {...headers, "tus-version": "1.0.0", "tus-extension": "creation,termination", "tus-max-size": "2147483648"}).end();
+    } else if (!persona || !isEditor(persona)) {
+        res.writeHead(403, {"content-type": "application/json"}).end(JSON.stringify({code: "FORBIDDEN", message: "Du har inte behörighet att göra det."}));
+    } else if (req.method === "POST") {
+        const upload = randomUUID();
+        const metadata = Object.fromEntries((req.headers["upload-metadata"] ?? "").split(",").filter(Boolean)
+            .map(pair => pair.trim().split(" ")).map(([key, value]) => [key, Buffer.from(value ?? "", "base64").toString("utf8")]));
+
+        state.uploads.set(upload, {name: metadata.filename ?? "upload", length: Number(req.headers["upload-length"]), offset: 0});
+        res.writeHead(201, {...headers, location: `/api/uploads/${upload}`}).end();
+    } else if (!state.uploads.has(id)) {
+        res.writeHead(404, headers).end();
+    } else if (req.method === "HEAD") {
+        const upload = state.uploads.get(id);
+
+        res.writeHead(200, {...headers, "upload-offset": String(upload.offset), "upload-length": String(upload.length), "cache-control": "no-store"}).end();
+    } else if (req.method === "PATCH") {
+        const upload = state.uploads.get(id);
+
+        if (Number(req.headers["upload-offset"]) !== upload.offset) {
+            res.writeHead(409, headers).end();
+            return;
+        }
+        upload.offset += body.length;
+        res.writeHead(204, {...headers, "upload-offset": String(upload.offset)}).end();
+    } else if (req.method === "DELETE") {
+        state.uploads.delete(id);
+        res.writeHead(204, headers).end();
+    } else {
+        res.writeHead(405).end();
+    }
+}
+
 const server = createServer((req, res) => {
     const chunks = [];
     req.on("data", chunk => chunks.push(chunk));
-    req.on("end", async () => {
+    req.on("end", () => handle(req, res, chunks).catch(error => {
+        // A broken handler answers 500 instead of taking the mock down for every later test
+        console.error(error);
+        if (!res.headersSent) {
+            res.writeHead(500).end();
+        }
+    }));
+});
+
+async function handle(req, res, chunks) {
+    {
         const url = new URL(req.url || "", `http://localhost:${PORT}`);
         const path = url.pathname;
-        const body = Buffer.concat(chunks).toString("utf8");
+        const rawBody = Buffer.concat(chunks);
+        const body = rawBody.toString("utf8");
 
         if (path.endsWith("/.well-known/openid-configuration")) {
             res.writeHead(200, {"content-type": "application/json"}).end(JSON.stringify(oidcConfig));
@@ -353,13 +698,50 @@ const server = createServer((req, res) => {
         } else if (req.method === "POST" && path === "/__persona") {
             currentPersona = JSON.parse(body).persona;
             res.writeHead(204).end();
+        } else if (req.method === "POST" && path === "/__spexregister") {
+            state.spexregisterUp = JSON.parse(body).up;
+            res.writeHead(204).end();
+        } else if (req.method === "POST" && path === "/__navidrome") {
+            state.navidromeUp = JSON.parse(body).up;
+            res.writeHead(204).end();
+        } else if (req.method === "POST" && path === "/__fail") {
+            const {operation, classification} = JSON.parse(body);
+
+            state.failNext.set(operation, classification);
+            res.writeHead(204).end();
+        } else if (req.method === "GET" && path === "/__state") {
+            res.writeHead(200, {"content-type": "application/json"}).end(JSON.stringify({
+                uploads: state.uploads.size, scanRequested: state.scanRequested,
+                tracks: state.tracks.map(({id, albumId, title, trackNumber, published, listed, trashedAt}) =>
+                    ({id, albumId, title, trackNumber, published, listed, trashedAt})),
+                albums: state.albums.map(({id, title, published, hasCover, trashedAt}) => ({id, title, published, hasCover, trashedAt})),
+            }));
         } else if (req.method === "GET" && /^\/api\/albums\/[^/]+\/cover$/.test(path)) {
-            res.writeHead(404).end();
+            const album = state.albums.find(candidate => candidate.id === path.split("/")[3]);
+
+            if (album?.hasCover) {
+                res.writeHead(200, {"content-type": "image/png"}).end(PNG);
+            } else {
+                res.writeHead(404).end();
+            }
+        } else if (req.method === "POST" && /^\/api\/albums\/[^/]+\/cover$/.test(path)) {
+            const album = state.albums.find(candidate => candidate.id === path.split("/")[3]);
+
+            if (!isEditor(personaOf(req) ?? {roles: []})) {
+                res.writeHead(403, {"content-type": "application/json"}).end(JSON.stringify({code: "FORBIDDEN", message: "Du har inte behörighet att göra det."}));
+            } else {
+                album.hasCover = true;
+                res.writeHead(200, {"content-type": "application/json"}).end(JSON.stringify({id: album.id, title: album.title, hasCover: true}));
+            }
+        } else if (path === "/api/uploads" || path.startsWith("/api/uploads/")) {
+            handleTus(req, path, rawBody, res);
         } else if (req.method === "GET" && /^\/api\/tracks\/[^/]+\/(audio|download)$/.test(path)) {
             res.writeHead(200, {"content-type": "audio/flac", "accept-ranges": "bytes"}).end(Buffer.alloc(16));
         } else if (path.startsWith("/rest/")) {
             if (!personaOf(req)) {
                 res.writeHead(401).end();
+            } else if (!state.navidromeUp) {
+                res.writeHead(503).end();
             } else {
                 handleRest(url, res);
             }
@@ -368,8 +750,8 @@ const server = createServer((req, res) => {
         } else {
             res.writeHead(404).end();
         }
-    });
-});
+    }
+}
 
 server.listen(PORT, () => {
     console.log(`[mock-backend] listening on http://localhost:${PORT}`);

@@ -36,7 +36,6 @@ type Documents = {
     "\n    query Search($q: String!) {\n        search(q: $q) {\n            albums {\n                id title year kind hasCover published trackCount durationMs\n                spex { id title year revival categoryId categoryName }\n            }\n            tracks {\n                id uuid albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics\n                lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing\n            }\n        }\n    }\n": typeof types.SearchDocument,
     "\n    query SpexSearch($q: String!) {\n        spexSearch(q: $q) { id title year revival categoryName }\n    }\n": typeof types.SpexSearchDocument,
     "\n    query TracksByNavidromeIds($ids: [String!]!) {\n        tracksByNavidromeIds(ids: $ids) {\n            id uuid albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics\n            lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing\n        }\n    }\n": typeof types.TracksByNavidromeIdsDocument,
-    "\n    query TracksByIds($ids: [ID!]!) {\n        tracksByIds(ids: $ids) { id title discNumber trackNumber albumId albumTitle spexId }\n    }\n": typeof types.TracksByIdsDocument,
     "\n    mutation AlbumCreate($input: AlbumInput!) { albumCreate(input: $input) { id } }\n": typeof types.AlbumCreateDocument,
     "\n    mutation AlbumUpdate($id: ID!, $input: AlbumInput!) { albumUpdate(id: $id, input: $input) { id } }\n": typeof types.AlbumUpdateDocument,
     "\n    mutation AlbumPublish($id: ID!, $published: Boolean!) { albumPublish(id: $id, published: $published) { id published } }\n": typeof types.AlbumPublishDocument,
@@ -76,7 +75,6 @@ const documents: Documents = {
     "\n    query Search($q: String!) {\n        search(q: $q) {\n            albums {\n                id title year kind hasCover published trackCount durationMs\n                spex { id title year revival categoryId categoryName }\n            }\n            tracks {\n                id uuid albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics\n                lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing\n            }\n        }\n    }\n": types.SearchDocument,
     "\n    query SpexSearch($q: String!) {\n        spexSearch(q: $q) { id title year revival categoryName }\n    }\n": types.SpexSearchDocument,
     "\n    query TracksByNavidromeIds($ids: [String!]!) {\n        tracksByNavidromeIds(ids: $ids) {\n            id uuid albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics\n            lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing\n        }\n    }\n": types.TracksByNavidromeIdsDocument,
-    "\n    query TracksByIds($ids: [ID!]!) {\n        tracksByIds(ids: $ids) { id title discNumber trackNumber albumId albumTitle spexId }\n    }\n": types.TracksByIdsDocument,
     "\n    mutation AlbumCreate($input: AlbumInput!) { albumCreate(input: $input) { id } }\n": types.AlbumCreateDocument,
     "\n    mutation AlbumUpdate($id: ID!, $input: AlbumInput!) { albumUpdate(id: $id, input: $input) { id } }\n": types.AlbumUpdateDocument,
     "\n    mutation AlbumPublish($id: ID!, $published: Boolean!) { albumPublish(id: $id, published: $published) { id published } }\n": types.AlbumPublishDocument,
@@ -196,10 +194,6 @@ export function graphql(source: "\n    query SpexSearch($q: String!) {\n        
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n    query TracksByNavidromeIds($ids: [String!]!) {\n        tracksByNavidromeIds(ids: $ids) {\n            id uuid albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics\n            lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing\n        }\n    }\n"): (typeof documents)["\n    query TracksByNavidromeIds($ids: [String!]!) {\n        tracksByNavidromeIds(ids: $ids) {\n            id uuid albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics\n            lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing\n        }\n    }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n    query TracksByIds($ids: [ID!]!) {\n        tracksByIds(ids: $ids) { id title discNumber trackNumber albumId albumTitle spexId }\n    }\n"): (typeof documents)["\n    query TracksByIds($ids: [ID!]!) {\n        tracksByIds(ids: $ids) { id title discNumber trackNumber albumId albumTitle spexId }\n    }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

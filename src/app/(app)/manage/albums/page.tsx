@@ -27,20 +27,20 @@ export default async function ManageAlbumsPage() {
                                 <TableHead>{t("title")}</TableHead>
                                 <TableHead>{t("year")}</TableHead>
                                 <TableHead className="hidden sm:table-cell">{t("category")}</TableHead>
-                                <TableHead>{t("tracks")}</TableHead>
+                                <TableHead className="hidden sm:table-cell">{t("tracks")}</TableHead>
                                 <TableHead>{t("status")}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {data?.albums.map(album => (
                                 <TableRow key={album.id}>
-                                    <TableCell>
+                                    <TableCell className="whitespace-normal">
                                         <Link href={`/manage/albums/${album.id}`} className="font-medium hover:underline">{album.title}</Link>
                                         {album.kind !== "SHOW" && <span className="ml-2 text-xs text-muted-foreground">{ta(`kind.${album.kind}`)}</span>}
                                     </TableCell>
                                     <TableCell className="tabular-nums">{album.year}</TableCell>
                                     <TableCell className="hidden sm:table-cell">{album.spex?.categoryName}</TableCell>
-                                    <TableCell className="tabular-nums">{album.trackCount}</TableCell>
+                                    <TableCell className="hidden tabular-nums sm:table-cell">{album.trackCount}</TableCell>
                                     <TableCell>
                                         {album.published
                                             ? <Badge variant="secondary">{t("published")}</Badge>

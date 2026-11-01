@@ -32,6 +32,7 @@ import {
     updateAlbumAction,
     updateTrackAction
 } from "@/app/(app)/manage/actions.server";
+import {track as trackEvent} from "@/utils/umami";
 
 export type EditorTrack = {
     id: string;
@@ -185,6 +186,9 @@ export function AlbumEditor({album}: { album: EditorAlbum }) {
                 const result = await createTrackAction(album.id, uploadId);
 
                 update(index, result.ok ? {state: "done"} : {state: "failed", message: result.message});
+                if (result.ok) {
+                    trackEvent("track-upload");
+                }
             } catch (error) {
                 update(index, {state: "failed", message: error instanceof Error ? error.message : String(error)});
             }
@@ -260,7 +264,10 @@ export function AlbumEditor({album}: { album: EditorAlbum }) {
                 <div className="flex-1 space-y-6">
                     <label className="flex items-center gap-3 rounded-lg border p-3">
                         <Switch checked={album.published} disabled={pending}
-                                onCheckedChange={checked => run(() => publishAlbumAction(album.id, checked))}/>
+                                onCheckedChange={checked => {
+                                    trackEvent("album-publish", {published: checked});
+                                    run(() => publishAlbumAction(album.id, checked));
+                                }}/>
                         <span>
                             <span className="block font-medium">{album.published ? t("published") : t("unpublished")}</span>
                             <span className="block text-xs text-muted-foreground">{t("publishText")}</span>

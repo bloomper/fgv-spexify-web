@@ -2,17 +2,16 @@ import * as React from "react";
 import {redirect} from "next/navigation";
 import {getTranslations} from "next-intl/server";
 import {AppSidebar} from "@/components/app-sidebar.client";
-import {RolesProvider} from "@/components/roles-provider.client";
 import {SiteHeader} from "@/components/site-header.client";
 import {SidebarInset, SidebarProvider} from "@/components/ui/sidebar";
 import {Button} from "@/components/ui/button";
 import {Logo} from "@/components/logo";
+import {LogoHome} from "@/components/logo-home";
 import {LogoText} from "@/components/logo-text";
 import {ModeToggle} from "@/components/mode-toggle.client";
 import {LanguageToggle} from "@/components/language-toggle.client";
 import {PlayerProvider} from "@/components/player/player-provider.client";
 import {PlayerBar} from "@/components/player/player-bar.client";
-import {SpexifyMark} from "@/components/brand/spexify-mark";
 import {requireUser} from "@/utils/auth.server";
 import {hasAccess} from "@/utils/auth";
 
@@ -54,8 +53,8 @@ export default async function AppLayout({children}: { children: React.ReactNode 
                     <div className="mx-auto w-full max-w-5xl px-4 py-10">
                         <div className="space-y-4 text-center">
                             <div className="mx-auto flex justify-center">
-                                <div className="h-20 w-20 sm:h-24 sm:w-24">
-                                    <SpexifyMark/>
+                                <div className="h-20 w-20 text-foreground sm:h-24 sm:w-24">
+                                    <LogoHome/>
                                 </div>
                             </div>
 
@@ -86,20 +85,18 @@ export default async function AppLayout({children}: { children: React.ReactNode 
 
     return (
         <div className="[--header-height:calc(--spacing(14))]">
-            <RolesProvider roles={roles}>
-                <PlayerProvider>
-                    <SidebarProvider className="flex flex-col">
-                        <SiteHeader/>
-                        <div className="flex flex-1">
-                            <AppSidebar roles={roles} accountUrl={accountUrl}/>
-                            <SidebarInset className="min-w-0 pb-24">
-                                {children}
-                            </SidebarInset>
-                        </div>
-                    </SidebarProvider>
-                    <PlayerBar/>
-                </PlayerProvider>
-            </RolesProvider>
+            <PlayerProvider>
+                <SidebarProvider className="flex flex-col">
+                    <SiteHeader/>
+                    <div className="flex flex-1">
+                        <AppSidebar roles={roles} accountUrl={accountUrl}/>
+                        <SidebarInset className="min-w-0 pb-24">
+                            {children}
+                        </SidebarInset>
+                    </div>
+                </SidebarProvider>
+                <PlayerBar/>
+            </PlayerProvider>
         </div>
     );
 }
