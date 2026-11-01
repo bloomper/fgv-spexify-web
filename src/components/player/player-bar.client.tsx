@@ -4,7 +4,7 @@ import * as React from "react";
 import {useMemo, useState} from "react";
 import Link from "next/link";
 import {useTranslations} from "next-intl";
-import {ListMusic, Mic2, Pause, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward} from "lucide-react";
+import {ListMusic, Mic2, Pause, Play, Repeat, Repeat1, RotateCcw, Shuffle, SkipBack, SkipForward} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Sheet, SheetContent, SheetHeader, SheetTitle} from "@/components/ui/sheet";
 import {usePlayer} from "@/components/player/player-provider.client";
@@ -45,9 +45,13 @@ export function PlayerBar() {
                     <CoverImage albumId={current.albumId} title={current.albumTitle} className="size-11 shrink-0 rounded"/>
                     <div className="min-w-0">
                         <div className="truncate text-sm font-medium">{current.title}</div>
-                        <div className="truncate text-xs text-muted-foreground">
-                            {current.performers ? `${current.performers} · ` : ""}{current.albumTitle}
-                        </div>
+                        {player.failed ? (
+                            <div role="alert" className="truncate text-xs text-destructive">{t("error")}</div>
+                        ) : (
+                            <div className="truncate text-xs text-muted-foreground">
+                                {current.performers ? `${current.performers} · ` : ""}{current.albumTitle}
+                            </div>
+                        )}
                     </div>
                 </Link>
                 <div className="flex shrink-0 items-center gap-1">
@@ -58,8 +62,9 @@ export function PlayerBar() {
                     <Button variant="ghost" size="icon" onClick={player.previous} aria-label={t("previous")}>
                         <SkipBack/>
                     </Button>
-                    <Button size="icon" onClick={player.toggle} aria-label={player.playing ? t("pause") : t("play")}>
-                        {player.playing ? <Pause/> : <Play/>}
+                    <Button size="icon" onClick={player.toggle}
+                            aria-label={player.failed ? t("retry") : player.playing ? t("pause") : t("play")}>
+                        {player.failed ? <RotateCcw/> : player.playing ? <Pause/> : <Play/>}
                     </Button>
                     <Button variant="ghost" size="icon" onClick={player.next} aria-label={t("next")}>
                         <SkipForward/>

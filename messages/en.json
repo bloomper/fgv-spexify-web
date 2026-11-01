@@ -314,7 +314,9 @@
       "one": "Repeat track"
     },
     "lyrics": "Lyrics",
-    "queue": "Queue"
+    "queue": "Queue",
+    "error": "The track could not be played.",
+    "retry": "Try again"
   },
   "Search": {
     "title": "Search",

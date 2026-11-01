@@ -314,7 +314,9 @@
       "one": "Upprepa låten"
     },
     "lyrics": "Text",
-    "queue": "Kö"
+    "queue": "Kö",
+    "error": "Låten kunde inte spelas upp.",
+    "retry": "Försök igen"
   },
   "Search": {
     "title": "Sök",

@@ -44,6 +44,35 @@ describe("PlayerProvider", () => {
         expect(scrobbleAction).toHaveBeenCalledWith("nd-2", false);
     });
 
+    it("says when a track cannot be loaded, retries from where it stopped, and clears the error on another track", () => {
+        const load = vi.spyOn(HTMLMediaElement.prototype, "load").mockImplementation(() => undefined);
+        const {result} = render();
+
+        act(() => result.current.playQueue(TRACKS, 0));
+        audio().currentTime = 42;
+        act(() => {
+            audio().dispatchEvent(new Event("error"));
+        });
+        expect(result.current.failed).toBe(true);
+        expect(result.current.playing).toBe(false);
+
+        act(() => result.current.toggle());
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(result.current.failed).toBe(false);
+        expect(result.current.playing).toBe(true);
+        act(() => {
+            audio().dispatchEvent(new Event("loadedmetadata"));
+        });
+        expect(audio().currentTime).toBe(42);
+
+        act(() => {
+            audio().dispatchEvent(new Event("error"));
+        });
+        act(() => result.current.next());
+        expect(result.current.current?.id).toBe("2");
+        expect(result.current.failed).toBe(false);
+    });
+
     it("moves on, stops at the end, and starts over when repeating all", () => {
         const {result} = render();
 

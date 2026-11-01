@@ -23,6 +23,8 @@ type PlayerState = {
     index: number;
     current: PlayerTrack | null;
     playing: boolean;
+    /** The current track could not be loaded; {@link toggle} tries again from where it stopped. */
+    failed: boolean;
     time: number;
     duration: number;
     shuffle: boolean;
@@ -63,13 +65,15 @@ function shuffled<T>(items: T[], first: number): T[] {
 /**
  * Plays tracks through one audio element that lives as long as the app's layout, so playing continues while the user
  * navigates. Audio comes from {@code /api/audio/[id]}, which streams with the user's session. The browser's media
- * controls (lock screen, keyboard keys) work through the Media Session API.
+ * controls (lock screen, keyboard keys) work through the Media Session API. When a track cannot be loaded, the player
+ * stops and says so instead of looking as if it is loading; playing again retries, and skipping moves on as usual.
  */
 export function PlayerProvider({children}: { children: React.ReactNode }) {
     const audio = useRef<HTMLAudioElement | null>(null);
     const [queue, setQueue] = useState<PlayerTrack[]>([]);
     const [index, setIndex] = useState(0);
     const [playing, setPlaying] = useState(false);
+    const [failed, setFailed] = useState(false);
     const [time, setTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [shuffle, setShuffleState] = useState(false);
@@ -83,6 +87,7 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
         if (!element || !track) {
             return;
         }
+        setFailed(false);
         element.src = `/api/audio/${track.id}`;
         scrobbled.current = null;
         if (autoplay) {
@@ -149,12 +154,21 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
         if (!element || !current) {
             return;
         }
-        if (element.paused) {
+        if (failed) {
+            const position = element.currentTime;
+
+            setFailed(false);
+            element.load();
+            element.addEventListener("loadedmetadata", () => {
+                element.currentTime = position;
+            }, {once: true});
+            void element.play().catch(() => setPlaying(false));
+        } else if (element.paused) {
             void element.play().catch(() => setPlaying(false));
         } else {
             element.pause();
         }
-    }, [current]);
+    }, [current, failed]);
 
     const seek = useCallback((target: number) => {
         if (audio.current) {
@@ -202,18 +216,24 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
         const onPlay = () => setPlaying(true);
         const onPause = () => setPlaying(false);
         const onDuration = () => setDuration(element.duration);
+        const onError = () => {
+            setFailed(true);
+            setPlaying(false);
+        };
 
         element.addEventListener("timeupdate", onTime);
         element.addEventListener("ended", onEnded);
         element.addEventListener("play", onPlay);
         element.addEventListener("pause", onPause);
         element.addEventListener("durationchange", onDuration);
+        element.addEventListener("error", onError);
         return () => {
             element.removeEventListener("timeupdate", onTime);
             element.removeEventListener("ended", onEnded);
             element.removeEventListener("play", onPlay);
             element.removeEventListener("pause", onPause);
             element.removeEventListener("durationchange", onDuration);
+            element.removeEventListener("error", onError);
         };
     }, [current, next, repeat]);
 
@@ -235,9 +255,9 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
     }, [current, next, previous, seek, toggle]);
 
     const value = useMemo<PlayerState>(() => ({
-        queue, index, current, playing, time, duration, shuffle, repeat,
+        queue, index, current, playing, failed, time, duration, shuffle, repeat,
         playQueue, enqueue, toggle, next, previous, seek, jump, setShuffle, cycleRepeat,
-    }), [queue, index, current, playing, time, duration, shuffle, repeat, playQueue, enqueue, toggle, next, previous, seek, jump, setShuffle, cycleRepeat]);
+    }), [queue, index, current, playing, failed, time, duration, shuffle, repeat, playQueue, enqueue, toggle, next, previous, seek, jump, setShuffle, cycleRepeat]);
 
     return (
         <PlayerContext.Provider value={value}>
