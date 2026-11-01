@@ -18,11 +18,13 @@ test.describe("Listening", () => {
         await expect(page.getByText("Här står vi nu på scenen")).toBeVisible();
     });
 
-    test("stars a track and finds it under Starred", async ({page, loginAs}) => {
+    test("stars a track and finds it under Starred", async ({page, loginAs, mock}) => {
         await loginAs("listener");
         await page.goto("/albums/1");
         await page.getByRole("button", {name: "Stjärnmärk Kärleksduetten"}).click();
         await expect(page.getByRole("button", {name: "Ta bort stjärnan från Kärleksduetten"})).toBeVisible();
+        // The star shows at once and is saved in the background; leaving the page before that would cancel it
+        await expect.poll(async () => (await mock.state()).starred).toHaveLength(1);
 
         await page.goto("/starred");
         await expect(page.getByText("Kärleksduetten")).toBeVisible();
