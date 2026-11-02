@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import {useState, useTransition} from "react";
+import {useTransition} from "react";
 import Link from "next/link";
 import {useTranslations} from "next-intl";
 import {toast} from "sonner";
-import {ArrowDown, ArrowUp, Download, Film, ListPlus, MoreHorizontal, Pause, Play, Radio, Star, X} from "lucide-react";
+import {ArrowDown, ArrowUp, Download, Film, Heart, ListPlus, MoreHorizontal, Pause, Play, Radio, X} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Badge} from "@/components/ui/badge";
 import {
@@ -26,6 +26,7 @@ import {cn} from "@/utils/utils";
 import {formatDate} from "@/utils/format";
 import {useDialogs} from "@/components/dialogs.client";
 import {track as trackEvent} from "@/utils/umami";
+import {useServerState} from "@/hooks/use-server-state.client";
 
 export type TrackRow = PlayerTrack & {
     discNumber: number;
@@ -88,7 +89,7 @@ function TrackSubtitle({track, showAlbum}: { track: TrackRow; showAlbum?: boolea
 }
 
 /**
- * Tracks with play buttons, stars, downloads, playlists and links to Spexflix. Stars, playlists and play counts live in
+ * Tracks with play buttons, likes, ratings, downloads, playlists and links to Spexflix. Stars, playlists and play counts live in
  * Navidrome, so they work only for published tracks, which Navidrome knows. Hovering a row shows a play button in
  * place of its number.
  */
@@ -97,8 +98,9 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
     const player = usePlayer();
     const radio = useRadio();
     const {prompt} = useDialogs();
-    const [starred, setStarred] = useState(() => new Set(initialStarred));
-    const [ratings, setRatings] = useState<Record<string, number>>({});
+    const [starred, setStarred] = useServerState(new Set(initialStarred), ids => [...ids].sort().join());
+    const [ratings, setRatings] = useServerState<Record<string, number>>(
+        Object.fromEntries(tracks.map(track => [track.id, track.rating ?? 0])), JSON.stringify);
     const ratingOf = (track: TrackRow) => ratings[track.id] ?? track.rating ?? 0;
     const [, startTransition] = useTransition();
     const playable = tracks.filter(track => !track.fileMissing);
@@ -156,6 +158,16 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
             if (result.ok) {
                 trackEvent("track-star", {starred: next});
             } else {
+                setStarred(current => {
+                    const copy = new Set(current);
+
+                    if (next) {
+                        copy.delete(id);
+                    } else {
+                        copy.add(id);
+                    }
+                    return copy;
+                });
                 toast.error(t("starFailed"));
             }
         });
@@ -266,7 +278,7 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
                                 <Button variant="ghost" size="icon" className="shrink-0" onClick={() => toggleStar(track)}
                                         aria-pressed={starred.has(track.navidromeId)}
                                         aria-label={starred.has(track.navidromeId) ? t("unstar", {title: track.title}) : t("star", {title: track.title})}>
-                                    <Star className={cn(starred.has(track.navidromeId) && "fill-current text-yellow-500")}/>
+                                    <Heart className={cn(starred.has(track.navidromeId) && "fill-current text-rose-500")}/>
                                 </Button>
                             )}
                             {playCount !== undefined && (

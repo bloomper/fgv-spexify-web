@@ -16,7 +16,7 @@ test.describe("The application shell", () => {
         await loginAs("listener");
 
         const sidebar = page.locator('[data-slot="sidebar"]:visible');
-        await expect(sidebar.getByRole("link", {name: "Stjärnmärkt"})).toBeVisible();
+        await expect(sidebar.getByRole("link", {name: "Gillat"})).toBeVisible();
         await expect(sidebar.getByRole("link", {name: "Redigera"})).toHaveCount(0);
         await expect(sidebar.getByRole("link", {name: "Administration"})).toHaveCount(0);
         await page.goto("/admin/library");

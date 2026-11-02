@@ -26,17 +26,25 @@ async function attempt(work: () => Promise<void>): Promise<SimpleResult> {
     }
 }
 
+/**
+ * Likes (stars) and ratings show on almost every page (album, liked, playlists, search, the start page), and Next
+ * keeps visited pages alive, so all of them must be fetched again.
+ */
+function revalidateListening() {
+    revalidatePath("/", "layout");
+}
+
 export async function starAction(navidromeId: string, starred: boolean): Promise<SimpleResult> {
     return withPolicyAction(Policies.app.requireAccess, () => attempt(async () => {
         await star(navidromeId, starred);
-        revalidatePath("/starred");
+        revalidateListening();
     }));
 }
 
 export async function starAlbumAction(navidromeAlbumId: string, starred: boolean): Promise<SimpleResult> {
     return withPolicyAction(Policies.app.requireAccess, () => attempt(async () => {
         await starAlbum(navidromeAlbumId, starred);
-        revalidatePath("/starred");
+        revalidateListening();
     }));
 }
 
@@ -49,7 +57,7 @@ export async function rateAction(navidromeId: string, rating: number): Promise<S
             throw new Error("Invalid rating");
         }
         await setRating(navidromeId, rating);
-        revalidatePath("/");
+        revalidateListening();
     }));
 }
 
