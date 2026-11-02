@@ -1,5 +1,17 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
-import {addToPlaylist, createPlaylist, getPlaylist, getPlaylists, getStarred, removeFromPlaylist, scrobble, star} from "@/lib/subsonic.server";
+import {
+    addToPlaylist,
+    createPlaylist,
+    getAlbumList,
+    getAlbumSongs,
+    getPlaylist,
+    getPlaylists,
+    getStarred,
+    playsOf,
+    removeFromPlaylist,
+    scrobble,
+    star
+} from "@/lib/subsonic.server";
 
 const apiFetch = vi.hoisted(() => vi.fn());
 
@@ -57,5 +69,25 @@ describe("the Subsonic client", () => {
         answer({error: {code: 70, message: "Playlist not found"}}, "failed");
 
         await expect(getPlaylist("x")).rejects.toThrow("Playlist not found");
+    });
+
+    it("reads play counts of an album's songs and the recently and most played albums", async () => {
+        answer({album: {id: "al-1", song: [{id: "nd-1", title: "Ouvertyr", playCount: 3, played: "2026-10-31T18:00:00Z"}, {id: "nd-2", title: "Final"}]}});
+        const songs = await getAlbumSongs("al-1");
+
+        expect(calledWith().pathname).toBe("/rest/getAlbum");
+        expect(playsOf(songs)).toEqual({
+            "nd-1": {playCount: 3, played: "2026-10-31T18:00:00Z"},
+            "nd-2": {playCount: 0, played: null},
+        });
+
+        answer({albumList2: {album: [{id: "al-1", name: "Nobel", playCount: 7}]}});
+        expect(await getAlbumList("frequent", 6)).toEqual([{id: "al-1", name: "Nobel", playCount: 7}]);
+        expect(calledWith().pathname).toBe("/rest/getAlbumList2");
+        expect(calledWith().searchParams.get("type")).toBe("frequent");
+        expect(calledWith().searchParams.get("size")).toBe("6");
+
+        answer({albumList2: {}});
+        expect(await getAlbumList("recent", 6)).toEqual([]);
     });
 });

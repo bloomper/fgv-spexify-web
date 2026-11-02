@@ -2,7 +2,11 @@ import "server-only";
 
 import {graphql} from "@/gql";
 import {runMutation, runQuery} from "@/lib/graphql.server";
-import type {AlbumFilter, AlbumInput, TrackInput} from "@/gql/graphql";
+import type {AlbumFilter, AlbumInput, AlbumKindInput, TrackInput} from "@/gql/graphql";
+
+export const KindFieldsFragment = graphql(`
+    fragment KindFields on AlbumKind { id nameSv nameEn isDefault }
+`);
 
 const MeQuery = graphql(`
     query Me {
@@ -14,7 +18,7 @@ const MeQuery = graphql(`
 const HomeQuery = graphql(`
     query Home {
         recentAlbums(limit: 12) {
-            id title year kind hasCover trackCount durationMs
+            id title year kind { ...KindFields } hasCover trackCount durationMs
             spex { id title year revival categoryId categoryName }
         }
         categories { id name albumCount }
@@ -25,7 +29,7 @@ const HomeQuery = graphql(`
 const AlbumsQuery = graphql(`
     query Albums($filter: AlbumFilter) {
         albums(filter: $filter) {
-            id title year kind hasCover published trackCount durationMs
+            id title year kind { ...KindFields } hasCover published trackCount durationMs
             spex { id title year revival categoryId categoryName }
         }
         categories { id name albumCount }
@@ -36,7 +40,7 @@ const AlbumsQuery = graphql(`
 const AlbumQuery = graphql(`
     query Album($id: ID!) {
         album(id: $id) {
-            id title year kind description hasCover published publishedAt trashedAt navidromeId trackCount durationMs
+            id title year kind { ...KindFields } description hasCover published publishedAt trashedAt navidromeId trackCount durationMs
             createdAt lastModifiedAt
             spex { id title year revival categoryId categoryName }
             tracks {
@@ -52,13 +56,28 @@ const SearchQuery = graphql(`
     query Search($q: String!) {
         search(q: $q) {
             albums {
-                id title year kind hasCover published trackCount durationMs
+                id title year kind { ...KindFields } hasCover published trackCount durationMs
                 spex { id title year revival categoryId categoryName }
             }
             tracks {
                 id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
                 lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing
             }
+        }
+    }
+`);
+
+const AlbumKindsQuery = graphql(`
+    query AlbumKinds {
+        albumKinds { ...KindFields position albumCount }
+    }
+`);
+
+const AlbumsByNavidromeIdsQuery = graphql(`
+    query AlbumsByNavidromeIds($ids: [String!]!) {
+        albumsByNavidromeIds(ids: $ids) {
+            id title year kind { ...KindFields } hasCover trackCount durationMs navidromeId
+            spex { id title year revival categoryId categoryName }
         }
     }
 `);
@@ -121,6 +140,18 @@ const TrackTrashMutation = graphql(`
 const TrackRestoreMutation = graphql(`
     mutation TrackRestore($id: ID!) { trackRestore(id: $id) { id } }
 `);
+const AlbumKindCreateMutation = graphql(`
+    mutation AlbumKindCreate($input: AlbumKindInput!) { albumKindCreate(input: $input) { id } }
+`);
+const AlbumKindUpdateMutation = graphql(`
+    mutation AlbumKindUpdate($id: ID!, $input: AlbumKindInput!) { albumKindUpdate(id: $id, input: $input) { id } }
+`);
+const AlbumKindsReorderMutation = graphql(`
+    mutation AlbumKindsReorder($ids: [ID!]!) { albumKindsReorder(ids: $ids) { id } }
+`);
+const AlbumKindDeleteMutation = graphql(`
+    mutation AlbumKindDelete($id: ID!) { albumKindDelete(id: $id) }
+`);
 const TrackDeleteMutation = graphql(`
     mutation TrackDelete($id: ID!) { trackDelete(id: $id) }
 `);
@@ -143,6 +174,14 @@ export async function getAlbum(id: string) {
 
 export async function search(q: string) {
     return (await runQuery(SearchQuery, {q}))?.search;
+}
+
+export async function getAlbumKinds() {
+    return (await runQuery(AlbumKindsQuery, {}))?.albumKinds ?? [];
+}
+
+export async function getAlbumsByNavidromeIds(ids: string[]) {
+    return ids.length === 0 ? [] : (await runQuery(AlbumsByNavidromeIdsQuery, {ids}))?.albumsByNavidromeIds ?? [];
 }
 
 export async function searchSpex(q: string) {
@@ -169,3 +208,7 @@ export const trackTrash = (id: string) => runMutation(TrackTrashMutation, {id});
 export const trackRestore = (id: string) => runMutation(TrackRestoreMutation, {id});
 export const trackDelete = (id: string) => runMutation(TrackDeleteMutation, {id});
 
+export const albumKindCreate = (input: AlbumKindInput) => runMutation(AlbumKindCreateMutation, {input});
+export const albumKindUpdate = (id: string, input: AlbumKindInput) => runMutation(AlbumKindUpdateMutation, {id, input});
+export const albumKindsReorder = (ids: string[]) => runMutation(AlbumKindsReorderMutation, {ids});
+export const albumKindDelete = (id: string) => runMutation(AlbumKindDeleteMutation, {id});

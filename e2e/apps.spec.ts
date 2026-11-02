@@ -1,4 +1,4 @@
-import {expect, test} from "./fixtures";
+import {answerDialog, expect, test} from "./fixtures";
 
 test.describe("My apps", () => {
     test("creates an app password, shows it once and revokes it", async ({page, loginAs}) => {
@@ -13,8 +13,8 @@ test.describe("My apps", () => {
         await page.getByRole("button", {name: "Klar"}).click();
         await expect(page.getByText("Telefon, Symfonium")).toBeVisible();
 
-        page.once("dialog", dialog => dialog.accept());
         await page.getByRole("button", {name: "Återkalla"}).click();
+        await answerDialog(page, "Bekräfta");
         await expect(page.getByText("Telefon, Symfonium")).toHaveCount(0);
     });
 
@@ -29,8 +29,8 @@ test.describe("My apps", () => {
         await page.getByRole("button", {name: "Klar"}).click();
         await expect(page.getByText("Feishin")).toBeVisible();
 
-        page.once("dialog", dialog => dialog.accept());
         await page.getByRole("button", {name: "Återkalla"}).click();
+        await answerDialog(page, "Bekräfta");
         await expect(page.getByText("Feishin")).toHaveCount(0);
     });
 });

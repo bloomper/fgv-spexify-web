@@ -7,15 +7,17 @@ import {toast} from "sonner";
 import {Trash2} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {deletePlaylistAction} from "@/app/(app)/actions.server";
+import {useDialogs} from "@/components/dialogs.client";
 
 export function DeletePlaylistButton({id}: { id: string }) {
     const t = useTranslations("Playlists");
+    const {confirm} = useDialogs();
     const router = useRouter();
     const [pending, startTransition] = useTransition();
 
     return (
-        <Button variant="outline" disabled={pending} onClick={() => {
-            if (!window.confirm(t("confirmDelete"))) {
+        <Button variant="outline" disabled={pending} onClick={async () => {
+            if (!await confirm({title: t("confirmDelete"), confirmLabel: t("delete"), destructive: true})) {
                 return;
             }
             startTransition(async () => {

@@ -2,36 +2,40 @@
 
 import * as React from "react";
 import {useEffect, useState, useTransition} from "react";
-import {useTranslations} from "next-intl";
+import {useLocale, useTranslations} from "next-intl";
 import {toast} from "sonner";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Textarea} from "@/components/ui/textarea";
 import {NativeSelect, NativeSelectOption} from "@/components/ui/native-select";
-import type {AlbumInput, AlbumKind} from "@/gql/graphql";
+import type {AlbumInput} from "@/gql/graphql";
 import {searchSpexAction} from "@/app/(app)/manage/actions.server";
+import {type KindName, kindName} from "@/utils/format";
 
 type Spex = { id: string; title?: string | null; year?: number | null; revival: boolean; categoryName?: string | null };
 
-const KINDS: AlbumKind[] = ["SHOW", "STUDIO", "COMPILATION", "OTHER"];
+export type KindOption = KindName & { id: string };
 
 /**
  * An album's fields. The spex is searched in Spexregister; the title and year default to the spex's.
  */
-export function AlbumForm({initial, submitLabel, onSubmit}: {
-    initial?: { spex?: Spex | null; title: string; year?: number | null; kind: AlbumKind; description?: string | null };
+export function AlbumForm({kinds, initial, submitLabel, onSubmit}: {
+    /** The album kinds in order; the first is the default. */
+    kinds: KindOption[];
+    initial?: { spex?: Spex | null; title: string; year?: number | null; kindId: string; description?: string | null };
     submitLabel: string;
     onSubmit: (input: AlbumInput) => Promise<boolean>;
 }) {
     const t = useTranslations("Manage");
     const ta = useTranslations("Album");
+    const locale = useLocale();
     const [spex, setSpex] = useState<Spex | null>(initial?.spex ?? null);
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<Spex[]>([]);
     const [title, setTitle] = useState(initial?.title ?? "");
     const [year, setYear] = useState(initial?.year ? String(initial.year) : "");
-    const [kind, setKind] = useState<AlbumKind>(initial?.kind ?? "SHOW");
+    const [kindId, setKindId] = useState(initial?.kindId ?? kinds[0]?.id ?? "");
     const [description, setDescription] = useState(initial?.description ?? "");
     const [pending, startTransition] = useTransition();
     const [searching, startSearch] = useTransition();
@@ -61,7 +65,7 @@ export function AlbumForm({initial, submitLabel, onSubmit}: {
                 spexId: spex?.id ?? null,
                 title: title.trim() || null,
                 year: year ? Number(year) : null,
-                kind,
+                kindId: kindId || null,
                 description: description.trim() || null,
             });
         });
@@ -113,8 +117,8 @@ export function AlbumForm({initial, submitLabel, onSubmit}: {
                 </div>
                 <div className="space-y-1.5">
                     <Label htmlFor="kind">{t("kind")}</Label>
-                    <NativeSelect id="kind" value={kind} onChange={event => setKind(event.target.value as AlbumKind)}>
-                        {KINDS.map(value => <NativeSelectOption key={value} value={value}>{ta(`kind.${value}`)}</NativeSelectOption>)}
+                    <NativeSelect id="kind" value={kindId} onChange={event => setKindId(event.target.value)}>
+                        {kinds.map(kind => <NativeSelectOption key={kind.id} value={kind.id}>{kindName(kind, locale)}</NativeSelectOption>)}
                     </NativeSelect>
                 </div>
             </div>

@@ -3,20 +3,20 @@
 import {useRouter} from "next/navigation";
 import {useTranslations} from "next-intl";
 import {toast} from "sonner";
-import {AlbumForm} from "@/components/album/album-form.client";
+import {AlbumForm, type KindOption} from "@/components/album/album-form.client";
 import {createAlbumAction} from "@/app/(app)/manage/actions.server";
 import {track} from "@/utils/umami";
 
-export function NewAlbum() {
+export function NewAlbum({kinds}: { kinds: KindOption[] }) {
     const t = useTranslations("Manage");
     const router = useRouter();
 
     return (
-        <AlbumForm submitLabel={t("create")} onSubmit={async input => {
+        <AlbumForm kinds={kinds} submitLabel={t("create")} onSubmit={async input => {
             const result = await createAlbumAction(input);
 
             if (result.ok && result.data) {
-                track("album-create", {kind: input.kind});
+                track("album-create", {defaultKind: !input.kindId || input.kindId === kinds[0]?.id});
                 router.push(`/manage/albums/${result.data}`);
                 return true;
             }

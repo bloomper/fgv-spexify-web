@@ -49,9 +49,19 @@ lives in Navidrome per user (stars, playlists, play counts). Stack and setup: `R
 - **Uploads** use tus through `/api/uploads/[[...path]]`, which forwards to the server with the token; `uploadFile` in
   `src/components/upload/tus.client.ts` resolves with the upload id, which `trackCreate` or `trackReplaceAudio` turns
   into a track. Chunks are 50 MB, below Cloudflare's request limit, and `proxyClientMaxBodySize` is 55 MB.
-- **Stars and playlists** live in Navidrome per user and are reached through the server's Subsonic gateway
+- **Stars, playlists and plays** live in Navidrome per user and are reached through the server's Subsonic gateway
   (`src/lib/subsonic.server.ts`) with the user's token. They work only for published tracks, which have a
-  `navidromeId`; `tracksByNavidromeIds` maps Navidrome's songs back to tracks.
+  `navidromeId`; `tracksByNavidromeIds` and `albumsByNavidromeIds` map Navidrome's songs and albums back. Play counts
+  and when last played come from `getAlbum`, `getStarred2` and `getPlaylist` (`toRows(tracks, plays)`); the start
+  page's "recently played" and "most played" rows from `getAlbumList2` (`getPlayedAlbums`). All of it falls back to
+  nothing when Navidrome is unavailable.
+- **Album kinds** are configured by admins (`/admin/kinds`) and come from `albumKinds`; show them with
+  `kindName(kind, locale)`. The first kind is the default and is not shown as a badge (`kind.isDefault`).
+- **The player bar** sets `--player-height` on `<html>` while it shows; the page and the sidebar (with the account
+  menu and logout at its bottom) end above it.
+- **Dialogs**: never `window.confirm`, `window.prompt` or `window.alert`. Ask with `useDialogs()` (`confirm` and
+  `prompt`, from `DialogsProvider` in `src/components/dialogs.client.tsx`, which the `(app)` layout mounts). The e2e
+  fixture `noNativeDialogs` fails any test that opens a native dialog; answer the app's own with `answerDialog`.
 - **App passwords and API keys** (`/apps`) are shown once, right after they are created.
 - **Editors** work under `/manage` (albums, the trash, the change log), **admins** under `/admin` (the music server,
   users, settings). New albums start unpublished; publishing an album or a track puts it into Navidrome.
@@ -75,14 +85,14 @@ drops query strings.
 
 Custom events go through `track()` (`src/utils/umami.ts`; import it as `trackEvent` where `track` is a variable), a
 no-op when the tracker isn't loaded. Event data is enum values, counts and booleans only — never names, emails, ids or
-typed text. Events: `album-create` (`kind`), `track-upload`, `album-publish` (`published`), `track-star` (`starred`), `playlist-add`
+typed text. Events: `album-create` (`defaultKind`), `track-upload`, `album-publish` (`published`), `track-star` (`starred`), `playlist-add`
 (`created`), `app-password-create`, `api-key-create`, `language-change` and `theme-change`, and through
 `data-umami-event` on the links `track-download` and `album-download`.
 
 ## Testing
 
 - E2E specs per area (listening/watching, editing, uploads, trash and change log, admin, errors, language). The mock
-  backend keeps state per test (reset automatically) and implements tus; the `mock` fixture switches it: `spexregister(up)`, `navidrome(up)`, `failNext(operation, classification)` and `state()`.
+  backend keeps state per test (reset automatically) and implements tus; the `mock` fixture switches it: `spexregister(up)`, `navidrome(up)`, `plays({navidromeId: {playCount, played}})`, `failNext(operation, classification)` and `state()`.
   `state()` lets a spec check what the web sent.
 - Call `hydrated(page, selector)` before `setInputFiles`: a file chosen before React hydrates the input is lost.
 - Unit tests in `__tests__/` beside the code. E2E specs in `e2e/`, one per area, with personas `admin`, `editor`,

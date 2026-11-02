@@ -55,3 +55,67 @@ test.describe("Editing", () => {
         await expect(page.getByRole("switch").first()).not.toBeChecked();
     });
 });
+
+test.describe("What the listener played", () => {
+    test("the start page shows recently and most played albums, and the album how often each track was played", async ({page, loginAs, mock}) => {
+        await mock.plays({
+            "al-1": {playCount: 5, played: "2026-10-31T18:00:00Z"},
+            [`nd-${uuidOf(11)}`]: {playCount: 3, played: "2026-10-31T18:00:00Z"},
+        });
+        await loginAs("listener");
+
+        const recently = page.getByRole("region", {name: "Senast spelat av dig"});
+        const most = page.getByRole("region", {name: "Mest spelat av dig"});
+
+        await expect(recently.getByRole("link", {name: /Nobel/})).toBeVisible();
+        await expect(recently.getByText("Spelat 2026-10-31")).toBeVisible();
+        await expect(most.getByText("5 spelningar")).toBeVisible();
+
+        await page.goto(`/albums/${uuidOf(1)}`);
+        const ouvertyr = page.getByRole("listitem").filter({hasText: "Ouvertyr"});
+
+        await expect(ouvertyr.getByText("Spelad 3 gånger")).toBeVisible();
+        await expect(ouvertyr.getByText("2026-10-31")).toBeVisible();
+        await expect(page.getByRole("listitem").filter({hasText: "Kärleksduetten"}).getByText("Inte spelad")).toBeVisible();
+    });
+
+    test("without plays the start page has no played rows", async ({page, loginAs}) => {
+        await loginAs("listener");
+
+        await expect(page.getByRole("heading", {name: "Senast publicerat"})).toBeVisible();
+        await expect(page.getByRole("heading", {name: "Senast spelat av dig"})).toHaveCount(0);
+    });
+
+    test("hovering a track shows a play button in place of its number", async ({page, loginAs}) => {
+        await loginAs("listener");
+        await page.goto(`/albums/${uuidOf(1)}`);
+
+        const row = page.getByRole("listitem").filter({hasText: "Kärleksduetten"});
+        const play = row.getByRole("button", {name: "Spela Kärleksduetten"});
+
+        await expect(play.getByText("2", {exact: true})).toBeVisible();
+        await expect(play.getByTestId("hover-play")).toBeHidden();
+        await row.hover();
+        await expect(play.getByTestId("hover-play")).toBeVisible();
+        await expect(play.getByText("2", {exact: true})).toBeHidden();
+    });
+
+    test("with the player open, the account menu and logout are still reachable", async ({page, loginAs}) => {
+        await page.setViewportSize({width: 1280, height: 720});
+        await loginAs("listener");
+        await page.goto(`/albums/${uuidOf(1)}`);
+        await page.getByRole("button", {name: "Spela allt"}).click();
+
+        const player = page.getByRole("region", {name: "Spelare"});
+
+        await expect(player).toContainText("Ouvertyr");
+
+        const account = page.locator("[data-sidebar=footer]").getByRole("button").first();
+        const accountBox = await account.boundingBox();
+        const playerBox = await player.boundingBox();
+
+        expect(accountBox!.y + accountBox!.height).toBeLessThanOrEqual(playerBox!.y);
+        await account.click();
+        await expect(page.getByRole("menuitem", {name: "Logga ut"})).toBeVisible();
+    });
+});

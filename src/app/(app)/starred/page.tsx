@@ -10,7 +10,7 @@ export default async function StarredPage() {
     return withPolicyPage(Policies.app.requireAccess, async () => {
         const t = await getTranslations("Starred");
         const listening = await getListeningState();
-        const rows = toRows(await getTracksByNavidromeIds(listening.starred));
+        const rows = toRows(await getTracksByNavidromeIds(listening.starred), listening.starredPlays);
 
         return (
             <div className="space-y-6 p-4 sm:p-6">

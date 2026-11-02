@@ -1,5 +1,5 @@
 import Link from "next/link";
-import {getTranslations} from "next-intl/server";
+import {getLocale, getTranslations} from "next-intl/server";
 import {Plus} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Badge} from "@/components/ui/badge";
@@ -7,11 +7,12 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/c
 import {getAlbums} from "@/lib/catalog/catalog.server";
 import {Policies} from "@/utils/policy.server";
 import {withPolicyPage} from "@/utils/route.server";
+import {kindName} from "@/utils/format";
 
 export default async function ManageAlbumsPage() {
     return withPolicyPage(Policies.editor.requireEditor, async () => {
         const t = await getTranslations("Manage");
-        const ta = await getTranslations("Album");
+        const locale = await getLocale();
         const data = await getAlbums({includeUnpublished: true});
 
         return (
@@ -36,7 +37,7 @@ export default async function ManageAlbumsPage() {
                                 <TableRow key={album.id}>
                                     <TableCell className="whitespace-normal">
                                         <Link href={`/manage/albums/${album.id}`} className="font-medium hover:underline">{album.title}</Link>
-                                        {album.kind !== "SHOW" && <span className="ml-2 text-xs text-muted-foreground">{ta(`kind.${album.kind}`)}</span>}
+                                        {!album.kind.isDefault && <span className="ml-2 text-xs text-muted-foreground">{kindName(album.kind, locale)}</span>}
                                     </TableCell>
                                     <TableCell className="tabular-nums">{album.year}</TableCell>
                                     <TableCell className="hidden sm:table-cell">{album.spex?.categoryName}</TableCell>

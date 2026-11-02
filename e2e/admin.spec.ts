@@ -1,4 +1,4 @@
-import {expect, test} from "./fixtures";
+import {answerDialog, expect, test} from "./fixtures";
 
 test.describe("Administration", () => {
     test.beforeEach(async ({loginAs}) => {
@@ -32,8 +32,8 @@ test.describe("Administration", () => {
         await expect(page.getByText("Spärren är hävd")).toBeVisible();
         await expect(olle.getByRole("button", {name: "Häv spärren"})).toHaveCount(0);
 
-        page.once("dialog", dialog => dialog.accept());
         await lisa.getByRole("button", {name: "Återkalla allt"}).click();
+        await answerDialog(page, "Återkalla allt");
         await expect(page.getByText("Återkallat", {exact: true})).toBeVisible();
         await expect(lisa.getByRole("button", {name: "Återkalla allt"})).toHaveCount(0);
     });

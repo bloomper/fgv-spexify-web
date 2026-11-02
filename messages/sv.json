@@ -245,7 +245,8 @@
     "adminLibrary": "Musikservern",
     "adminUsers": "Användare",
     "adminMaintenance": "Underhåll",
-    "adminSettings": "Inställningar"
+    "adminSettings": "Inställningar",
+    "adminKinds": "Albumsorter"
   },
   "Home": {
     "title": "Spexify",
@@ -256,7 +257,11 @@
     "recent": "Senast publicerat",
     "allAlbums": "Alla album",
     "empty": "Inga album är publicerade ännu.",
-    "years": "År"
+    "years": "År",
+    "recentlyPlayed": "Senast spelat av dig",
+    "mostPlayed": "Mest spelat av dig",
+    "lastPlayed": "Spelat {date}",
+    "plays": "{count, plural, =1 {# spelning} other {# spelningar}}"
   },
   "Albums": {
     "title": "Album",
@@ -267,12 +272,6 @@
     "none": "Inga album matchar."
   },
   "Album": {
-    "kind": {
-      "SHOW": "Föreställning",
-      "STUDIO": "Studio",
-      "COMPILATION": "Samling",
-      "OTHER": "Övrigt"
-    },
     "revival": "Nyuppsättning",
     "unpublished": "Opublicerad",
     "fileMissing": "Filen saknas",
@@ -299,7 +298,12 @@
     "addedToPlaylist": "Tillagd i spellistan",
     "removeFromPlaylist": "Ta bort ur spellistan",
     "goToAlbum": "Gå till albumet",
-    "watchInSpexflix": "Se i Spexflix: {video}"
+    "watchInSpexflix": "Se i Spexflix: {video}",
+    "newPlaylistTitle": "Ny spellista",
+    "createPlaylist": "Skapa",
+    "plays": "{count, plural, =1 {Spelad # gång} other {Spelad # gånger}}",
+    "lastPlayed": "Senast spelad {date}",
+    "neverPlayed": "Inte spelad"
   },
   "Player": {
     "label": "Spelare",
@@ -527,5 +531,26 @@
     "minutes": "Spärrens längd (minuter)",
     "save": "Spara",
     "saved": "Sparat"
+  },
+  "AdminKinds": {
+    "title": "Albumsorter",
+    "text": "Sorterna som ett album kan ha, t.ex. föreställning eller studioinspelning. Den första är förvald för nya album och visas inte som etikett. En sort som något album har, även i papperskorgen, kan inte raderas.",
+    "nameSv": "Namn på svenska",
+    "nameEn": "Namn på engelska",
+    "albums": "{count, plural, =0 {Inga album} =1 {# album} other {# album}}",
+    "default": "Förvald",
+    "moveUp": "Flytta upp {name}",
+    "moveDown": "Flytta ner {name}",
+    "delete": "Radera",
+    "deleteKind": "Radera {name}",
+    "confirmDelete": "Radera albumsorten {name}?",
+    "inUse": "Används av album",
+    "add": "Lägg till sort",
+    "added": "Sorten är tillagd",
+    "saved": "Sparat",
+    "deleted": "Sorten är raderad",
+    "save": "Spara",
+    "edit": "Ändra {name}",
+    "cancel": "Avbryt"
   }
 }

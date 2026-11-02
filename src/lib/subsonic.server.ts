@@ -4,7 +4,7 @@ import {apiFetch} from "@/lib/api.server";
 
 /**
  * Spexify's Subsonic gateway, called with the user's Keycloak token, for what lives in Navidrome per user: stars,
- * playlists and play counts.
+ * playlists, play counts and when the user last played a song or album.
  */
 async function subsonic<T>(endpoint: string, params: Record<string, string | string[]> = {}): Promise<T> {
     const query = new URLSearchParams({v: "1.16.1", c: "spexify-web", f: "json"});
@@ -25,13 +25,48 @@ async function subsonic<T>(endpoint: string, params: Record<string, string | str
     return result;
 }
 
-export type SubsonicSong = { id: string; title: string; album: string; albumId: string; duration?: number };
+export type SubsonicSong = {
+    id: string;
+    title: string;
+    album: string;
+    albumId: string;
+    duration?: number;
+    /** How often the user played it; missing when never. */
+    playCount?: number;
+    /** When the user last played it; missing when never. */
+    played?: string;
+};
+export type SubsonicAlbum = { id: string; name: string; playCount?: number; played?: string };
+/** Play counts and when last played, by Navidrome's song id. */
+export type Plays = Record<string, { playCount: number; played: string | null }>;
+
+export function playsOf(songs: SubsonicSong[]): Plays {
+    return Object.fromEntries(songs.map(song => [song.id, {playCount: song.playCount ?? 0, played: song.played ?? null}]));
+}
 export type SubsonicPlaylist = { id: string; name: string; songCount: number; duration: number };
 
 export async function getStarred(): Promise<SubsonicSong[]> {
     const result = await subsonic<{ starred2: { song?: SubsonicSong[] } }>("getStarred2");
 
     return result.starred2.song ?? [];
+}
+
+/**
+ * The songs of an album in Navidrome, with the user's play counts.
+ */
+export async function getAlbumSongs(navidromeAlbumId: string): Promise<SubsonicSong[]> {
+    const result = await subsonic<{ album: { song?: SubsonicSong[] } }>("getAlbum", {id: navidromeAlbumId});
+
+    return result.album.song ?? [];
+}
+
+/**
+ * The user's recently played ("recent") or most played ("frequent") albums, at most {@code size}.
+ */
+export async function getAlbumList(type: "recent" | "frequent", size: number): Promise<SubsonicAlbum[]> {
+    const result = await subsonic<{ albumList2: { album?: SubsonicAlbum[] } }>("getAlbumList2", {type, size: String(size)});
+
+    return result.albumList2.album ?? [];
 }
 
 export async function star(navidromeId: string, starred: boolean) {

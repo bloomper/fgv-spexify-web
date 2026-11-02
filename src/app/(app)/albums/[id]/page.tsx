@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {notFound} from "next/navigation";
-import {getTranslations} from "next-intl/server";
+import {getLocale, getTranslations} from "next-intl/server";
 import {Download, Pencil} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
@@ -9,10 +9,11 @@ import {PlayAllButtons, TrackList} from "@/components/album/track-list.client";
 import {toRows} from "@/components/album/to-rows";
 import {formatDuration} from "@/components/player/lyrics";
 import {getAlbum, getMe} from "@/lib/catalog/catalog.server";
-import {getListeningState, spexflixUrl} from "@/lib/catalog/listening.server";
+import {getAlbumPlays, getListeningState, spexflixUrl} from "@/lib/catalog/listening.server";
 import {Policies} from "@/utils/policy.server";
 import {withPolicyPage} from "@/utils/route.server";
 import {isEditor} from "@/utils/auth";
+import {kindName} from "@/utils/format";
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -25,13 +26,14 @@ export default async function AlbumPage({params}: { params: Promise<{ id: string
         }
 
         const t = await getTranslations("Album");
+        const locale = await getLocale();
         const [album, listening, me] = await Promise.all([getAlbum(id), getListeningState(), getMe()]);
 
         if (!album) {
             notFound();
         }
 
-        const rows = toRows(album.tracks);
+        const rows = toRows(album.tracks, await getAlbumPlays(album.navidromeId));
         const register = process.env.SPEXREGISTER_WEB_URL?.replace(/\/$/, "");
 
         return (
@@ -40,7 +42,7 @@ export default async function AlbumPage({params}: { params: Promise<{ id: string
                     <CoverImage albumId={album.id} title={album.title} className="w-48 shrink-0 self-center rounded-lg shadow sm:self-start"/>
                     <div className="min-w-0 space-y-3">
                         <div className="flex flex-wrap gap-1.5">
-                            <Badge variant="secondary">{t(`kind.${album.kind}`)}</Badge>
+                            <Badge variant="secondary">{kindName(album.kind, locale)}</Badge>
                             {album.spex?.revival && <Badge variant="secondary">{t("revival")}</Badge>}
                             {!album.published && <Badge variant="outline">{t("unpublished")}</Badge>}
                         </div>

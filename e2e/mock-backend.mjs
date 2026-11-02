@@ -58,11 +58,17 @@ function resetState() {
             {job: "SPEX_REFRESH", schedule: "0 15 3 * * *", running: false, lastStartedAt: null, lastFinishedAt: null, lastSucceeded: null},
             {job: "UPLOAD_CLEANUP", schedule: "0 5 * * * *", running: true, lastStartedAt: "2026-11-01T10:05:00Z", lastFinishedAt: null, lastSucceeded: null},
         ],
+        kinds: [
+            {id: uuidOf(901), nameSv: "Föreställning", nameEn: "Show", position: 1},
+            {id: uuidOf(902), nameSv: "Studio", nameEn: "Studio", position: 2},
+            {id: uuidOf(903), nameSv: "Samling", nameEn: "Compilation", position: 3},
+            {id: uuidOf(904), nameSv: "Övrigt", nameEn: "Other", position: 4},
+        ],
         albums: [
-            {id: uuidOf(1), title: "Nobel", year: 1975, kind: "SHOW", description: "Inspelat 1975.", hasCover: false,
+            {id: uuidOf(1), title: "Nobel", year: 1975, kindId: uuidOf(901), description: "Inspelat 1975.", hasCover: false,
                 published: true, publishedAt: "2026-10-01T10:00:00Z", trashedAt: null, navidromeId: "al-1",
                 createdAt: "2026-10-01T10:00:00Z", lastModifiedAt: null, spex: SPEX},
-            {id: uuidOf(2), title: "Opublicerat album", year: 2026, kind: "STUDIO", description: null, hasCover: false,
+            {id: uuidOf(2), title: "Opublicerat album", year: 2026, kindId: uuidOf(902), description: null, hasCover: false,
                 published: false, publishedAt: null, trashedAt: null, navidromeId: null,
                 createdAt: "2026-10-02T10:00:00Z", lastModifiedAt: null, spex: null},
         ],
@@ -72,6 +78,8 @@ function resetState() {
             track(uuidOf(21), uuidOf(2), "Opublicerat album", 1, "Hemlig låt", {published: false, listed: false, navidromeId: null}),
         ],
         starred: [],
+        // Navidrome id of a song or album -> how often the listener played it and when last
+        plays: {},
         playlists: [{id: "pl-1", name: "Favoriter", entries: [`nd-${uuidOf(11)}`]}],
         appPasswords: [],
         apiKeys: [],
@@ -111,10 +119,16 @@ const visibleAlbums = persona => state.albums.filter(album => !album.trashedAt &
 const tracksOf = (persona, albumId) => state.tracks
     .filter(t => t.albumId === albumId && (isEditor(persona) ? !t.trashedAt : t.listed))
     .sort((a, b) => a.discNumber - b.discNumber || a.trackNumber - b.trackNumber);
+const sortedKinds = () => [...state.kinds].sort((a, b) => a.position - b.position);
+const kindOf = kindId => {
+    const kind = state.kinds.find(candidate => candidate.id === kindId);
+
+    return {...kind, isDefault: sortedKinds()[0]?.id === kindId};
+};
 const withCounts = (persona, album) => {
     const tracks = tracksOf(persona, album.id);
 
-    return {...album, trackCount: tracks.length, durationMs: tracks.reduce((sum, t) => sum + t.durationMs, 0)};
+    return {...album, kind: kindOf(album.kindId), trackCount: tracks.length, durationMs: tracks.reduce((sum, t) => sum + t.durationMs, 0)};
 };
 const isAdmin = persona => persona.roles.includes("ADMIN");
 
@@ -224,7 +238,7 @@ const resolvers = {
         }
 
         const album = {id: uuidOf(state.nextId++), title: input.title || SPEX.title, year: input.year ?? SPEX.year,
-            kind: input.kind, description: input.description, hasCover: false, published: false, publishedAt: null,
+            kindId: input.kindId ?? sortedKinds()[0].id, description: input.description, hasCover: false, published: false, publishedAt: null,
             trashedAt: null, navidromeId: null, createdAt: new Date().toISOString(), lastModifiedAt: null,
             spex: input.spexId ? SPEX : null};
 
@@ -285,7 +299,7 @@ const resolvers = {
 
         const album = albumById(id);
 
-        Object.assign(album, {title: input.title || album.title, year: input.year ?? album.year, kind: input.kind,
+        Object.assign(album, {title: input.title || album.title, year: input.year ?? album.year, kindId: input.kindId ?? album.kindId,
             description: input.description ?? null, lastModifiedAt: new Date().toISOString()});
         state.tracks.filter(t => t.albumId === id).forEach(t => t.albumTitle = album.title);
         audit(persona, "UPDATE", "ALBUM", id, `Ändrade albumet ${album.title}`);
@@ -403,7 +417,7 @@ const resolvers = {
         const trashedAlbums = state.albums.filter(album => album.trashedAt);
 
         return {trash: {
-            albums: trashedAlbums.map(album => ({...album, trackCount: state.tracks.filter(t => t.albumId === album.id).length})),
+            albums: trashedAlbums.map(album => ({...album, kind: kindOf(album.kindId), trackCount: state.tracks.filter(t => t.albumId === album.id).length})),
             tracks: state.tracks.filter(t => t.trashedAt && !trashedAlbums.some(album => album.id === t.albumId)),
         }};
     },
@@ -447,6 +461,43 @@ const resolvers = {
         state.apiKeys = state.apiKeys.filter(key => key.id !== id);
         return {apiKeyRevoke: null};
     },
+    AlbumKinds: persona => {
+        requireUser(persona);
+        return {albumKinds: sortedKinds().map(kind => ({...kindOf(kind.id), albumCount: state.albums.filter(album => album.kindId === kind.id).length}))};
+    },
+    AlbumsByNavidromeIds: (persona, {ids}) => ({
+        albumsByNavidromeIds: ids.map(id => state.albums.find(album => album.navidromeId === id && album.published && !album.trashedAt))
+            .filter(Boolean).map(album => withCounts(persona, album)),
+    }),
+    AlbumKindCreate: (persona, {input}) => {
+        requireAdmin(persona);
+
+        const kind = {id: uuidOf(state.nextId++), nameSv: input.nameSv, nameEn: input.nameEn, position: state.kinds.length + 1};
+
+        state.kinds.push(kind);
+        return {albumKindCreate: {id: kind.id}};
+    },
+    AlbumKindUpdate: (persona, {id, input}) => {
+        requireAdmin(persona);
+        Object.assign(state.kinds.find(kind => kind.id === id), {nameSv: input.nameSv, nameEn: input.nameEn});
+        return {albumKindUpdate: {id}};
+    },
+    AlbumKindsReorder: (persona, {ids}) => {
+        requireAdmin(persona);
+        ids.forEach((id, i) => state.kinds.find(kind => kind.id === id).position = i + 1);
+        return {albumKindsReorder: ids.map(id => ({id}))};
+    },
+    AlbumKindDelete: (persona, {id}) => {
+        requireAdmin(persona);
+
+        const count = state.albums.filter(album => album.kindId === id).length;
+
+        if (count > 0) {
+            throw new GraphQLError("CONFLICT", `Albumsorten används av ${count} album och kan inte raderas.`);
+        }
+        state.kinds = state.kinds.filter(kind => kind.id !== id);
+        return {albumKindDelete: null};
+    },
     TracksByIds: (persona, {ids}) => ({
         tracksByIds: ids.map(id => state.tracks.find(t => t.id === id && t.listed)).filter(Boolean)
             .map(t => ({...t, spexId: state.albums.find(album => album.id === t.albumId)?.spex?.id ?? null})),
@@ -464,8 +515,32 @@ function handleRest(url, res) {
     const endpoint = url.pathname.slice("/rest/".length);
     const id = url.searchParams.get("id");
 
-    if (endpoint === "getStarred2") {
-        subsonic(res, {starred2: {song: state.starred.map(navidromeId => ({id: navidromeId, title: "", album: "", albumId: ""}))}});
+    const songOf = navidromeId => ({id: navidromeId, title: "", album: "", albumId: "",
+        ...(state.plays[navidromeId] ? {playCount: state.plays[navidromeId].playCount, played: state.plays[navidromeId].played} : {})});
+
+    if (endpoint === "scrobble") {
+        if (url.searchParams.get("submission") === "true") {
+            const track = state.tracks.find(t => t.navidromeId === id);
+            const albumId = state.albums.find(album => album.id === track?.albumId)?.navidromeId;
+            const now = new Date().toISOString();
+
+            for (const played of [id, albumId].filter(Boolean)) {
+                state.plays[played] = {playCount: (state.plays[played]?.playCount ?? 0) + 1, played: now};
+            }
+        }
+        subsonic(res, {});
+    } else if (endpoint === "getAlbum") {
+        const album = state.albums.find(candidate => candidate.navidromeId === id);
+
+        subsonic(res, {album: {id, song: state.tracks.filter(t => t.albumId === album?.id && t.navidromeId).map(t => songOf(t.navidromeId))}});
+    } else if (endpoint === "getAlbumList2") {
+        const played = Object.entries(state.plays)
+            .filter(([navidromeId]) => state.albums.some(album => album.navidromeId === navidromeId))
+            .sort(([, a], [, b]) => url.searchParams.get("type") === "frequent" ? b.playCount - a.playCount : b.played.localeCompare(a.played));
+
+        subsonic(res, {albumList2: {album: played.map(([navidromeId, plays]) => ({id: navidromeId, name: "", ...plays}))}});
+    } else if (endpoint === "getStarred2") {
+        subsonic(res, {starred2: {song: state.starred.map(songOf)}});
     } else if (endpoint === "star") {
         state.starred.push(id);
         subsonic(res, {});
@@ -482,7 +557,7 @@ function handleRest(url, res) {
                 version: "1.16.1", error: {code: 70, message: "Playlist not found"}}}));
             return;
         }
-        subsonic(res, {playlist: {...playlistOf(playlist), entry: playlist.entries.map(navidromeId => ({id: navidromeId, title: "", album: "", albumId: ""}))}});
+        subsonic(res, {playlist: {...playlistOf(playlist), entry: playlist.entries.map(songOf)}});
     } else if (endpoint === "createPlaylist") {
         state.playlists.push({id: `pl-${state.nextId++}`, name: url.searchParams.get("name"), entries: url.searchParams.getAll("songId")});
         subsonic(res, {});
@@ -727,6 +802,9 @@ async function handle(req, res, chunks) {
         } else if (req.method === "POST" && path === "/__navidrome") {
             state.navidromeUp = JSON.parse(body).up;
             res.writeHead(204).end();
+        } else if (req.method === "POST" && path === "/__plays") {
+            Object.assign(state.plays, JSON.parse(body).plays);
+            res.writeHead(204).end();
         } else if (req.method === "POST" && path === "/__fail") {
             const {operation, classification} = JSON.parse(body);
 
@@ -734,7 +812,8 @@ async function handle(req, res, chunks) {
             res.writeHead(204).end();
         } else if (req.method === "GET" && path === "/__state") {
             res.writeHead(200, {"content-type": "application/json"}).end(JSON.stringify({
-                uploads: state.uploads.size, scanRequested: state.scanRequested, starred: state.starred,
+                uploads: state.uploads.size, scanRequested: state.scanRequested, starred: state.starred, plays: state.plays,
+                kinds: state.kinds,
                 tracks: state.tracks.map(({id, albumId, title, trackNumber, published, listed, trashedAt}) =>
                     ({id, albumId, title, trackNumber, published, listed, trashedAt})),
                 albums: state.albums.map(({id, title, published, hasCover, trashedAt}) => ({id, title, published, hasCover, trashedAt})),
