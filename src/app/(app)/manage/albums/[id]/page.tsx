@@ -5,6 +5,8 @@ import {getAlbum, getAlbumKinds} from "@/lib/catalog/catalog.server";
 import {Policies} from "@/utils/policy.server";
 import {withPolicyPage} from "@/utils/route.server";
 import {AlbumEditor} from "./album-editor.client";
+import {RecordHistory} from "@/components/audit/change-log";
+import {auditLink} from "../../audit/links";
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -30,6 +32,7 @@ export default async function EditAlbumPage({params}: { params: Promise<{ id: st
                     <Link href={`/albums/${album.id}`} className="text-sm text-primary hover:underline">{t("viewAsListener")}</Link>
                 </div>
                 <AlbumEditor album={album} kinds={kinds}/>
+                <RecordHistory entityId={album.id} path="/manage/audit" linkOf={auditLink}/>
             </div>
         );
     });

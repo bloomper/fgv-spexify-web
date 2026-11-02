@@ -1,7 +1,17 @@
 "use server";
 
 import {revalidatePath} from "next/cache";
-import {addToPlaylist, createPlaylist, deletePlaylist, removeFromPlaylist, setRating, star, starAlbum} from "@/lib/subsonic.server";
+import {
+    addToPlaylist,
+    createPlaylist,
+    deletePlaylist,
+    removeFromPlaylist,
+    setPlaylistSongs,
+    setRating,
+    star,
+    starAlbum,
+    updatePlaylistInfo,
+} from "@/lib/subsonic.server";
 import {withPolicyAction} from "@/utils/route.server";
 import {Policies} from "@/utils/policy.server";
 
@@ -57,6 +67,29 @@ export async function addToPlaylistAction(playlistId: string | null, name: strin
 export async function removeFromPlaylistAction(playlistId: string, index: number): Promise<SimpleResult> {
     return withPolicyAction(Policies.app.requireAccess, () => attempt(async () => {
         await removeFromPlaylist(playlistId, index);
+        revalidatePath(`/playlists/${playlistId}`);
+    }));
+}
+
+export async function updatePlaylistAction(playlistId: string, info: { name?: string; comment?: string; public?: boolean }): Promise<SimpleResult> {
+    return withPolicyAction(Policies.app.requireAccess, () => attempt(async () => {
+        const name = info.name?.trim();
+
+        if (info.name !== undefined && (!name || name.length > 100)) {
+            throw new Error("Invalid name");
+        }
+        await updatePlaylistInfo(playlistId, {...info, name, comment: info.comment?.trim().slice(0, 500)});
+        revalidatePath("/playlists");
+        revalidatePath(`/playlists/${playlistId}`);
+    }));
+}
+
+/**
+ * Puts a playlist's songs in a new order; the ids are Navidrome's, every song of the playlist once.
+ */
+export async function reorderPlaylistAction(playlistId: string, songIds: string[]): Promise<SimpleResult> {
+    return withPolicyAction(Policies.app.requireAccess, () => attempt(async () => {
+        await setPlaylistSongs(playlistId, songIds);
         revalidatePath(`/playlists/${playlistId}`);
     }));
 }

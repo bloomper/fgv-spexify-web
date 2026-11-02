@@ -45,7 +45,7 @@ function track(id, albumId, albumTitle, number, title, extra = {}) {
         performers: "Kungen, Drottningen", melody: "Dancing Queen (ABBA)", lyricsAuthor: null, arranger: null,
         lyrics: "[00:00.50]Här står vi nu på scenen", lyricsSynced: true, format: "FLAC", fileSize: 1000000,
         durationMs: 61000, bitrate: 900, published: true, listed: true, trashedAt: null, navidromeId: `nd-${id}`,
-        fileMissing: false, videoLinks: [], ...extra,
+        fileMissing: false, videoLinks: [], replayGain: {trackGain: -4.5, trackPeak: 0.95, albumGain: -4.0, albumPeak: 0.98}, ...extra,
     };
 }
 
@@ -57,6 +57,7 @@ function resetState() {
         maintenanceJobs: [
             {job: "SPEX_REFRESH", schedule: "0 15 3 * * *", running: false, lastStartedAt: null, lastFinishedAt: null, lastSucceeded: null},
             {job: "UPLOAD_CLEANUP", schedule: "0 5 * * * *", running: true, lastStartedAt: "2026-11-01T10:05:00Z", lastFinishedAt: null, lastSucceeded: null},
+            {job: "LOUDNESS_SCAN", schedule: "0 45 3 * * *", running: false, lastStartedAt: null, lastFinishedAt: null, lastSucceeded: null},
         ],
         kinds: [
             {id: uuidOf(901), nameSv: "Föreställning", nameEn: "Show", position: 1},
@@ -220,6 +221,22 @@ const resolvers = {
             tracks: state.tracks.filter(t => t.listed && t.title.toLowerCase().includes(q.toLowerCase())),
         },
     }),
+    Credits: (persona, {kind}) => {
+        const counts = new Map();
+
+        state.tracks.filter(t => t.listed).forEach(t => creditNames(t, kind).forEach(name => counts.set(name, (counts.get(name) ?? 0) + 1)));
+        return {credits: [...counts].sort(([a], [b]) => a.localeCompare(b, "sv")).map(([name, trackCount]) => ({name, trackCount}))};
+    },
+    CreditTracks: (persona, {kind, name}) => ({
+        creditTracks: state.tracks.filter(t => t.listed && creditNames(t, kind).some(candidate => candidate.toLowerCase() === name.toLowerCase())),
+    }),
+    Radio: (persona, {trackId, albumId, limit}) => {
+        const listed = state.tracks.filter(t => t.listed);
+        const seed = listed.filter(t => t.id === trackId);
+        const rest = listed.filter(t => t.id !== trackId && t.albumId !== albumId);
+
+        return {radio: [...seed, ...rest].slice(0, limit ?? 50)};
+    },
     TracksByNavidromeIds: (persona, {ids}) => ({tracksByNavidromeIds: ids.map(id => state.tracks.find(t => t.navidromeId === id)).filter(Boolean)}),
     Apps: persona => ({
         me: {username: persona.email, displayName: persona.name},
@@ -427,12 +444,25 @@ const resolvers = {
             tracks: state.tracks.filter(t => t.trashedAt && !trashedAlbums.some(album => album.id === t.albumId)),
         }};
     },
-    AuditLog: (persona, {page = 0, size = 50}) => {
+    AuditLog: (persona, {page = 0, size = 50, filter = {}}) => {
         requireEditor(persona);
 
-        const entries = state.audit.filter(entry => isAdmin(persona) || entry.actor === persona.sub);
+        const f = filter ?? {};
+        const entries = state.audit
+            .filter(entry => isAdmin(persona) ? !f.actorId || entry.actor === f.actorId : entry.actor === persona.sub)
+            .filter(entry => (!f.entityType || entry.entityType === f.entityType) && (!f.action || entry.action === f.action)
+                && (!f.entityId || entry.entityId === f.entityId) && (!f.q || entry.summary.toLowerCase().includes(f.q.toLowerCase()))
+                && (!f.from || entry.at >= f.from) && (!f.to || entry.at < f.to))
+            .map(entry => ({...entry, actorId: entry.actor}));
 
         return {auditLog: {entries: entries.slice(page * size, (page + 1) * size), totalCount: entries.length, page, size}};
+    },
+    AuditActors: persona => {
+        requireEditor(persona);
+
+        const actors = new Map(state.audit.filter(entry => isAdmin(persona) || entry.actor === persona.sub).map(entry => [entry.actor, entry.actorName]));
+
+        return {auditActors: [...actors].map(([id, name]) => ({id, name}))};
     },
     Settings: () => ({settings: state.settings}),
     SettingsUpdate: (persona, {input}) => {
@@ -515,7 +545,25 @@ function subsonic(res, payload) {
 }
 
 const playlistOf = playlist => ({id: playlist.id, name: playlist.name, songCount: playlist.entries.length,
-    duration: playlist.entries.length * 61, created: "2026-10-01T10:00:00Z", changed: "2026-10-01T10:00:00Z"});
+    duration: playlist.entries.length * 61, created: "2026-10-01T10:00:00Z", changed: "2026-10-01T10:00:00Z",
+    comment: playlist.comment ?? "", owner: playlist.owner ?? "lisa", public: playlist.public ?? false, readonly: playlist.readonly ?? false});
+
+const splitNames = value => value ? [...new Set(value.split(/\s*[,;/&]\s*/).map(name => name.trim()).filter(Boolean))] : [];
+
+function creditNames(track, kind) {
+    switch (kind) {
+        case "PERFORMER":
+            return splitNames(track.performers);
+        case "LYRICS_AUTHOR":
+            return splitNames(track.lyricsAuthor);
+        case "ARRANGER":
+            return splitNames(track.arranger);
+        case "MELODY":
+            return track.melody ? [track.melody] : [];
+        default:
+            return splitNames(/\(([^()]+)\)\s*$/.exec(track.melody ?? "")?.[1]);
+    }
+}
 
 function handleRest(url, res) {
     const endpoint = url.pathname.slice("/rest/".length);
@@ -598,11 +646,25 @@ function handleRest(url, res) {
         }
         subsonic(res, {playlist: {...playlistOf(playlist), entry: playlist.entries.map(songOf)}});
     } else if (endpoint === "createPlaylist") {
-        state.playlists.push({id: `pl-${state.nextId++}`, name: url.searchParams.get("name"), entries: url.searchParams.getAll("songId")});
+        const existing = state.playlists.find(candidate => candidate.id === url.searchParams.get("playlistId"));
+
+        if (existing) {
+            existing.entries = url.searchParams.getAll("songId");
+        } else {
+            state.playlists.push({id: `pl-${state.nextId++}`, name: url.searchParams.get("name"), entries: url.searchParams.getAll("songId")});
+        }
         subsonic(res, {});
     } else if (endpoint === "updatePlaylist") {
         const playlist = state.playlists.find(candidate => candidate.id === url.searchParams.get("playlistId"));
 
+        for (const key of ["name", "comment"]) {
+            if (url.searchParams.has(key)) {
+                playlist[key] = url.searchParams.get(key);
+            }
+        }
+        if (url.searchParams.has("public")) {
+            playlist.public = url.searchParams.get("public") === "true";
+        }
         playlist.entries.push(...url.searchParams.getAll("songIdToAdd"));
         url.searchParams.getAll("songIndexToRemove").map(Number).sort((a, b) => b - a).forEach(index => playlist.entries.splice(index, 1));
         subsonic(res, {});
@@ -857,6 +919,7 @@ async function handle(req, res, chunks) {
                 uploads: state.uploads.size, scanRequested: state.scanRequested, starred: state.starred, plays: state.plays,
                 ratings: state.ratings, starredAlbums: state.starredAlbums, playQueue: state.playQueue,
                 kinds: state.kinds,
+                playlists: state.playlists,
                 tracks: state.tracks.map(({id, albumId, title, trackNumber, published, listed, trashedAt}) =>
                     ({id, albumId, title, trackNumber, published, listed, trashedAt})),
                 albums: state.albums.map(({id, title, published, hasCover, trashedAt}) => ({id, title, published, hasCover, trashedAt})),

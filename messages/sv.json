@@ -246,7 +246,8 @@
     "adminUsers": "Användare",
     "adminMaintenance": "Underhåll",
     "adminSettings": "Inställningar",
-    "adminKinds": "Albumsorter"
+    "adminKinds": "Albumsorter",
+    "credits": "Medverkande"
   },
   "Home": {
     "title": "Spexify",
@@ -311,7 +312,12 @@
     "rated": "Betyget är sparat",
     "rateFailed": "Betyget kunde inte sparas.",
     "starAlbum": "Stjärnmärk albumet",
-    "unstarAlbum": "Ta bort albumets stjärna"
+    "unstarAlbum": "Ta bort albumets stjärna",
+    "melodyLabel": "Melodi:",
+    "startRadio": "Starta radio",
+    "albumRadio": "Radio",
+    "moveUp": "Flytta upp",
+    "moveDown": "Flytta ner"
   },
   "Player": {
     "label": "Spelare",
@@ -330,7 +336,25 @@
     "queue": "Kö",
     "error": "Låten kunde inte spelas upp.",
     "retry": "Försök igen",
-    "restored": "Fortsätt där du slutade"
+    "restored": "Fortsätt där du slutade",
+    "volume": "Volym",
+    "mute": "Stäng av ljudet",
+    "unmute": "Slå på ljudet",
+    "settings": "Uppspelning",
+    "shortcuts": "Kortkommandon",
+    "replayGain": {
+      "label": "Utjämna ljudnivån (ReplayGain)",
+      "off": "Av",
+      "track": "Per låt",
+      "album": "Per album"
+    },
+    "clearQueue": "Töm kön",
+    "moveUp": "Flytta upp {title}",
+    "moveDown": "Flytta ner {title}",
+    "removeFromQueue": "Ta bort {title} ur kön",
+    "radioFailed": "Radion kunde inte startas. Försök igen.",
+    "radioEmpty": "Det finns inga låtar att spela.",
+    "randomRadio": "Slumpradio"
   },
   "Search": {
     "title": "Sök",
@@ -356,7 +380,20 @@
     "songs": "{count, plural, =1 {# låt} other {# låtar}}",
     "delete": "Radera spellistan",
     "confirmDelete": "Radera spellistan?",
-    "empty": "Spellistan är tom."
+    "empty": "Spellistan är tom.",
+    "rename": "Byt namn",
+    "name": "Namn",
+    "save": "Spara",
+    "renamed": "Spellistan har bytt namn.",
+    "describe": "Beskrivning",
+    "description": "Beskrivning",
+    "described": "Beskrivningen är sparad.",
+    "makePublic": "Gör offentlig",
+    "makePrivate": "Gör privat",
+    "madePublic": "Spellistan är offentlig: alla i Spexify kan lyssna på den.",
+    "madePrivate": "Spellistan är privat.",
+    "public": "Offentlig",
+    "by": "Av {owner}"
   },
   "Apps": {
     "title": "Mina appar",
@@ -475,7 +512,48 @@
     "pages": "Sidor",
     "newer": "Nyare",
     "older": "Äldre",
-    "pageOf": "Sida {page} av {pages}"
+    "pageOf": "Sida {page} av {pages}",
+    "event": "Händelse",
+    "filters": "Filtrera ändringsloggen",
+    "search": "Sök i beskrivningen",
+    "typeLabel": "Sort",
+    "allTypes": "Alla sorter",
+    "actionLabel": "Händelse",
+    "allActions": "Alla händelser",
+    "everyone": "Alla",
+    "from": "Från och med",
+    "to": "Till och med",
+    "filter": "Filtrera",
+    "reset": "Rensa filtret",
+    "count": "{count, plural, =0 {Inga ändringar} one {# ändring} other {# ändringar}}",
+    "none": "Inga ändringar ännu.",
+    "noneFiltered": "Inga ändringar matchar filtret.",
+    "oneRecord": "Visar ändringarna av en post.",
+    "allRecords": "Visa alla poster",
+    "history": "Historik",
+    "historyOf": "Historik för {summary}",
+    "recordHistory": "Ändringar",
+    "allChanges": "Alla {count} ändringar",
+    "action": {
+      "CREATE": "Skapad",
+      "UPDATE": "Ändrad",
+      "PUBLISH": "Publicerad",
+      "UNPUBLISH": "Avpublicerad",
+      "TRASH": "I papperskorgen",
+      "RESTORE": "Återställd",
+      "DELETE": "Raderad",
+      "UPLOAD": "Uppladdad",
+      "REPLACE": "Ny fil",
+      "REPROCESS": "Bearbetad igen",
+      "REVOKE": "Återkallad"
+    },
+    "type": {
+      "ALBUM": "Album",
+      "TRACK": "Låt",
+      "ALBUM_KIND": "Albumsort",
+      "SETTINGS": "Inställningar",
+      "USER": "Användare"
+    }
   },
   "AdminLibrary": {
     "title": "Musikservern",
@@ -516,6 +594,10 @@
       "UPLOAD_CLEANUP": {
         "title": "Städning av uppladdningar",
         "description": "Tar bort uppladdningar som påbörjats men aldrig använts, med sina filer."
+      },
+      "LOUDNESS_SCAN": {
+        "title": "Mätning av ljudnivå",
+        "description": "Mäter ljudnivån för låtar som saknar den, för ReplayGain, och skriver in den i filerna."
       }
     }
   },
@@ -567,5 +649,38 @@
   "Rating": {
     "stars": "{count, plural, =1 {# stjärna} other {# stjärnor}}",
     "rated": "{count, plural, =1 {Betyg: # stjärna} other {Betyg: # stjärnor}}"
+  },
+  "Shortcuts": {
+    "title": "Kortkommandon",
+    "description": "Fungerar överallt utom när du skriver i ett fält.",
+    "toggle": "Spela eller pausa",
+    "seek": "Spola 10 sekunder bakåt eller framåt",
+    "skip": "Föregående eller nästa låt",
+    "volume": "Höj eller sänk volymen",
+    "mute": "Stäng av eller slå på ljudet",
+    "shuffle": "Blanda",
+    "repeat": "Upprepa",
+    "help": "Visa kortkommandona"
+  },
+  "Credits": {
+    "title": "Medverkande",
+    "kinds": "Sorters medverkan",
+    "none": "Inga ännu.",
+    "noTracks": "Inga låtar hittades.",
+    "tracks": "{count, plural, one {# låt} other {# låtar}}",
+    "kind": {
+      "performers": "Sångare",
+      "melodies": "Melodier",
+      "original-artists": "Originalartister",
+      "lyrics-authors": "Textförfattare",
+      "arrangers": "Arrangörer"
+    },
+    "text": {
+      "performers": "Alla som sjunger i låtarna, eller rollerna som gör det.",
+      "melodies": "Originallåtarna som spexlåtarna går på.",
+      "original-artists": "Artisterna bakom originallåtarna, från parentesen efter melodin.",
+      "lyrics-authors": "De som skrivit texterna.",
+      "arrangers": "De som arrangerat musiken."
+    }
   }
 }

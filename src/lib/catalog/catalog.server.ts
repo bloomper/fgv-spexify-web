@@ -2,7 +2,7 @@ import "server-only";
 
 import {graphql} from "@/gql";
 import {runMutation, runQuery} from "@/lib/graphql.server";
-import type {AlbumFilter, AlbumInput, AlbumKindInput, TrackInput} from "@/gql/graphql";
+import type {AlbumFilter, AlbumInput, AlbumKindInput, CreditKind, TrackInput} from "@/gql/graphql";
 
 export const KindFieldsFragment = graphql(`
     fragment KindFields on AlbumKind { id nameSv nameEn isDefault }
@@ -46,6 +46,7 @@ const AlbumQuery = graphql(`
             tracks {
                 id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
                 lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing
+                replayGain { trackGain trackPeak albumGain albumPeak }
                 videoLinks { videoId videoTitle chapterTitle startSeconds }
             }
         }
@@ -62,6 +63,7 @@ const SearchQuery = graphql(`
             tracks {
                 id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
                 lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing
+                replayGain { trackGain trackPeak albumGain albumPeak }
             }
         }
     }
@@ -93,6 +95,7 @@ const TracksByNavidromeIdsQuery = graphql(`
         tracksByNavidromeIds(ids: $ids) {
             id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
             lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing
+                replayGain { trackGain trackPeak albumGain albumPeak }
         }
     }
 `);
@@ -152,6 +155,31 @@ const AlbumKindsReorderMutation = graphql(`
 const AlbumKindDeleteMutation = graphql(`
     mutation AlbumKindDelete($id: ID!) { albumKindDelete(id: $id) }
 `);
+const CreditsQuery = graphql(`
+    query Credits($kind: CreditKind!) {
+        credits(kind: $kind) { name trackCount }
+    }
+`);
+
+const CreditTracksQuery = graphql(`
+    query CreditTracks($kind: CreditKind!, $name: String!) {
+        creditTracks(kind: $kind, name: $name) {
+            id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
+            lyricsSynced durationMs listed navidromeId fileMissing
+            replayGain { trackGain trackPeak albumGain albumPeak }
+        }
+    }
+`);
+
+const RadioQuery = graphql(`
+    query Radio($trackId: ID, $albumId: ID, $limit: Int) {
+        radio(trackId: $trackId, albumId: $albumId, limit: $limit) {
+            id albumId albumTitle title performers durationMs navidromeId lyrics lyricsSynced fileMissing
+            replayGain { trackGain trackPeak albumGain albumPeak }
+        }
+    }
+`);
+
 const TrackDeleteMutation = graphql(`
     mutation TrackDelete($id: ID!) { trackDelete(id: $id) }
 `);
@@ -190,6 +218,18 @@ export async function searchSpex(q: string) {
 
 export async function getTracksByNavidromeIds(ids: string[]) {
     return ids.length === 0 ? [] : (await runQuery(TracksByNavidromeIdsQuery, {ids}))?.tracksByNavidromeIds ?? [];
+}
+
+export async function getCredits(kind: CreditKind) {
+    return (await runQuery(CreditsQuery, {kind}))?.credits ?? [];
+}
+
+export async function getCreditTracks(kind: CreditKind, name: string) {
+    return (await runQuery(CreditTracksQuery, {kind, name}))?.creditTracks ?? [];
+}
+
+export async function getRadio(seed: { trackId?: string; albumId?: string }, limit = 50) {
+    return (await runQuery(RadioQuery, {trackId: seed.trackId ?? null, albumId: seed.albumId ?? null, limit}))?.radio ?? [];
 }
 
 export const albumCreate = async (input: AlbumInput) => (await runMutation(AlbumCreateMutation, {input}))?.albumCreate;

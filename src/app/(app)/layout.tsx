@@ -12,6 +12,7 @@ import {ModeToggle} from "@/components/mode-toggle.client";
 import {LanguageToggle} from "@/components/language-toggle.client";
 import {PlayerProvider} from "@/components/player/player-provider.client";
 import {PlayerBar} from "@/components/player/player-bar.client";
+import {PlayerShortcuts} from "@/components/player/shortcuts.client";
 import {DialogsProvider} from "@/components/dialogs.client";
 import {requireUser} from "@/utils/auth.server";
 import {hasAccess} from "@/utils/auth";
@@ -98,6 +99,7 @@ export default async function AppLayout({children}: { children: React.ReactNode 
                         </div>
                     </SidebarProvider>
                     <PlayerBar/>
+                    <PlayerShortcuts/>
                 </DialogsProvider>
             </PlayerProvider>
         </div>

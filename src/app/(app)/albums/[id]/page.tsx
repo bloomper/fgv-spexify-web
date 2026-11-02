@@ -62,7 +62,7 @@ export default async function AlbumPage({params}: { params: Promise<{ id: string
                                className="text-sm text-primary hover:underline">{t("inSpexregister")}</a>
                         )}
                         <div className="flex flex-wrap gap-2 pt-1">
-                            <PlayAllButtons tracks={rows}/>
+                            <PlayAllButtons tracks={rows} radioAlbumId={album.published && !album.trashedAt ? album.id : undefined}/>
                             <Button variant="outline" nativeButton={false} render={<a href={`/api/download/album/${album.id}`} download data-umami-event="album-download"/>}>
                                 <Download/>{t("downloadAlbum")}
                             </Button>

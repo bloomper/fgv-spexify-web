@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import {useMemo} from "react";
-import {Drama, House, Library, ListMusic, type LucideIcon, Pencil, Settings, Smartphone, Star, Wrench} from "lucide-react";
+import {Drama, House, Library, ListMusic, type LucideIcon, Pencil, Settings, Smartphone, Star, Users, Wrench} from "lucide-react";
 
 import {NavMain} from "@/components/nav-main.client";
 import {NavSecondary} from "@/components/nav-secondary.client";
@@ -60,6 +60,7 @@ export function AppSidebar({roles, accountUrl, ...props}: AppSidebarProps) {
             {title: t("Nav.albums"), url: "/albums", icon: Library, isActive: pathname.startsWith("/albums")},
             {title: t("Nav.starred"), url: "/starred", icon: Star, isActive: pathname.startsWith("/starred")},
             {title: t("Nav.playlists"), url: "/playlists", icon: ListMusic, isActive: pathname.startsWith("/playlists")},
+            {title: t("Nav.credits"), url: "/credits", icon: Users, isActive: pathname.startsWith("/credits")},
             {title: t("Nav.apps"), url: "/apps", icon: Smartphone, isActive: pathname.startsWith("/apps")},
         ];
 

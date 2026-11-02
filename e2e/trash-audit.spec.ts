@@ -63,6 +63,38 @@ test.describe("The change log", () => {
         await expect(page.getByText("Publicerade albumet Opublicerat album")).toBeVisible();
     });
 
+    test("filters the changes, follows one record and shows an album's history", async ({page, loginAs}) => {
+        await loginAs("admin");
+        await page.goto(`/manage/albums/${uuidOf(1)}`);
+        await page.getByRole("switch").first().click();
+        await expect(page.getByText("Opublicerat", {exact: true}).first()).toBeVisible();
+        await page.goto(`/manage/albums/${uuidOf(2)}`);
+        await page.getByRole("switch").first().click();
+        await expect(page.getByText("Publicerat", {exact: true})).toBeVisible();
+
+        await page.goto("/manage/audit");
+        await expect(page.getByText("2 ändringar")).toBeVisible();
+        await page.getByLabel("Händelse").selectOption("UNPUBLISH");
+        await page.getByRole("button", {name: "Filtrera"}).click();
+        await expect(page).toHaveURL(/action=UNPUBLISH/);
+        await expect(page.getByText("1 ändring", {exact: true})).toBeVisible();
+        await expect(page.getByRole("link", {name: "Avpublicerade albumet Nobel", exact: true})).toHaveAttribute("href", `/manage/albums/${uuidOf(1)}`);
+        await expect(page.getByText("Publicerade albumet Opublicerat album")).toHaveCount(0);
+
+        await page.getByRole("link", {name: "Rensa filtret"}).click();
+        await expect(page).toHaveURL(/\/manage\/audit$/);
+        await expect(page.getByText("2 ändringar")).toBeVisible();
+        await page.getByLabel("Sök i beskrivningen").fill("opublicerat");
+        await page.getByRole("button", {name: "Filtrera"}).click();
+        await expect(page.getByText("1 ändring", {exact: true})).toBeVisible();
+        await page.getByRole("link", {name: /^Historik för/}).click();
+        await expect(page.getByText("Visar ändringarna av en post.")).toBeVisible();
+
+        await page.goto(`/manage/albums/${uuidOf(2)}`);
+        await expect(page.getByRole("heading", {name: "Ändringar"})).toBeVisible();
+        await expect(page.getByText("Publicerade albumet Opublicerat album").filter({visible: true})).toBeVisible();
+    });
+
     test("is not for listeners", async ({page, loginAs}) => {
         await loginAs("listener");
         await page.goto("/manage/audit");

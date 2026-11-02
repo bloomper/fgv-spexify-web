@@ -2,6 +2,7 @@ import Link from "next/link";
 import {getLocale, getTranslations} from "next-intl/server";
 import {AlbumGrid} from "@/components/album/album-grid";
 import {Badge} from "@/components/ui/badge";
+import {RandomRadioButton} from "@/components/player/radio.client";
 import {getHome, getMe} from "@/lib/catalog/catalog.server";
 import {getPlayedAlbums} from "@/lib/catalog/listening.server";
 import {formatDate} from "@/utils/format";
@@ -23,6 +24,9 @@ export default async function HomePage() {
                         {t("greeting", {name: me?.me.displayName ?? me?.me.username ?? ""})}
                     </h1>
                     <p className="max-w-prose whitespace-pre-line text-muted-foreground">{welcome || t("intro")}</p>
+                    <div className="pt-1">
+                        <RandomRadioButton/>
+                    </div>
                 </section>
 
                 {home && home.categories.length > 0 && (

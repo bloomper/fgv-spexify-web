@@ -77,6 +77,7 @@ type MockState = {
     /** The listener's ratings by Navidrome id of song or album. */
     ratings: Record<string, number>;
     starredAlbums: string[];
+    playlists: { id: string; name: string; entries: string[]; public?: boolean; comment?: string }[];
     playQueue: { ids: string[]; current: string | null; position: number } | null;
     tracks: { id: string; albumId: string; title: string; trackNumber: number; published: boolean; listed: boolean; trashedAt: string | null }[];
     albums: { id: string; title: string; published: boolean; hasCover: boolean; trashedAt: string | null }[];

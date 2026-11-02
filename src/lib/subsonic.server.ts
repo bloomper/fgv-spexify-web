@@ -47,7 +47,17 @@ export function playsOf(songs: SubsonicSong[]): Plays {
     return Object.fromEntries(songs.map(song => [song.id,
         {playCount: song.playCount ?? 0, played: song.played ?? null, rating: song.userRating ?? 0}]));
 }
-export type SubsonicPlaylist = { id: string; name: string; songCount: number; duration: number };
+export type SubsonicPlaylist = {
+    id: string;
+    name: string;
+    songCount: number;
+    duration: number;
+    comment?: string;
+    owner?: string;
+    public?: boolean;
+    /** OpenSubsonic: true when the user may not change it, i.e. someone else's public playlist. */
+    readonly?: boolean;
+};
 
 export async function getStarred(): Promise<SubsonicSong[]> {
     return (await getStarredAll()).songs;
@@ -149,6 +159,25 @@ export async function createPlaylist(name: string, songIds: string[]) {
 
 export async function addToPlaylist(playlistId: string, songIds: string[]) {
     await subsonic("updatePlaylist", {playlistId, songIdToAdd: songIds});
+}
+
+/**
+ * Renames a playlist, changes its comment or makes it public (other Spexify users can listen to it) or private.
+ */
+export async function updatePlaylistInfo(playlistId: string, info: { name?: string; comment?: string; public?: boolean }) {
+    await subsonic("updatePlaylist", {
+        playlistId,
+        ...(info.name !== undefined ? {name: info.name} : {}),
+        ...(info.comment !== undefined ? {comment: info.comment} : {}),
+        ...(info.public !== undefined ? {public: String(info.public)} : {}),
+    });
+}
+
+/**
+ * Replaces a playlist's songs with these, in this order: createPlaylist with an existing playlist's id.
+ */
+export async function setPlaylistSongs(playlistId: string, songIds: string[]) {
+    await subsonic("createPlaylist", {playlistId, songId: songIds});
 }
 
 export async function removeFromPlaylist(playlistId: string, index: number) {
