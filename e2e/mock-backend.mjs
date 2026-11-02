@@ -34,10 +34,15 @@ class GraphQLError extends Error {
     }
 }
 
+/** The linked spex, as the server copies them from Spexregister. */
+const spexOf = ids => (ids ?? []).map(id => SPEXREGISTER.find(spex => spex.id === id)).filter(Boolean);
+
 /** The UUID the server would give the entity numbered n here. */
 const uuidOf = n => `00000000-0000-7000-8000-${String(n).padStart(12, "0")}`;
 
-const SPEX = {id: uuidOf(1), title: "Nobel", year: 1975, revival: false, categoryId: uuidOf(1), categoryName: "Chalmersspexet"};
+const SPEX = {id: uuidOf(1), title: "Nobel", year: 1975, revival: false, parentId: null, familyId: uuidOf(1), categoryId: uuidOf(1), categoryName: "Chalmersspexet"};
+const REVIVAL = {id: uuidOf(2), title: "Nobel", year: 2026, revival: true, parentId: uuidOf(1), familyId: uuidOf(1), categoryId: uuidOf(1), categoryName: "Chalmersspexet"};
+const SPEXREGISTER = [SPEX, REVIVAL];
 
 function track(id, albumId, albumTitle, number, title, extra = {}) {
     return {
@@ -68,10 +73,10 @@ function resetState() {
         albums: [
             {id: uuidOf(1), title: "Nobel", year: 1975, kindId: uuidOf(901), description: "Inspelat 1975.", hasCover: false,
                 published: true, publishedAt: "2026-10-01T10:00:00Z", trashedAt: null, navidromeId: "al-1",
-                createdAt: "2026-10-01T10:00:00Z", lastModifiedAt: null, spex: SPEX},
+                createdAt: "2026-10-01T10:00:00Z", lastModifiedAt: null, spex: [SPEX]},
             {id: uuidOf(2), title: "Opublicerat album", year: 2026, kindId: uuidOf(902), description: null, hasCover: false,
                 published: false, publishedAt: null, trashedAt: null, navidromeId: null,
-                createdAt: "2026-10-02T10:00:00Z", lastModifiedAt: null, spex: null},
+                createdAt: "2026-10-02T10:00:00Z", lastModifiedAt: null, spex: []},
         ],
         tracks: [
             track(uuidOf(11), uuidOf(1), "Nobel", 1, "Ouvertyr"),
@@ -206,9 +211,16 @@ const resolvers = {
         years: [1975],
     }),
     Albums: (persona, {filter}) => ({
-        albums: visibleAlbums(persona).filter(album => album.published || filter?.includeUnpublished).map(album => withCounts(persona, album)),
+        albums: visibleAlbums(persona).filter(album => album.published || filter?.includeUnpublished)
+            .filter(album => !filter?.spexId || album.spex.some(spex => spex.id === filter.spexId || spex.parentId === filter.spexId))
+            .map(album => withCounts(persona, album)),
         categories: [{id: uuidOf(1), name: "Chalmersspexet", albumCount: 1}],
         years: [1975],
+    }),
+    SpexAlbums: (persona, {filter}) => ({
+        albums: visibleAlbums(persona).filter(album => album.published)
+            .filter(album => album.spex.some(spex => spex.id === filter.spexId || spex.parentId === filter.spexId))
+            .map(album => withCounts(persona, album)),
     }),
     Album: (persona, {id}) => {
         const album = visibleAlbums(persona).find(candidate => candidate.id === id);
@@ -260,10 +272,11 @@ const resolvers = {
             throw forbidden();
         }
 
-        const album = {id: uuidOf(state.nextId++), title: input.title || SPEX.title, year: input.year ?? SPEX.year,
+        const spex = spexOf(input.spexIds);
+        const album = {id: uuidOf(state.nextId++), title: input.title || spex[0]?.title, year: input.year ?? spex[0]?.year ?? null,
             kindId: input.kindId ?? sortedKinds()[0].id, description: input.description, hasCover: false, published: false, publishedAt: null,
             trashedAt: null, navidromeId: null, createdAt: new Date().toISOString(), lastModifiedAt: null,
-            spex: input.spexId ? SPEX : null};
+            spex};
 
         state.albums.push(album);
         audit(persona, "CREATE", "ALBUM", album.id, `Skapade albumet ${album.title}`);
@@ -286,7 +299,7 @@ const resolvers = {
         if (!state.spexregisterUp) {
             throw new GraphQLError("SPEXREGISTER_UNAVAILABLE", MESSAGES.SPEXREGISTER_UNAVAILABLE);
         }
-        return {spexSearch: [{id: SPEX.id, title: SPEX.title, year: SPEX.year, revival: false, categoryName: SPEX.categoryName}]};
+        return {spexSearch: SPEXREGISTER.map(({id, title, year, revival, parentId, categoryName}) => ({id, title, year, revival, parentId, categoryName}))};
     },
     MaintenanceJobs: persona => {
         requireAdmin(persona);
@@ -322,6 +335,7 @@ const resolvers = {
 
         const album = albumById(id);
 
+        album.spex = spexOf(input.spexIds);
         Object.assign(album, {title: input.title || album.title, year: input.year ?? album.year, kindId: input.kindId ?? album.kindId,
             description: input.description ?? null, lastModifiedAt: new Date().toISOString()});
         state.tracks.filter(t => t.albumId === id).forEach(t => t.albumTitle = album.title);
@@ -536,7 +550,7 @@ const resolvers = {
     },
     TracksByIds: (persona, {ids}) => ({
         tracksByIds: ids.map(id => state.tracks.find(t => t.id === id && t.listed)).filter(Boolean)
-            .map(t => ({...t, spexId: state.albums.find(album => album.id === t.albumId)?.spex?.id ?? null})),
+            .map(t => ({...t, spexId: state.albums.find(album => album.id === t.albumId)?.spex[0]?.id ?? null})),
     }),
 };
 

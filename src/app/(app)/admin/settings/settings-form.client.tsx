@@ -42,10 +42,11 @@ export function SettingsForm({initial}: { initial: SettingsInput }) {
                 <Label htmlFor="welcome-en">{t("welcomeEn")}</Label>
                 <Textarea id="welcome-en" rows={3} value={values.welcomeEn ?? ""} onChange={event => setValues({...values, welcomeEn: event.target.value})}/>
             </div>
+            {/* Labels can wrap to different heights; the fields line up at the bottom */}
             <div className="grid gap-4 sm:grid-cols-3">
-                <div className="space-y-1.5"><Label htmlFor="expiry">{t("expiry")}</Label><Input id="expiry" min={1} max={120} {...number("appPasswordExpiryMonths")}/></div>
-                <div className="space-y-1.5"><Label htmlFor="attempts">{t("attempts")}</Label><Input id="attempts" min={3} max={1000} {...number("lockoutAttempts")}/></div>
-                <div className="space-y-1.5"><Label htmlFor="minutes">{t("minutes")}</Label><Input id="minutes" min={1} max={1440} {...number("lockoutMinutes")}/></div>
+                <div className="flex flex-col justify-end gap-1.5"><Label htmlFor="expiry">{t("expiry")}</Label><Input id="expiry" min={1} max={120} {...number("appPasswordExpiryMonths")}/></div>
+                <div className="flex flex-col justify-end gap-1.5"><Label htmlFor="attempts">{t("attempts")}</Label><Input id="attempts" min={3} max={1000} {...number("lockoutAttempts")}/></div>
+                <div className="flex flex-col justify-end gap-1.5"><Label htmlFor="minutes">{t("minutes")}</Label><Input id="minutes" min={1} max={1440} {...number("lockoutMinutes")}/></div>
             </div>
             <Button type="submit" disabled={pending}>{t("save")}</Button>
         </form>

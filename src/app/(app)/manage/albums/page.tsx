@@ -40,7 +40,7 @@ export default async function ManageAlbumsPage() {
                                         {!album.kind.isDefault && <span className="ml-2 text-xs text-muted-foreground">{kindName(album.kind, locale)}</span>}
                                     </TableCell>
                                     <TableCell className="tabular-nums">{album.year}</TableCell>
-                                    <TableCell className="hidden sm:table-cell">{album.spex?.categoryName}</TableCell>
+                                    <TableCell className="hidden sm:table-cell">{album.spex[0]?.categoryName}</TableCell>
                                     <TableCell className="hidden tabular-nums sm:table-cell">{album.trackCount}</TableCell>
                                     <TableCell>
                                         {album.published

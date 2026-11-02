@@ -271,7 +271,9 @@
     "allCategories": "Alla",
     "years": "År",
     "allYears": "Alla år",
-    "none": "Inga album matchar."
+    "none": "Inga album matchar.",
+    "spexFilter": "Album från {title}, med nyuppsättningar",
+    "clearSpex": "Visa alla album"
   },
   "Album": {
     "revival": "Nyuppsättning",
@@ -317,7 +319,10 @@
     "startRadio": "Starta radio",
     "albumRadio": "Radio",
     "moveUp": "Flytta upp",
-    "moveDown": "Flytta ner"
+    "moveDown": "Flytta ner",
+    "inSpexregisterOf": "{title} i Spexregistret",
+    "sameSpex": "Mer från samma spex",
+    "allFromSpex": "Alla album från {title}"
   },
   "Player": {
     "label": "Spelare",
@@ -429,7 +434,7 @@
   "Manage": {
     "albums": "Album",
     "newAlbum": "Nytt album",
-    "newAlbumText": "Välj spexet albumet hör till. Titel och år hämtas från spexet om du inte anger andra. Albumet är opublicerat tills du publicerar det.",
+    "newAlbumText": "Välj spexet eller spexen albumet hör till, eller markera att det inte hör till något. Titel och år hämtas från spexet om du inte anger andra. Albumet är opublicerat tills du publicerar det.",
     "title": "Titel",
     "year": "År",
     "category": "Spex",
@@ -438,10 +443,6 @@
     "published": "Publicerat",
     "unpublished": "Opublicerat",
     "spex": "Spex",
-    "spexSearch": "Sök spex på titel eller år",
-    "spexHint": "Lämna tomt för ett album som inte hör till ett enskilt spex, t.ex. en samling.",
-    "searching": "Söker…",
-    "change": "Byt",
     "kind": "Sort",
     "description": "Beskrivning",
     "create": "Skapa",
@@ -682,5 +683,24 @@
       "lyrics-authors": "De som skrivit texterna.",
       "arrangers": "De som arrangerat musiken."
     }
+  },
+  "SpexPicker": {
+    "spex": "Spex",
+    "none": "Inte kopplat till något spex",
+    "noneHint": "T.ex. en jubileumsinspelning eller blandade visor. Ange en titel.",
+    "picked": "Valda spex",
+    "main": "Huvudspex",
+    "makeMain": "Gör till huvudspex",
+    "makeMainOf": "Gör {title} till huvudspex",
+    "remove": "Ta bort",
+    "removeOf": "Ta bort {title}",
+    "search": "Sök spex på titel eller år",
+    "searchMore": "Lägg till fler spex, t.ex. för en samling",
+    "hint": "Nyuppsättningar visas under sitt originalspex. Titel och år hämtas från spexet om du inte anger andra.",
+    "mainHint": "Huvudspexet står först: affischen, kategorin och förvalda titel och år hämtas från det.",
+    "searching": "Söker…",
+    "results": "Sökträffar",
+    "alreadyPicked": "vald",
+    "revival": "Nyuppsättning"
   }
 }

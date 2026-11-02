@@ -8,7 +8,8 @@ import {CoverImage} from "@/components/album/cover-image.client";
 import {PlayAllButtons, TrackList} from "@/components/album/track-list.client";
 import {toRows} from "@/components/album/to-rows";
 import {formatDuration} from "@/components/player/lyrics";
-import {getAlbum, getMe} from "@/lib/catalog/catalog.server";
+import {getAlbum, getAlbumsOfSpex, getMe} from "@/lib/catalog/catalog.server";
+import {AlbumGrid} from "@/components/album/album-grid";
 import {getAlbumListening, getListeningState, spexflixUrl} from "@/lib/catalog/listening.server";
 import {AlbumListening} from "@/components/album/album-listening.client";
 import {Policies} from "@/utils/policy.server";
@@ -34,7 +35,12 @@ export default async function AlbumPage({params}: { params: Promise<{ id: string
             notFound();
         }
 
-        const albumListening = await getAlbumListening(album.navidromeId);
+        const [albumListening, related] = await Promise.all([
+            getAlbumListening(album.navidromeId),
+            getAlbumsOfSpex(album.spex.map(spex => spex.familyId)),
+        ]);
+        const others = related.filter(other => other.id !== album.id);
+        const main = album.spex[0];
         const rows = toRows(album.tracks, albumListening?.plays);
         const register = process.env.SPEXREGISTER_WEB_URL?.replace(/\/$/, "");
 
@@ -45,21 +51,38 @@ export default async function AlbumPage({params}: { params: Promise<{ id: string
                     <div className="min-w-0 space-y-3">
                         <div className="flex flex-wrap gap-1.5">
                             <Badge variant="secondary">{kindName(album.kind, locale)}</Badge>
-                            {album.spex?.revival && <Badge variant="secondary">{t("revival")}</Badge>}
+                            {main?.revival && <Badge variant="secondary">{t("revival")}</Badge>}
                             {!album.published && <Badge variant="outline">{t("unpublished")}</Badge>}
                         </div>
                         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{album.title}</h1>
                         <p className="text-sm text-muted-foreground">
-                            {[album.year, album.spex?.categoryName, t("tracks", {count: album.trackCount}),
+                            {[album.year, main?.categoryName, t("tracks", {count: album.trackCount}),
                                 formatDuration(album.durationMs / 1000)].filter(Boolean).join(" · ")}
                         </p>
                         {album.description && <p className="max-w-prose whitespace-pre-line text-sm">{album.description}</p>}
                         {album.navidromeId && albumListening && (
                             <AlbumListening navidromeId={album.navidromeId} starred={albumListening.starred} rating={albumListening.rating}/>
                         )}
-                        {album.spex && register && (
-                            <a href={`${register}/spex?open=${album.spex.id}`} target="_blank" rel="noopener noreferrer"
-                               className="text-sm text-primary hover:underline">{t("inSpexregister")}</a>
+                        {album.spex.length > 0 && (
+                            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                                {album.spex.map(spex => {
+                                    const name = [spex.title, spex.year].filter(Boolean).join(" ");
+
+                                    return (
+                                        <li key={spex.id} className="flex flex-wrap gap-x-2">
+                                            <Link href={`/albums?spex=${spex.familyId}`} className="text-primary hover:underline">
+                                                {t("allFromSpex", {title: spex.title ?? name})}
+                                            </Link>
+                                            {register && (
+                                                <a href={`${register}/spex?open=${spex.id}`} target="_blank" rel="noopener noreferrer"
+                                                   className="text-muted-foreground hover:underline">
+                                                    {album.spex.length > 1 || spex.revival ? t("inSpexregisterOf", {title: name}) : t("inSpexregister")}
+                                                </a>
+                                            )}
+                                        </li>
+                                    );
+                                })}
+                            </ul>
                         )}
                         <div className="flex flex-wrap gap-2 pt-1">
                             <PlayAllButtons tracks={rows} radioAlbumId={album.published && !album.trashedAt ? album.id : undefined}/>
@@ -78,6 +101,12 @@ export default async function AlbumPage({params}: { params: Promise<{ id: string
                     ? <TrackList tracks={rows} starred={listening.starred} playlists={listening.playlists}
                                  spexflixUrl={me?.me.spexflixUser ? spexflixUrl() : null}/>
                     : <p className="text-muted-foreground">{t("noTracks")}</p>}
+                {others.length > 0 && (
+                    <section aria-labelledby="same-spex" className="space-y-3">
+                        <h2 id="same-spex" className="text-lg font-semibold">{t("sameSpex")}</h2>
+                        <AlbumGrid albums={others}/>
+                    </section>
+                )}
             </div>
         );
     });

@@ -271,7 +271,9 @@
     "allCategories": "All",
     "years": "Years",
     "allYears": "All years",
-    "none": "No albums match."
+    "none": "No albums match.",
+    "spexFilter": "Albums of {title}, revivals included",
+    "clearSpex": "Show all albums"
   },
   "Album": {
     "revival": "Revival",
@@ -317,7 +319,10 @@
     "startRadio": "Start radio",
     "albumRadio": "Radio",
     "moveUp": "Move up",
-    "moveDown": "Move down"
+    "moveDown": "Move down",
+    "inSpexregisterOf": "{title} in Spexregister",
+    "sameSpex": "More from the same spex",
+    "allFromSpex": "All albums of {title}"
   },
   "Player": {
     "label": "Player",
@@ -429,7 +434,7 @@
   "Manage": {
     "albums": "Albums",
     "newAlbum": "New album",
-    "newAlbumText": "Pick the spex the album belongs to. Title and year come from the spex unless you give others. The album is unpublished until you publish it.",
+    "newAlbumText": "Choose the spex the album is about, or mark that it is not about any. Title and year are taken from the spex unless you give others. The album stays unpublished until you publish it.",
     "title": "Title",
     "year": "Year",
     "category": "Spex",
@@ -438,10 +443,6 @@
     "published": "Published",
     "unpublished": "Unpublished",
     "spex": "Spex",
-    "spexSearch": "Search spex by title or year",
-    "spexHint": "Leave empty for an album not about one spex, e.g. a compilation.",
-    "searching": "Searching…",
-    "change": "Change",
     "kind": "Kind",
     "description": "Description",
     "create": "Create",
@@ -682,5 +683,24 @@
       "lyrics-authors": "Who wrote the lyrics.",
       "arrangers": "Who arranged the music."
     }
+  },
+  "SpexPicker": {
+    "spex": "Spex",
+    "none": "Not about any spex",
+    "noneHint": "E.g. a jubilee recording or mixed songs. Give a title.",
+    "picked": "Chosen spex",
+    "main": "Main spex",
+    "makeMain": "Make main spex",
+    "makeMainOf": "Make {title} the main spex",
+    "remove": "Remove",
+    "removeOf": "Remove {title}",
+    "search": "Search spex by title or year",
+    "searchMore": "Add more spex, e.g. for a compilation",
+    "hint": "Revivals are shown under their original spex. Title and year are taken from the spex unless you give others.",
+    "mainHint": "The main spex comes first: the poster, the category and the default title and year come from it.",
+    "searching": "Searching…",
+    "results": "Search results",
+    "alreadyPicked": "chosen",
+    "revival": "Revival"
   }
 }

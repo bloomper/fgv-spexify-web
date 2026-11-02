@@ -8,13 +8,17 @@ import {cn} from "@/utils/utils";
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export default async function AlbumsPage({searchParams}: { searchParams: Promise<{ category?: string; year?: string }> }) {
+export default async function AlbumsPage({searchParams}: { searchParams: Promise<{ category?: string; year?: string; spex?: string }> }) {
     return withPolicyPage(Policies.app.requireAccess, async () => {
         const t = await getTranslations("Albums");
-        const {category, year} = await searchParams;
+        const {category, year, spex} = await searchParams;
         const categoryId = category && ID.test(category) ? category : null;
         const yearNumber = year && /^\d{4}$/.test(year) ? Number(year) : null;
-        const data = await getAlbums({categoryId, year: yearNumber});
+        const spexId = spex && ID.test(spex) ? spex : null;
+        const data = await getAlbums({categoryId, year: yearNumber, spexId});
+        // The spex as the albums have it: the original when the filter is one, else the revival itself.
+        const linked = data?.albums.flatMap(album => album.spex);
+        const spexTitle = spexId ? (linked?.find(item => item.id === spexId)?.title ?? linked?.find(item => item.familyId === spexId)?.title) : null;
         const link = (params: { category?: string | null; year?: number | null }) => {
             const query = new URLSearchParams();
 
@@ -31,6 +35,12 @@ export default async function AlbumsPage({searchParams}: { searchParams: Promise
         return (
             <div className="space-y-6 p-4 sm:p-6">
                 <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+                {spexId && (
+                    <p className="flex flex-wrap items-baseline gap-x-3 text-sm">
+                        <span>{t("spexFilter", {title: spexTitle ?? "?"})}</span>
+                        <Link href={link({category: categoryId, year: yearNumber})} className="text-primary hover:underline">{t("clearSpex")}</Link>
+                    </p>
+                )}
                 <nav aria-label={t("categories")} className="flex flex-wrap gap-2">
                     <Link href={link({year: yearNumber})} className={chip(!categoryId)}>{t("allCategories")}</Link>
                     {data?.categories.map(item => (

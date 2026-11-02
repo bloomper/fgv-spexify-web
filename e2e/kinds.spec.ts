@@ -24,7 +24,8 @@ test.describe("Album kinds", () => {
         await page.goto("/manage/albums/new");
         // The first kind is preselected
         await expect(page.getByLabel("Sort")).toHaveValue(uuidOf(902));
-        await page.getByLabel("Titel").fill("Trailers 2026");
+        await page.getByRole("checkbox", {name: "Inte kopplat till något spex"}).click();
+        await page.getByLabel("Titel", {exact: true}).fill("Trailers 2026");
         await page.getByLabel("Sort").selectOption({label: "Trailer"});
         await page.getByRole("button", {name: "Skapa"}).click();
         await expect(page).toHaveURL(/\/manage\/albums\/[0-9a-f-]{36}$/);

@@ -16,6 +16,7 @@ import {Checkbox} from "@/components/ui/checkbox";
 import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle} from "@/components/ui/dialog";
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
 import {CoverImage} from "@/components/album/cover-image.client";
+import type {PickedSpex} from "@/components/spex/spex-picker.client";
 import {AlbumForm, type KindOption} from "@/components/album/album-form.client";
 import {formatDuration} from "@/components/player/lyrics";
 import {uploadFile} from "@/components/upload/tus.client";
@@ -62,7 +63,7 @@ export type EditorAlbum = {
     description?: string | null;
     hasCover: boolean;
     published: boolean;
-    spex?: { id: string; title?: string | null; year?: number | null; revival?: boolean | null; categoryName?: string | null } | null;
+    spex: PickedSpex[];
     tracks: EditorTrack[];
 };
 
@@ -277,7 +278,7 @@ export function AlbumEditor({album, kinds}: { album: EditorAlbum; kinds: KindOpt
                     </label>
                     <AlbumForm kinds={kinds} submitLabel={t("save")}
                                initial={{
-                                   spex: album.spex ? {...album.spex, revival: album.spex.revival === true} : null,
+                                   spex: album.spex,
                                    title: album.title,
                                    year: album.year,
                                    kindId: album.kind.id,

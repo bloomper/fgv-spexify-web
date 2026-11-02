@@ -11,7 +11,8 @@ export type AlbumSummary = {
     kind: KindName & { isDefault: boolean };
     published?: boolean;
     trackCount: number;
-    spex?: { categoryName?: string | null; revival?: boolean | null } | null;
+    /** The main spex first. */
+    spex?: { categoryName?: string | null; revival?: boolean | null }[];
 };
 
 /**
@@ -37,12 +38,12 @@ export function AlbumGrid({albums, hrefFor, label}: {
                         <div className="mt-2 space-y-0.5">
                             <div className="line-clamp-2 text-sm font-medium leading-tight">{album.title}</div>
                             <div className="text-xs text-muted-foreground">
-                                {[album.year, album.spex?.categoryName].filter(Boolean).join(" · ")}
+                                {[album.year, album.spex?.[0]?.categoryName].filter(Boolean).join(" · ")}
                             </div>
                             {label?.(album) && <div className="text-xs text-muted-foreground">{label(album)}</div>}
                             <div className="flex flex-wrap gap-1 pt-0.5">
                                 {!album.kind.isDefault && <Badge variant="secondary">{kindName(album.kind, locale)}</Badge>}
-                                {album.spex?.revival && <Badge variant="secondary">{t("revival")}</Badge>}
+                                {album.spex?.[0]?.revival && <Badge variant="secondary">{t("revival")}</Badge>}
                                 {album.published === false && <Badge variant="outline">{t("unpublished")}</Badge>}
                             </div>
                         </div>

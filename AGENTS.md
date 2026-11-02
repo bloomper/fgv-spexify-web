@@ -71,6 +71,10 @@ lives in Navidrome per user (stars, playlists, play counts). Stack and setup: `R
 - **The play queue** is shared with the user's apps through `savePlayQueue`/`getPlayQueue`: `PlayerProvider` saves it
   when it changes, on pause and every 30 s while playing, and an empty player takes it up again, paused, on the first
   page load. It saves nothing before the saved queue was read.
+- **Spex**: an album is about a list of spex, the main one first (poster, category, default title and year), or none,
+  which the editor marks explicitly (`SpexPicker` in `src/components/spex/`). Each spex has a `familyId`, its original's
+  id for a revival; `/albums?spex=<familyId>` and the album page's "more from the same spex" list an original with its
+  revivals, and `spexSearch` returns revivals right after their original, which the picker indents.
 - **Album kinds** are configured by admins (`/admin/kinds`) and come from `albumKinds`; show them with
   `kindName(kind, locale)`. The first kind is the default and is not shown as a badge (`kind.isDefault`).
 - **The player bar** sets `--player-height` on `<html>` while it shows; the page and the sidebar (with the account

@@ -19,7 +19,7 @@ const HomeQuery = graphql(`
     query Home {
         recentAlbums(limit: 12) {
             id title year kind { ...KindFields } hasCover trackCount durationMs
-            spex { id title year revival categoryId categoryName }
+            spex { id title year revival parentId familyId categoryId categoryName }
         }
         categories { id name albumCount }
         years
@@ -30,10 +30,19 @@ const AlbumsQuery = graphql(`
     query Albums($filter: AlbumFilter) {
         albums(filter: $filter) {
             id title year kind { ...KindFields } hasCover published trackCount durationMs
-            spex { id title year revival categoryId categoryName }
+            spex { id title year revival parentId familyId categoryId categoryName }
         }
         categories { id name albumCount }
         years
+    }
+`);
+
+const SpexAlbumsQuery = graphql(`
+    query SpexAlbums($filter: AlbumFilter) {
+        albums(filter: $filter) {
+            id title year kind { ...KindFields } hasCover published trackCount durationMs
+            spex { id title year revival parentId familyId categoryId categoryName }
+        }
     }
 `);
 
@@ -42,7 +51,7 @@ const AlbumQuery = graphql(`
         album(id: $id) {
             id title year kind { ...KindFields } description hasCover published publishedAt trashedAt navidromeId trackCount durationMs
             createdAt lastModifiedAt
-            spex { id title year revival categoryId categoryName }
+            spex { id title year revival parentId familyId categoryId categoryName }
             tracks {
                 id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
                 lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing
@@ -58,7 +67,7 @@ const SearchQuery = graphql(`
         search(q: $q) {
             albums {
                 id title year kind { ...KindFields } hasCover published trackCount durationMs
-                spex { id title year revival categoryId categoryName }
+                spex { id title year revival parentId familyId categoryId categoryName }
             }
             tracks {
                 id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
@@ -79,14 +88,14 @@ const AlbumsByNavidromeIdsQuery = graphql(`
     query AlbumsByNavidromeIds($ids: [String!]!) {
         albumsByNavidromeIds(ids: $ids) {
             id title year kind { ...KindFields } hasCover trackCount durationMs navidromeId
-            spex { id title year revival categoryId categoryName }
+            spex { id title year revival parentId familyId categoryId categoryName }
         }
     }
 `);
 
 const SpexSearchQuery = graphql(`
     query SpexSearch($q: String!) {
-        spexSearch(q: $q) { id title year revival categoryName }
+        spexSearch(q: $q) { id title year revival parentId categoryName }
     }
 `);
 
@@ -194,6 +203,16 @@ export async function getHome() {
 
 export async function getAlbums(filter: AlbumFilter) {
     return runQuery(AlbumsQuery, {filter});
+}
+
+/**
+ * The albums of the spex and, for originals, their revivals, oldest first, each album once.
+ */
+export async function getAlbumsOfSpex(spexIds: string[]) {
+    const lists = await Promise.all([...new Set(spexIds)].map(spexId => runQuery(SpexAlbumsQuery, {filter: {spexId}})));
+    const albums = new Map(lists.flatMap(list => list?.albums ?? []).map(album => [album.id, album]));
+
+    return [...albums.values()].sort((a, b) => (a.year ?? 0) - (b.year ?? 0) || a.title.localeCompare(b.title));
 }
 
 export async function getAlbum(id: string) {
