@@ -80,6 +80,12 @@ function resetState() {
         starred: [],
         // Navidrome id of a song or album -> how often the listener played it and when last
         plays: {},
+        // Navidrome id of a song or album -> the listener's rating, 1 to 5
+        ratings: {},
+        // Navidrome ids of starred albums
+        starredAlbums: [],
+        // The play queue shared with the listener's apps: Navidrome song ids, the current one and the position in ms
+        playQueue: null,
         playlists: [{id: "pl-1", name: "Favoriter", entries: [`nd-${uuidOf(11)}`]}],
         appPasswords: [],
         apiKeys: [],
@@ -516,7 +522,9 @@ function handleRest(url, res) {
     const id = url.searchParams.get("id");
 
     const songOf = navidromeId => ({id: navidromeId, title: "", album: "", albumId: "",
-        ...(state.plays[navidromeId] ? {playCount: state.plays[navidromeId].playCount, played: state.plays[navidromeId].played} : {})});
+        ...(state.plays[navidromeId] ? {playCount: state.plays[navidromeId].playCount, played: state.plays[navidromeId].played} : {}),
+        ...(state.ratings[navidromeId] ? {userRating: state.ratings[navidromeId]} : {})});
+    const albumIdParam = url.searchParams.get("albumId");
 
     if (endpoint === "scrobble") {
         if (url.searchParams.get("submission") === "true") {
@@ -532,7 +540,30 @@ function handleRest(url, res) {
     } else if (endpoint === "getAlbum") {
         const album = state.albums.find(candidate => candidate.navidromeId === id);
 
-        subsonic(res, {album: {id, song: state.tracks.filter(t => t.albumId === album?.id && t.navidromeId).map(t => songOf(t.navidromeId))}});
+        subsonic(res, {album: {id, ...(state.ratings[id] ? {userRating: state.ratings[id]} : {}),
+            ...(state.starredAlbums.includes(id) ? {starred: "2026-10-31T18:00:00Z"} : {}), song: state.tracks.filter(t => t.albumId === album?.id && t.navidromeId).map(t => songOf(t.navidromeId))}});
+    } else if (endpoint === "getAlbumList2" && url.searchParams.get("type") === "highest") {
+        const rated = Object.entries(state.ratings)
+            .filter(([navidromeId]) => state.albums.some(album => album.navidromeId === navidromeId))
+            .sort(([, a], [, b]) => b - a);
+
+        subsonic(res, {albumList2: {album: rated.map(([navidromeId, userRating]) => ({id: navidromeId, name: "", userRating}))}});
+    } else if (endpoint === "setRating") {
+        const rating = Number(url.searchParams.get("rating"));
+
+        if (rating === 0) {
+            delete state.ratings[id];
+        } else {
+            state.ratings[id] = rating;
+        }
+        subsonic(res, {});
+    } else if (endpoint === "getPlayQueue") {
+        subsonic(res, state.playQueue ? {playQueue: {current: state.playQueue.current, position: state.playQueue.position,
+            username: "lisa", changed: "2026-10-31T18:00:00Z", changedBy: "Symfonium", entry: state.playQueue.ids.map(songOf)}} : {});
+    } else if (endpoint === "savePlayQueue") {
+        state.playQueue = {ids: url.searchParams.getAll("id"), current: url.searchParams.get("current"),
+            position: Number(url.searchParams.get("position") ?? 0)};
+        subsonic(res, {});
     } else if (endpoint === "getAlbumList2") {
         const played = Object.entries(state.plays)
             .filter(([navidromeId]) => state.albums.some(album => album.navidromeId === navidromeId))
@@ -540,12 +571,20 @@ function handleRest(url, res) {
 
         subsonic(res, {albumList2: {album: played.map(([navidromeId, plays]) => ({id: navidromeId, name: "", ...plays}))}});
     } else if (endpoint === "getStarred2") {
-        subsonic(res, {starred2: {song: state.starred.map(songOf)}});
+        subsonic(res, {starred2: {song: state.starred.map(songOf), album: state.starredAlbums.map(navidromeId => ({id: navidromeId, name: ""}))}});
     } else if (endpoint === "star") {
-        state.starred.push(id);
+        if (albumIdParam) {
+            state.starredAlbums.push(albumIdParam);
+        } else {
+            state.starred.push(id);
+        }
         subsonic(res, {});
     } else if (endpoint === "unstar") {
-        state.starred = state.starred.filter(candidate => candidate !== id);
+        if (albumIdParam) {
+            state.starredAlbums = state.starredAlbums.filter(candidate => candidate !== albumIdParam);
+        } else {
+            state.starred = state.starred.filter(candidate => candidate !== id);
+        }
         subsonic(res, {});
     } else if (endpoint === "getPlaylists") {
         subsonic(res, {playlists: {playlist: state.playlists.map(playlistOf)}});
@@ -802,6 +841,9 @@ async function handle(req, res, chunks) {
         } else if (req.method === "POST" && path === "/__navidrome") {
             state.navidromeUp = JSON.parse(body).up;
             res.writeHead(204).end();
+        } else if (req.method === "POST" && path === "/__playQueue") {
+            state.playQueue = JSON.parse(body).playQueue;
+            res.writeHead(204).end();
         } else if (req.method === "POST" && path === "/__plays") {
             Object.assign(state.plays, JSON.parse(body).plays);
             res.writeHead(204).end();
@@ -813,6 +855,7 @@ async function handle(req, res, chunks) {
         } else if (req.method === "GET" && path === "/__state") {
             res.writeHead(200, {"content-type": "application/json"}).end(JSON.stringify({
                 uploads: state.uploads.size, scanRequested: state.scanRequested, starred: state.starred, plays: state.plays,
+                ratings: state.ratings, starredAlbums: state.starredAlbums, playQueue: state.playQueue,
                 kinds: state.kinds,
                 tracks: state.tracks.map(({id, albumId, title, trackNumber, published, listed, trashedAt}) =>
                     ({id, albumId, title, trackNumber, published, listed, trashedAt})),

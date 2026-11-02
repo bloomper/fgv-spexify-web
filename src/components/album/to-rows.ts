@@ -41,5 +41,6 @@ export function toRows(tracks: TrackLike[], plays: Plays = {}): TrackRow[] {
         videoLinks: track.videoLinks,
         playCount: track.navidromeId ? plays[track.navidromeId]?.playCount : undefined,
         played: track.navidromeId ? plays[track.navidromeId]?.played : undefined,
+        rating: track.navidromeId ? plays[track.navidromeId]?.rating ?? 0 : undefined,
     }));
 }

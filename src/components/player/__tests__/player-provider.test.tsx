@@ -4,8 +4,10 @@ import * as React from "react";
 import {PlayerProvider, type PlayerTrack, usePlayer} from "@/components/player/player-provider.client";
 
 const scrobbleAction = vi.hoisted(() => vi.fn());
+const loadPlayQueueAction = vi.hoisted(() => vi.fn());
+const savePlayQueueAction = vi.hoisted(() => vi.fn());
 
-vi.mock("@/components/player/actions.server", () => ({scrobbleAction}));
+vi.mock("@/components/player/actions.server", () => ({scrobbleAction, loadPlayQueueAction, savePlayQueueAction}));
 
 const track = (id: string, navidromeId: string | null = `nd-${id}`): PlayerTrack =>
     ({id, title: `Låt ${id}`, albumId: "1", albumTitle: "Nobel", durationMs: 60_000, navidromeId});
@@ -20,6 +22,8 @@ function render() {
 describe("PlayerProvider", () => {
     beforeEach(() => {
         scrobbleAction.mockReset();
+        loadPlayQueueAction.mockReset().mockResolvedValue(null);
+        savePlayQueueAction.mockReset().mockResolvedValue(undefined);
         vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(function (this: HTMLMediaElement) {
             this.dispatchEvent(new Event("play"));
             return Promise.resolve();
@@ -174,5 +178,64 @@ describe("PlayerProvider", () => {
         vi.spyOn(console, "error").mockImplementation(() => undefined);
 
         expect(() => renderHook(() => usePlayer())).toThrow("usePlayer must be used inside PlayerProvider");
+    });
+
+    it("takes up the saved queue, paused where it was left, without reporting a play", async () => {
+        loadPlayQueueAction.mockResolvedValue({tracks: TRACKS.slice(0, 2), index: 1, positionSeconds: 42});
+        const {result} = render();
+
+        await vi.waitFor(() => expect(result.current.current?.id).toBe("2"));
+        expect(result.current.queue).toHaveLength(2);
+        expect(result.current.playing).toBe(false);
+        expect(result.current.time).toBe(42);
+        expect(audio().src).toMatch(/\/api\/audio\/2$/);
+        expect(scrobbleAction).not.toHaveBeenCalled();
+    });
+
+    it("keeps what the user started while the saved queue was on its way", async () => {
+        let answer: (value: unknown) => void = () => undefined;
+
+        loadPlayQueueAction.mockReturnValue(new Promise(resolve => answer = resolve));
+        const {result} = render();
+
+        act(() => result.current.playQueue(TRACKS, 0));
+        await act(async () => answer({tracks: [track("9")], index: 0, positionSeconds: 0}));
+
+        expect(result.current.current?.id).toBe("1");
+    });
+
+    it("saves the queue's songs Navidrome knows, the current one and the position, once the saved queue was read", async () => {
+        vi.useFakeTimers({shouldAdvanceTime: true});
+        try {
+            const {result} = render();
+
+            await act(async () => undefined);
+            act(() => result.current.playQueue(TRACKS, 1));
+            audio().currentTime = 12;
+            await act(async () => {
+                vi.advanceTimersByTime(1100);
+            });
+
+            expect(savePlayQueueAction).toHaveBeenLastCalledWith(["nd-1", "nd-2"], "nd-2", 12000);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it("saves nothing before the saved queue was read", () => {
+        loadPlayQueueAction.mockReturnValue(new Promise(() => undefined));
+        vi.useFakeTimers();
+        try {
+            const {result} = render();
+
+            act(() => result.current.playQueue(TRACKS, 0));
+            act(() => {
+                vi.advanceTimersByTime(5000);
+            });
+
+            expect(savePlayQueueAction).not.toHaveBeenCalled();
+        } finally {
+            vi.useRealTimers();
+        }
     });
 });

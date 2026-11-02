@@ -261,7 +261,8 @@
     "recentlyPlayed": "Recently played by you",
     "mostPlayed": "Most played by you",
     "lastPlayed": "Played {date}",
-    "plays": "{count, plural, =1 {# play} other {# plays}}"
+    "plays": "{count, plural, =1 {# play} other {# plays}}",
+    "highestRated": "Highest rated by you"
   },
   "Albums": {
     "title": "Albums",
@@ -303,7 +304,14 @@
     "createPlaylist": "Create",
     "plays": "{count, plural, =1 {Played once} other {Played # times}}",
     "lastPlayed": "Last played {date}",
-    "neverPlayed": "Not played"
+    "neverPlayed": "Not played",
+    "rate": "Rating for {title}",
+    "rateAlbum": "Your rating of the album",
+    "rateTrack": "Rating",
+    "rated": "The rating was saved",
+    "rateFailed": "The rating could not be saved.",
+    "starAlbum": "Star the album",
+    "unstarAlbum": "Remove the album's star"
   },
   "Player": {
     "label": "Player",
@@ -321,7 +329,8 @@
     "lyrics": "Lyrics",
     "queue": "Queue",
     "error": "The track could not be played.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "restored": "Continue where you left off"
   },
   "Search": {
     "title": "Search",
@@ -334,8 +343,10 @@
   },
   "Starred": {
     "title": "Starred",
-    "text": "Tracks you have starred, here and in your apps.",
-    "none": "You have not starred anything yet."
+    "text": "Tracks and albums you have starred, here and in your apps.",
+    "none": "You have not starred anything yet.",
+    "albums": "Albums",
+    "tracks": "Tracks"
   },
   "Playlists": {
     "title": "Playlists",
@@ -552,5 +563,9 @@
     "save": "Save",
     "edit": "Edit {name}",
     "cancel": "Cancel"
+  },
+  "Rating": {
+    "stars": "{count, plural, =1 {# star} other {# stars}}",
+    "rated": "{count, plural, =1 {Rated # star} other {Rated # stars}}"
   }
 }

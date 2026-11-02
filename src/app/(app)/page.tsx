@@ -11,6 +11,7 @@ import {withPolicyPage} from "@/utils/route.server";
 export default async function HomePage() {
     return withPolicyPage(Policies.app.requireAccess, async () => {
         const t = await getTranslations("Home");
+        const tr = await getTranslations("Rating");
         const locale = await getLocale();
         const [home, me, played] = await Promise.all([getHome(), getMe(), getPlayedAlbums()]);
         const welcome = locale === "en" ? me?.settings.welcomeEn : me?.settings.welcomeSv;
@@ -56,6 +57,14 @@ export default async function HomePage() {
                         <h2 id="most-played" className="text-lg font-semibold">{t("mostPlayed")}</h2>
                         <AlbumGrid albums={played.frequent.slice(0, 6)}
                                    label={album => t("plays", {count: played.frequent.find(item => item.id === album.id)?.playCount ?? 0})}/>
+                    </section>
+                )}
+
+                {played.highest.length > 0 && (
+                    <section className="space-y-3" aria-labelledby="highest-rated">
+                        <h2 id="highest-rated" className="text-lg font-semibold">{t("highestRated")}</h2>
+                        <AlbumGrid albums={played.highest.slice(0, 6)}
+                                   label={album => tr("rated", {count: played.highest.find(item => item.id === album.id)?.rating ?? 0})}/>
                     </section>
                 )}
 

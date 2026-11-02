@@ -55,6 +55,9 @@ export const test = base.extend<{ resetBackend: void; noNativeDialogs: void; log
             plays: async (plays: Record<string, { playCount: number; played: string }>) => {
                 await request.post(`${MOCK_URL}/__plays`, {data: {plays}});
             },
+            playQueue: async (playQueue: { ids: string[]; current: string | null; position: number } | null) => {
+                await request.post(`${MOCK_URL}/__playQueue`, {data: {playQueue}});
+            },
             failNext: async (operation: string, classification: string) => {
                 await request.post(`${MOCK_URL}/__fail`, {data: {operation, classification}});
             },
@@ -71,6 +74,10 @@ type MockState = {
     /** Play counts by Navidrome id of song or album, from scrobbles. */
     plays: Record<string, { playCount: number; played: string }>;
     kinds: { id: string; nameSv: string; nameEn: string; position: number }[];
+    /** The listener's ratings by Navidrome id of song or album. */
+    ratings: Record<string, number>;
+    starredAlbums: string[];
+    playQueue: { ids: string[]; current: string | null; position: number } | null;
     tracks: { id: string; albumId: string; title: string; trackNumber: number; published: boolean; listed: boolean; trashedAt: string | null }[];
     albums: { id: string; title: string; published: boolean; hasCover: boolean; trashedAt: string | null }[];
 };
@@ -82,6 +89,8 @@ type Mock = {
     navidrome: (up: boolean) => Promise<void>;
     /** Sets how often the listener played songs or albums, by Navidrome id ("nd-…" songs, "al-1" the album Nobel). */
     plays: (plays: Record<string, { playCount: number; played: string }>) => Promise<void>;
+    /** Sets the play queue the listener's apps saved in Navidrome; null for none. */
+    playQueue: (playQueue: { ids: string[]; current: string | null; position: number } | null) => Promise<void>;
     /** Makes the next call of a GraphQL operation, e.g. "AlbumUpdate", fail with the classification, e.g. "CONFLICT". */
     failNext: (operation: string, classification: string) => Promise<void>;
     /** What the backend holds, for checking what the web sent. */

@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {type PlayerTrack, usePlayer} from "@/components/player/player-provider.client";
 import {formatDuration} from "@/components/player/lyrics";
-import {addToPlaylistAction, removeFromPlaylistAction, starAction} from "@/app/(app)/actions.server";
+import {addToPlaylistAction, rateAction, removeFromPlaylistAction, starAction} from "@/app/(app)/actions.server";
+import {RatingInput, RatingStars} from "@/components/rating.client";
 import {cn} from "@/utils/utils";
 import {formatDate} from "@/utils/format";
 import {useDialogs} from "@/components/dialogs.client";
@@ -34,6 +35,8 @@ export type TrackRow = PlayerTrack & {
     playCount?: number;
     /** When the user last played it. */
     played?: string | null;
+    /** The user's rating, 1 to 5, or 0 when not rated; undefined when not known. */
+    rating?: number;
 };
 
 type Props = {
@@ -56,6 +59,8 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
     const player = usePlayer();
     const {prompt} = useDialogs();
     const [starred, setStarred] = useState(() => new Set(initialStarred));
+    const [ratings, setRatings] = useState<Record<string, number>>({});
+    const ratingOf = (track: TrackRow) => ratings[track.id] ?? track.rating ?? 0;
     const [, startTransition] = useTransition();
     const playable = tracks.filter(track => !track.fileMissing);
     const discs = new Set(tracks.map(track => track.discNumber)).size > 1;
@@ -85,6 +90,27 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
                 trackEvent("track-star", {starred: next});
             } else {
                 toast.error(t("starFailed"));
+            }
+        });
+    };
+
+    const rate = (track: TrackRow, rating: number) => {
+        if (!track.navidromeId) {
+            return;
+        }
+
+        const previous = ratingOf(track);
+        const id = track.navidromeId;
+
+        setRatings(current => ({...current, [track.id]: rating}));
+        startTransition(async () => {
+            const result = await rateAction(id, rating);
+
+            if (result.ok) {
+                trackEvent("track-rate", {rating});
+            } else {
+                setRatings(current => ({...current, [track.id]: previous}));
+                toast.error(t("rateFailed"));
             }
         });
     };
@@ -185,6 +211,7 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
                                             {track.played && <span className="block">{formatDate(track.played)}</span>}
                                         </>
                                     ) : t("neverPlayed")}
+                                    <RatingStars value={ratingOf(track)} className="justify-end"/>
                                 </span>
                             )}
                             <span className="hidden w-12 shrink-0 text-right text-xs tabular-nums text-muted-foreground sm:block">
@@ -200,6 +227,12 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
                                     </DropdownMenuItem>
                                     {track.navidromeId && (
                                         <>
+                                            <DropdownMenuSeparator/>
+                                            <div className="flex items-center justify-between gap-3 px-2 py-1 text-sm">
+                                                <span>{t("rateTrack")}</span>
+                                                <RatingInput value={ratingOf(track)} onChange={rating => rate(track, rating)}
+                                                             label={t("rate", {title: track.title})}/>
+                                            </div>
                                             <DropdownMenuSeparator/>
                                             {playlists.map(playlist => (
                                                 <DropdownMenuItem key={playlist.id} onClick={() => void addTo(track, playlist.id)}>

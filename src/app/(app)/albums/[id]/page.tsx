@@ -9,7 +9,8 @@ import {PlayAllButtons, TrackList} from "@/components/album/track-list.client";
 import {toRows} from "@/components/album/to-rows";
 import {formatDuration} from "@/components/player/lyrics";
 import {getAlbum, getMe} from "@/lib/catalog/catalog.server";
-import {getAlbumPlays, getListeningState, spexflixUrl} from "@/lib/catalog/listening.server";
+import {getAlbumListening, getListeningState, spexflixUrl} from "@/lib/catalog/listening.server";
+import {AlbumListening} from "@/components/album/album-listening.client";
 import {Policies} from "@/utils/policy.server";
 import {withPolicyPage} from "@/utils/route.server";
 import {isEditor} from "@/utils/auth";
@@ -33,7 +34,8 @@ export default async function AlbumPage({params}: { params: Promise<{ id: string
             notFound();
         }
 
-        const rows = toRows(album.tracks, await getAlbumPlays(album.navidromeId));
+        const albumListening = await getAlbumListening(album.navidromeId);
+        const rows = toRows(album.tracks, albumListening?.plays);
         const register = process.env.SPEXREGISTER_WEB_URL?.replace(/\/$/, "");
 
         return (
@@ -52,6 +54,9 @@ export default async function AlbumPage({params}: { params: Promise<{ id: string
                                 formatDuration(album.durationMs / 1000)].filter(Boolean).join(" · ")}
                         </p>
                         {album.description && <p className="max-w-prose whitespace-pre-line text-sm">{album.description}</p>}
+                        {album.navidromeId && albumListening && (
+                            <AlbumListening navidromeId={album.navidromeId} starred={albumListening.starred} rating={albumListening.rating}/>
+                        )}
                         {album.spex && register && (
                             <a href={`${register}/spex?open=${album.spex.id}`} target="_blank" rel="noopener noreferrer"
                                className="text-sm text-primary hover:underline">{t("inSpexregister")}</a>

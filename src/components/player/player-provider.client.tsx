@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import {createContext, useCallback, useContext, useEffect, useMemo, useRef, useState} from "react";
-import {scrobbleAction} from "@/components/player/actions.server";
+import {loadPlayQueueAction, savePlayQueueAction, scrobbleAction} from "@/components/player/actions.server";
 
 export type PlayerTrack = {
     id: string;
@@ -67,6 +67,10 @@ function shuffled<T>(items: T[], first: number): T[] {
  * navigates. Audio comes from {@code /api/audio/[id]}, which streams with the user's session. The browser's media
  * controls (lock screen, keyboard keys) work through the Media Session API. When a track cannot be loaded, the player
  * stops and says so instead of looking as if it is loading; playing again retries, and skipping moves on as usual.
+ *
+ * The queue is shared with the user's apps through Navidrome's play queue: it is saved when it changes, when playing
+ * pauses and every half minute while playing, and on the first page load an empty player takes it up again, paused
+ * where it was left.
  */
 export function PlayerProvider({children}: { children: React.ReactNode }) {
     const audio = useRef<HTMLAudioElement | null>(null);
@@ -79,7 +83,14 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
     const [shuffle, setShuffleState] = useState(false);
     const [repeat, setRepeat] = useState<Repeat>("off");
     const scrobbled = useRef<string | null>(null);
+    // Nothing is saved before the saved queue was read, or an empty player would overwrite it
+    const restored = useRef(false);
     const current = queue[index] ?? null;
+    const queueRef = useRef(queue);
+
+    useEffect(() => {
+        queueRef.current = queue;
+    }, [queue]);
 
     const load = useCallback((track: PlayerTrack | undefined, autoplay: boolean) => {
         const element = audio.current;
@@ -92,9 +103,9 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
         scrobbled.current = null;
         if (autoplay) {
             void element.play().catch(() => setPlaying(false));
-        }
-        if (track.navidromeId) {
-            void scrobbleAction(track.navidromeId, false);
+            if (track.navidromeId) {
+                void scrobbleAction(track.navidromeId, false);
+            }
         }
     }, []);
 
@@ -236,6 +247,65 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
             element.removeEventListener("error", onError);
         };
     }, [current, next, repeat]);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        loadPlayQueueAction().then(saved => {
+            if (cancelled) {
+                return;
+            }
+            // The user may have started something while the saved queue was on its way
+            if (queueRef.current.length > 0 || !saved || saved.tracks.length === 0) {
+                return;
+            }
+
+            const element = audio.current;
+
+            setQueue(saved.tracks);
+            setIndex(saved.index);
+            load(saved.tracks[saved.index], false);
+            if (element && saved.positionSeconds > 0) {
+                element.addEventListener("loadedmetadata", () => {
+                    element.currentTime = saved.positionSeconds;
+                }, {once: true});
+                setTime(saved.positionSeconds);
+            }
+        }).catch(() => undefined).finally(() => {
+            restored.current = true;
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [load]);
+
+    const save = useCallback(() => {
+        const withIds = queue.filter(track => track.navidromeId);
+
+        if (!restored.current || withIds.length === 0) {
+            return;
+        }
+        void savePlayQueueAction(withIds.map(track => track.navidromeId!), current?.navidromeId ?? null,
+            (audio.current?.currentTime ?? 0) * 1000).catch(() => undefined);
+    }, [current, queue]);
+
+    useEffect(() => {
+        const timer = setTimeout(save, 1000);
+
+        return () => clearTimeout(timer);
+        // A changed queue or track is saved; time alone is saved by the interval below
+    }, [save]);
+
+    useEffect(() => {
+        if (!playing) {
+            save();
+            return;
+        }
+
+        const timer = setInterval(save, 30_000);
+
+        return () => clearInterval(timer);
+    }, [playing, save]);
 
     useEffect(() => {
         if (!("mediaSession" in navigator) || !current) {

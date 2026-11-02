@@ -6,7 +6,7 @@ import {TrackList, type TrackRow} from "@/components/album/track-list.client";
 import {DialogsProvider} from "@/components/dialogs.client";
 
 const player = vi.hoisted(() => ({current: null as null | { id: string }, playing: false, playQueue: vi.fn(), toggle: vi.fn(), enqueue: vi.fn()}));
-const actions = vi.hoisted(() => ({starAction: vi.fn(), addToPlaylistAction: vi.fn(), removeFromPlaylistAction: vi.fn()}));
+const actions = vi.hoisted(() => ({starAction: vi.fn(), addToPlaylistAction: vi.fn(), removeFromPlaylistAction: vi.fn(), rateAction: vi.fn()}));
 const toast = vi.hoisted(() => ({success: vi.fn(), error: vi.fn()}));
 
 vi.mock("@/components/player/player-provider.client", () => ({usePlayer: () => player}));
@@ -34,6 +34,7 @@ describe("TrackList", () => {
         actions.starAction.mockResolvedValue({ok: true});
         actions.addToPlaylistAction.mockResolvedValue({ok: true});
         actions.removeFromPlaylistAction.mockResolvedValue({ok: true});
+        actions.rateAction.mockResolvedValue({ok: true});
     });
 
     it("plays from the chosen track, skipping tracks whose file is missing", async () => {
@@ -143,5 +144,22 @@ describe("TrackList", () => {
         expect(screen.getByText(/plays:.*"count":3/)).toBeInTheDocument();
         expect(screen.getByText("2026-10-31")).toBeInTheDocument();
         expect(screen.getByText("neverPlayed")).toBeInTheDocument();
+    });
+
+    it("rates a track from its menu, shows the rating, and takes it back when it cannot be saved", async () => {
+        show([row("1", {playCount: 1, played: null, rating: 0})]);
+
+        await userEvent.click(screen.getByRole("button", {name: /more/}));
+        const group = await screen.findByRole("radiogroup", {name: /rate:/});
+
+        await userEvent.click(within(group).getByRole("radio", {name: /"count":4/}));
+        await waitFor(() => expect(actions.rateAction).toHaveBeenCalledWith("nd-1", 4));
+        expect(screen.getByRole("img", {name: /rated:.*"count":4/})).toBeInTheDocument();
+
+        actions.rateAction.mockResolvedValue({ok: false});
+        await userEvent.click(within(group).getByRole("radio", {name: /"count":4/}));
+        await waitFor(() => expect(actions.rateAction).toHaveBeenLastCalledWith("nd-1", 0));
+        await waitFor(() => expect(toast.error).toHaveBeenCalledWith("rateFailed"));
+        expect(screen.getByRole("img", {name: /rated:.*"count":4/})).toBeInTheDocument();
     });
 });
