@@ -54,6 +54,10 @@ let state;
 function resetState() {
     state = {
         nextId: 100,
+        maintenanceJobs: [
+            {job: "SPEX_REFRESH", schedule: "0 15 3 * * *", running: false, lastStartedAt: null, lastFinishedAt: null, lastSucceeded: null},
+            {job: "UPLOAD_CLEANUP", schedule: "0 5 * * * *", running: true, lastStartedAt: "2026-11-01T10:05:00Z", lastFinishedAt: null, lastSucceeded: null},
+        ],
         albums: [
             {id: uuidOf(1), title: "Nobel", year: 1975, kind: "SHOW", description: "Inspelat 1975.", hasCover: false,
                 published: true, publishedAt: "2026-10-01T10:00:00Z", trashedAt: null, navidromeId: "al-1",
@@ -246,6 +250,22 @@ const resolvers = {
             throw new GraphQLError("SPEXREGISTER_UNAVAILABLE", MESSAGES.SPEXREGISTER_UNAVAILABLE);
         }
         return {spexSearch: [{id: SPEX.id, title: SPEX.title, year: SPEX.year, revival: false, categoryName: SPEX.categoryName}]};
+    },
+    MaintenanceJobs: persona => {
+        requireAdmin(persona);
+        return {maintenanceJobs: state.maintenanceJobs};
+    },
+    MaintenanceJobRun: (persona, {job}) => {
+        requireAdmin(persona);
+        const status = state.maintenanceJobs.find(j => j.job === job);
+
+        if (!status || status.running) {
+            return {maintenanceJobRun: false};
+        }
+        status.lastStartedAt = "2026-11-01T12:00:00Z";
+        status.lastFinishedAt = "2026-11-01T12:00:01Z";
+        status.lastSucceeded = true;
+        return {maintenanceJobRun: true};
     },
     LibraryStatus: persona => {
         if (!persona.roles.includes("ADMIN")) {

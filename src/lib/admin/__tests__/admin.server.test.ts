@@ -43,4 +43,17 @@ describe("the admin client", () => {
         expect(runMutation.mock.calls.at(-1)?.[1]).toEqual({input: {lockoutMinutes: 5}});
         expect(runMutation).toHaveBeenCalledTimes(5);
     });
+
+    it("reads the maintenance jobs and starts one", async () => {
+        runQuery.mockResolvedValueOnce({maintenanceJobs: [{job: "SPEX_REFRESH", running: false}]});
+        expect(await admin.getMaintenanceJobs()).toEqual([{job: "SPEX_REFRESH", running: false}]);
+        runQuery.mockResolvedValueOnce(undefined);
+        expect(await admin.getMaintenanceJobs()).toEqual([]);
+
+        runMutation.mockResolvedValueOnce({maintenanceJobRun: true});
+        expect(await admin.maintenanceJobRun("UPLOAD_CLEANUP")).toBe(true);
+        expect(runMutation.mock.calls.at(-1)?.[1]).toEqual({job: "UPLOAD_CLEANUP"});
+        runMutation.mockResolvedValueOnce({maintenanceJobRun: false});
+        expect(await admin.maintenanceJobRun("UPLOAD_CLEANUP")).toBe(false);
+    });
 });

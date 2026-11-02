@@ -29,6 +29,8 @@ type Documents = {
     "mutation TrashEmpty { trashEmpty }": typeof types.TrashEmptyDocument,
     "mutation LibraryRescan { libraryRescan }": typeof types.LibraryRescanDocument,
     "\n    mutation SettingsUpdate($input: SettingsInput!) { settingsUpdate(input: $input) { welcomeSv } }\n": typeof types.SettingsUpdateDocument,
+    "\n    query MaintenanceJobs { maintenanceJobs { job schedule running lastStartedAt lastFinishedAt lastSucceeded } }\n": typeof types.MaintenanceJobsDocument,
+    "mutation MaintenanceJobRun($job: MaintenanceJob!) { maintenanceJobRun(job: $job) }": typeof types.MaintenanceJobRunDocument,
     "\n    query Me {\n        me { username displayName roles spexflixUser }\n        settings { welcomeSv welcomeEn appPasswordExpiryMonths lockoutAttempts lockoutMinutes }\n    }\n": typeof types.MeDocument,
     "\n    query Home {\n        recentAlbums(limit: 12) {\n            id title year kind hasCover trackCount durationMs\n            spex { id title year revival categoryId categoryName }\n        }\n        categories { id name albumCount }\n        years\n    }\n": typeof types.HomeDocument,
     "\n    query Albums($filter: AlbumFilter) {\n        albums(filter: $filter) {\n            id title year kind hasCover published trackCount durationMs\n            spex { id title year revival categoryId categoryName }\n        }\n        categories { id name albumCount }\n        years\n    }\n": typeof types.AlbumsDocument,
@@ -68,6 +70,8 @@ const documents: Documents = {
     "mutation TrashEmpty { trashEmpty }": types.TrashEmptyDocument,
     "mutation LibraryRescan { libraryRescan }": types.LibraryRescanDocument,
     "\n    mutation SettingsUpdate($input: SettingsInput!) { settingsUpdate(input: $input) { welcomeSv } }\n": types.SettingsUpdateDocument,
+    "\n    query MaintenanceJobs { maintenanceJobs { job schedule running lastStartedAt lastFinishedAt lastSucceeded } }\n": types.MaintenanceJobsDocument,
+    "mutation MaintenanceJobRun($job: MaintenanceJob!) { maintenanceJobRun(job: $job) }": types.MaintenanceJobRunDocument,
     "\n    query Me {\n        me { username displayName roles spexflixUser }\n        settings { welcomeSv welcomeEn appPasswordExpiryMonths lockoutAttempts lockoutMinutes }\n    }\n": types.MeDocument,
     "\n    query Home {\n        recentAlbums(limit: 12) {\n            id title year kind hasCover trackCount durationMs\n            spex { id title year revival categoryId categoryName }\n        }\n        categories { id name albumCount }\n        years\n    }\n": types.HomeDocument,
     "\n    query Albums($filter: AlbumFilter) {\n        albums(filter: $filter) {\n            id title year kind hasCover published trackCount durationMs\n            spex { id title year revival categoryId categoryName }\n        }\n        categories { id name albumCount }\n        years\n    }\n": types.AlbumsDocument,
@@ -166,6 +170,14 @@ export function graphql(source: "mutation LibraryRescan { libraryRescan }"): (ty
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n    mutation SettingsUpdate($input: SettingsInput!) { settingsUpdate(input: $input) { welcomeSv } }\n"): (typeof documents)["\n    mutation SettingsUpdate($input: SettingsInput!) { settingsUpdate(input: $input) { welcomeSv } }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    query MaintenanceJobs { maintenanceJobs { job schedule running lastStartedAt lastFinishedAt lastSucceeded } }\n"): (typeof documents)["\n    query MaintenanceJobs { maintenanceJobs { job schedule running lastStartedAt lastFinishedAt lastSucceeded } }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "mutation MaintenanceJobRun($job: MaintenanceJob!) { maintenanceJobRun(job: $job) }"): (typeof documents)["mutation MaintenanceJobRun($job: MaintenanceJob!) { maintenanceJobRun(job: $job) }"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
