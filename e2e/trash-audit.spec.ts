@@ -1,5 +1,5 @@
 import {uuidOf} from "./constants";
-import {expect, test} from "./fixtures";
+import {answerDialog, expect, test} from "./fixtures";
 
 test.describe("The trash", () => {
     test("an editor trashes an album and a track and restores them, but cannot delete", async ({page, loginAs, mock}) => {
@@ -9,8 +9,8 @@ test.describe("The trash", () => {
         await page.getByRole("menuitem", {name: "Lägg i papperskorgen"}).click();
         await expect(page.getByText("Lagt i papperskorgen")).toBeVisible();
 
-        page.once("dialog", dialog => dialog.accept());
         await page.getByRole("button", {name: "Lägg i papperskorgen"}).click();
+        await answerDialog(page, "Lägg i papperskorgen");
         await expect(page).toHaveURL(/\/manage\/albums$/);
 
         await page.goto("/manage/trash");
@@ -24,8 +24,9 @@ test.describe("The trash", () => {
     test("an admin deletes from the trash and empties it", async ({page, loginAs, mock}) => {
         await loginAs("admin");
         await page.goto(`/manage/albums/${uuidOf(2)}`);
-        page.on("dialog", dialog => dialog.accept());
         await page.getByRole("button", {name: "Lägg i papperskorgen"}).click();
+        await answerDialog(page, "Lägg i papperskorgen");
+        await expect(page).toHaveURL(/\/manage\/albums$/);
         await page.goto(`/manage/albums/${uuidOf(1)}`);
         await page.getByRole("button", {name: "Mer för Ouvertyr"}).click();
         await page.getByRole("menuitem", {name: "Lägg i papperskorgen"}).click();
@@ -33,8 +34,10 @@ test.describe("The trash", () => {
 
         await page.goto("/manage/trash");
         await page.getByRole("listitem").filter({hasText: "Opublicerat album"}).getByRole("button", {name: "Radera"}).click();
+        await answerDialog(page, "Radera");
         await expect(page.getByText("Opublicerat album")).toHaveCount(0);
         await page.getByRole("button", {name: "Töm papperskorgen"}).click();
+        await answerDialog(page, "Töm papperskorgen");
         await expect(page.getByText("Papperskorgen är tom.")).toBeVisible();
         expect((await mock.state()).tracks.map(track => track.title)).toEqual(["Kärleksduetten"]);
     });

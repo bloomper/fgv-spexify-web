@@ -1,5 +1,5 @@
 import {uuidOf} from "./constants";
-import {expect, test} from "./fixtures";
+import {answerDialog, expect, test} from "./fixtures";
 
 test.describe("Playlists", () => {
     test.beforeEach(async ({loginAs}) => {
@@ -21,9 +21,10 @@ test.describe("Playlists", () => {
         await page.getByRole("menuitem", {name: "Lägg till i Favoriter"}).click();
         await expect(page.getByText("Tillagd i spellistan")).toBeVisible();
 
-        page.once("dialog", dialog => dialog.accept("Duetter"));
         await page.getByRole("button", {name: "Mer för Kärleksduetten"}).click();
         await page.getByRole("menuitem", {name: "Ny spellista…"}).click();
+        await expect(page.getByRole("dialog", {name: "Ny spellista"})).toBeVisible();
+        await answerDialog(page, "Skapa", "Duetter");
         await expect(page.getByText("Tillagd i spellistan")).toHaveCount(2);
 
         await page.goto("/playlists");
@@ -38,8 +39,8 @@ test.describe("Playlists", () => {
     test("deletes a playlist", async ({page}) => {
         await page.goto("/playlists");
         await page.getByRole("link", {name: /Favoriter/}).click();
-        page.once("dialog", dialog => dialog.accept());
         await page.getByRole("button", {name: "Radera spellistan"}).click();
+        await answerDialog(page, "Radera spellistan");
 
         await expect(page).toHaveURL(/\/playlists$/);
         await expect(page.getByText("Du har inga spellistor ännu.")).toBeVisible();

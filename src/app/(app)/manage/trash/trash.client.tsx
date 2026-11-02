@@ -7,6 +7,7 @@ import {toast} from "sonner";
 import {Button} from "@/components/ui/button";
 import {formatInstant} from "@/utils/format";
 import {deleteAlbumAction, deleteTrackAction, emptyTrashAction, trashAlbumAction, trashTrackAction} from "@/app/(app)/manage/actions.server";
+import {useDialogs} from "@/components/dialogs.client";
 
 type Item = { id: string; title: string; trashedAt?: string | null; detail?: string; albumId?: string };
 
@@ -15,6 +16,7 @@ type Item = { id: string; title: string; trashedAt?: string | null; detail?: str
  */
 export function TrashList({albums, tracks, admin}: { albums: Item[]; tracks: Item[]; admin: boolean }) {
     const t = useTranslations("Trash");
+    const {confirm} = useDialogs();
     const router = useRouter();
     const [pending, startTransition] = useTransition();
     const run = (work: () => Promise<{ ok: boolean; message?: string }>) => startTransition(async () => {
@@ -42,8 +44,8 @@ export function TrashList({albums, tracks, admin}: { albums: Item[]; tracks: Ite
                         {t("restore")}
                     </Button>
                     {admin && (
-                        <Button variant="destructive" size="sm" disabled={pending} onClick={() => {
-                            if (window.confirm(t("confirmDelete", {title: item.title}))) {
+                        <Button variant="destructive" size="sm" disabled={pending} onClick={async () => {
+                            if (await confirm({title: t("confirmDelete", {title: item.title}), confirmLabel: t("delete"), destructive: true})) {
                                 run(() => kind === "album" ? deleteAlbumAction(item.id) : deleteTrackAction(item.id));
                             }
                         }}>{t("delete")}</Button>
@@ -57,8 +59,8 @@ export function TrashList({albums, tracks, admin}: { albums: Item[]; tracks: Ite
         <div className="space-y-6">
             {albums.length === 0 && tracks.length === 0 && <p className="text-muted-foreground">{t("empty")}</p>}
             {admin && (albums.length > 0 || tracks.length > 0) && (
-                <Button variant="destructive" disabled={pending} onClick={() => {
-                    if (window.confirm(t("confirmEmpty"))) {
+                <Button variant="destructive" disabled={pending} onClick={async () => {
+                    if (await confirm({title: t("confirmEmpty"), confirmLabel: t("emptyTrash"), destructive: true})) {
                         run(emptyTrashAction);
                     }
                 }}>{t("emptyTrash")}</Button>

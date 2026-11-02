@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {useMemo, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import Link from "next/link";
 import {useTranslations} from "next-intl";
 import {ListMusic, Mic2, Pause, Play, Repeat, Repeat1, RotateCcw, Shuffle, SkipBack, SkipForward} from "lucide-react";
@@ -22,13 +22,37 @@ export function PlayerBar() {
     const {current} = player;
     const lines = useMemo(() => current?.lyrics && current.lyricsSynced ? parseLrc(current.lyrics) : [], [current]);
     const active = currentLine(lines, player.time);
+    const bar = useRef<HTMLDivElement>(null);
+    const visible = current !== null;
+
+    // The bar covers the bottom of the page, so the page and the sidebar (with the account menu and logout at its
+    // bottom) end above it: they read its height from --player-height
+    useEffect(() => {
+        const element = bar.current;
+        const root = document.documentElement;
+
+        if (!visible || !element) {
+            root.style.removeProperty("--player-height");
+            return;
+        }
+
+        const update = () => root.style.setProperty("--player-height", `${element.offsetHeight}px`);
+        const observer = new ResizeObserver(update);
+
+        update();
+        observer.observe(element);
+        return () => {
+            observer.disconnect();
+            root.style.removeProperty("--player-height");
+        };
+    }, [visible]);
 
     if (!current) {
         return null;
     }
 
     return (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur print:hidden"
+        <div ref={bar} className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur print:hidden"
              role="region" aria-label={t("label")}>
             <input
                 type="range"

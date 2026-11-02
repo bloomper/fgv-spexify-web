@@ -1,4 +1,5 @@
 import type {TrackRow} from "@/components/album/track-list.client";
+import type {Plays} from "@/lib/subsonic.server";
 
 type TrackLike = {
     id: string;
@@ -18,7 +19,10 @@ type TrackLike = {
     videoLinks?: { videoId: string; videoTitle: string; chapterTitle: string; startSeconds: number }[];
 };
 
-export function toRows(tracks: TrackLike[]): TrackRow[] {
+/**
+ * Tracks as the track list shows them, with the user's play counts from Navidrome when given.
+ */
+export function toRows(tracks: TrackLike[], plays: Plays = {}): TrackRow[] {
     return tracks.map(track => ({
         id: track.id,
         title: track.title,
@@ -35,5 +39,8 @@ export function toRows(tracks: TrackLike[]): TrackRow[] {
         listed: track.listed,
         fileMissing: track.fileMissing,
         videoLinks: track.videoLinks,
+        playCount: track.navidromeId ? plays[track.navidromeId]?.playCount : undefined,
+        played: track.navidromeId ? plays[track.navidromeId]?.played : undefined,
+        rating: track.navidromeId ? plays[track.navidromeId]?.rating ?? 0 : undefined,
     }));
 }

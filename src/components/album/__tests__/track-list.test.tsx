@@ -3,9 +3,10 @@ import {beforeEach, describe, expect, it, vi} from "vitest";
 import {render, screen, waitFor, within} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {TrackList, type TrackRow} from "@/components/album/track-list.client";
+import {DialogsProvider} from "@/components/dialogs.client";
 
 const player = vi.hoisted(() => ({current: null as null | { id: string }, playing: false, playQueue: vi.fn(), toggle: vi.fn(), enqueue: vi.fn()}));
-const actions = vi.hoisted(() => ({starAction: vi.fn(), addToPlaylistAction: vi.fn(), removeFromPlaylistAction: vi.fn()}));
+const actions = vi.hoisted(() => ({starAction: vi.fn(), addToPlaylistAction: vi.fn(), removeFromPlaylistAction: vi.fn(), rateAction: vi.fn()}));
 const toast = vi.hoisted(() => ({success: vi.fn(), error: vi.fn()}));
 
 vi.mock("@/components/player/player-provider.client", () => ({usePlayer: () => player}));
@@ -21,7 +22,9 @@ const row = (id: string, extra: Partial<TrackRow> = {}): TrackRow => ({
 });
 
 const show = (tracks: TrackRow[], props: Partial<Parameters<typeof TrackList>[0]> = {}) =>
-    render(<TrackList tracks={tracks} starred={[]} playlists={[{id: "pl-1", name: "Favoriter"}]} spexflixUrl={null} {...props}/>);
+    render(<DialogsProvider>
+        <TrackList tracks={tracks} starred={[]} playlists={[{id: "pl-1", name: "Favoriter"}]} spexflixUrl={null} {...props}/>
+    </DialogsProvider>);
 
 describe("TrackList", () => {
     beforeEach(() => {
@@ -31,6 +34,7 @@ describe("TrackList", () => {
         actions.starAction.mockResolvedValue({ok: true});
         actions.addToPlaylistAction.mockResolvedValue({ok: true});
         actions.removeFromPlaylistAction.mockResolvedValue({ok: true});
+        actions.rateAction.mockResolvedValue({ok: true});
     });
 
     it("plays from the chosen track, skipping tracks whose file is missing", async () => {
@@ -70,7 +74,8 @@ describe("TrackList", () => {
     });
 
     it("adds a track to a playlist or a new one from its menu", async () => {
-        vi.spyOn(window, "prompt").mockReturnValue("Duetter");
+        const prompt = vi.spyOn(window, "prompt");
+
         show([row("1")]);
 
         await userEvent.click(screen.getByRole("button", {name: /more/}));
@@ -79,6 +84,13 @@ describe("TrackList", () => {
 
         await userEvent.click(screen.getByRole("button", {name: /more/}));
         await userEvent.click(await screen.findByRole("menuitem", {name: "newPlaylist"}));
+        // An in-app dialog, never the browser's prompt
+        const dialog = await screen.findByRole("dialog");
+
+        expect(within(dialog).getByRole("button", {name: "createPlaylist"})).toBeDisabled();
+        await userEvent.type(within(dialog).getByLabelText("playlistName"), " Duetter ");
+        await userEvent.click(within(dialog).getByRole("button", {name: "createPlaylist"}));
+        expect(prompt).not.toHaveBeenCalled();
         await waitFor(() => expect(actions.addToPlaylistAction).toHaveBeenCalledWith(null, "Duetter", ["nd-1"]));
         expect(toast.success).toHaveBeenCalledWith("addedToPlaylist");
     });
@@ -102,5 +114,52 @@ describe("TrackList", () => {
         expect(link).toHaveAttribute("href", expect.stringContaining("https://spexflix.test/videos/7"));
         expect(link.getAttribute("href")).toContain("t=42");
         expect(within(document.body).queryAllByText(/goToAlbum/)).toHaveLength(0);
+    });
+
+    it("shows a play button in place of the number when a row is hovered", () => {
+        show([row("1"), row("2", {fileMissing: true})]);
+
+        const [first, missing] = screen.getAllByRole("listitem");
+
+        expect(first).toHaveClass("group/track");
+        expect(within(first).getByTestId("hover-play")).toHaveClass("hidden", "group-hover/track:block");
+        expect(within(first).getByText("1")).toHaveClass("group-hover/track:hidden");
+        expect(within(missing).queryByTestId("hover-play")).toBeNull();
+    });
+
+    it("cancelling the new playlist dialog adds nothing", async () => {
+        show([row("1")]);
+
+        await userEvent.click(screen.getByRole("button", {name: /more/}));
+        await userEvent.click(await screen.findByRole("menuitem", {name: "newPlaylist"}));
+        await userEvent.click(within(await screen.findByRole("dialog")).getByRole("button", {name: "cancel"}));
+
+        await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+        expect(actions.addToPlaylistAction).not.toHaveBeenCalled();
+    });
+
+    it("shows how often and when the user played a track", () => {
+        show([row("1", {playCount: 3, played: "2026-10-31T18:00:00Z"}), row("2", {playCount: 0, played: null})]);
+
+        expect(screen.getByText(/plays:.*"count":3/)).toBeInTheDocument();
+        expect(screen.getByText("2026-10-31")).toBeInTheDocument();
+        expect(screen.getByText("neverPlayed")).toBeInTheDocument();
+    });
+
+    it("rates a track from its menu, shows the rating, and takes it back when it cannot be saved", async () => {
+        show([row("1", {playCount: 1, played: null, rating: 0})]);
+
+        await userEvent.click(screen.getByRole("button", {name: /more/}));
+        const group = await screen.findByRole("radiogroup", {name: /rate:/});
+
+        await userEvent.click(within(group).getByRole("radio", {name: /"count":4/}));
+        await waitFor(() => expect(actions.rateAction).toHaveBeenCalledWith("nd-1", 4));
+        expect(screen.getByRole("img", {name: /rated:.*"count":4/})).toBeInTheDocument();
+
+        actions.rateAction.mockResolvedValue({ok: false});
+        await userEvent.click(within(group).getByRole("radio", {name: /"count":4/}));
+        await waitFor(() => expect(actions.rateAction).toHaveBeenLastCalledWith("nd-1", 0));
+        await waitFor(() => expect(toast.error).toHaveBeenCalledWith("rateFailed"));
+        expect(screen.getByRole("img", {name: /rated:.*"count":4/})).toBeInTheDocument();
     });
 });

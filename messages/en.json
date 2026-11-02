@@ -245,7 +245,8 @@
     "adminLibrary": "Music server",
     "adminUsers": "Users",
     "adminMaintenance": "Maintenance",
-    "adminSettings": "Settings"
+    "adminSettings": "Settings",
+    "adminKinds": "Album kinds"
   },
   "Home": {
     "title": "Spexify",
@@ -256,7 +257,12 @@
     "recent": "Recently published",
     "allAlbums": "All albums",
     "empty": "No albums are published yet.",
-    "years": "Years"
+    "years": "Years",
+    "recentlyPlayed": "Recently played by you",
+    "mostPlayed": "Most played by you",
+    "lastPlayed": "Played {date}",
+    "plays": "{count, plural, =1 {# play} other {# plays}}",
+    "highestRated": "Highest rated by you"
   },
   "Albums": {
     "title": "Albums",
@@ -267,12 +273,6 @@
     "none": "No albums match."
   },
   "Album": {
-    "kind": {
-      "SHOW": "Show",
-      "STUDIO": "Studio",
-      "COMPILATION": "Compilation",
-      "OTHER": "Other"
-    },
     "revival": "Revival",
     "unpublished": "Unpublished",
     "fileMissing": "File missing",
@@ -299,7 +299,19 @@
     "addedToPlaylist": "Added to the playlist",
     "removeFromPlaylist": "Remove from playlist",
     "goToAlbum": "Go to album",
-    "watchInSpexflix": "Watch in Spexflix: {video}"
+    "watchInSpexflix": "Watch in Spexflix: {video}",
+    "newPlaylistTitle": "New playlist",
+    "createPlaylist": "Create",
+    "plays": "{count, plural, =1 {Played once} other {Played # times}}",
+    "lastPlayed": "Last played {date}",
+    "neverPlayed": "Not played",
+    "rate": "Rating for {title}",
+    "rateAlbum": "Your rating of the album",
+    "rateTrack": "Rating",
+    "rated": "The rating was saved",
+    "rateFailed": "The rating could not be saved.",
+    "starAlbum": "Star the album",
+    "unstarAlbum": "Remove the album's star"
   },
   "Player": {
     "label": "Player",
@@ -317,7 +329,8 @@
     "lyrics": "Lyrics",
     "queue": "Queue",
     "error": "The track could not be played.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "restored": "Continue where you left off"
   },
   "Search": {
     "title": "Search",
@@ -330,8 +343,10 @@
   },
   "Starred": {
     "title": "Starred",
-    "text": "Tracks you have starred, here and in your apps.",
-    "none": "You have not starred anything yet."
+    "text": "Tracks and albums you have starred, here and in your apps.",
+    "none": "You have not starred anything yet.",
+    "albums": "Albums",
+    "tracks": "Tracks"
   },
   "Playlists": {
     "title": "Playlists",
@@ -527,5 +542,30 @@
     "minutes": "Lock-out length (minutes)",
     "save": "Save",
     "saved": "Saved"
+  },
+  "AdminKinds": {
+    "title": "Album kinds",
+    "text": "The kinds an album can have, e.g. a show or a studio recording. The first is preselected for new albums and not shown as a badge. A kind that any album has, also in the trash, cannot be deleted.",
+    "nameSv": "Name in Swedish",
+    "nameEn": "Name in English",
+    "albums": "{count, plural, =0 {No albums} =1 {# album} other {# albums}}",
+    "default": "Default",
+    "moveUp": "Move {name} up",
+    "moveDown": "Move {name} down",
+    "delete": "Delete",
+    "deleteKind": "Delete {name}",
+    "confirmDelete": "Delete the album kind {name}?",
+    "inUse": "Used by albums",
+    "add": "Add kind",
+    "added": "The kind was added",
+    "saved": "Saved",
+    "deleted": "The kind was deleted",
+    "save": "Save",
+    "edit": "Edit {name}",
+    "cancel": "Cancel"
+  },
+  "Rating": {
+    "stars": "{count, plural, =1 {# star} other {# stars}}",
+    "rated": "{count, plural, =1 {Rated # star} other {Rated # stars}}"
   }
 }

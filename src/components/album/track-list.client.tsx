@@ -17,8 +17,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {type PlayerTrack, usePlayer} from "@/components/player/player-provider.client";
 import {formatDuration} from "@/components/player/lyrics";
-import {addToPlaylistAction, removeFromPlaylistAction, starAction} from "@/app/(app)/actions.server";
+import {addToPlaylistAction, rateAction, removeFromPlaylistAction, starAction} from "@/app/(app)/actions.server";
+import {RatingInput, RatingStars} from "@/components/rating.client";
 import {cn} from "@/utils/utils";
+import {formatDate} from "@/utils/format";
+import {useDialogs} from "@/components/dialogs.client";
 import {track as trackEvent} from "@/utils/umami";
 
 export type TrackRow = PlayerTrack & {
@@ -28,6 +31,12 @@ export type TrackRow = PlayerTrack & {
     listed: boolean;
     fileMissing: boolean;
     videoLinks?: { videoId: string; videoTitle: string; chapterTitle: string; startSeconds: number }[];
+    /** How often the user played it, from Navidrome; undefined when not known. */
+    playCount?: number;
+    /** When the user last played it. */
+    played?: string | null;
+    /** The user's rating, 1 to 5, or 0 when not rated; undefined when not known. */
+    rating?: number;
 };
 
 type Props = {
@@ -41,13 +50,17 @@ type Props = {
 };
 
 /**
- * Tracks with play buttons, stars, downloads, playlists and links to Spexflix. Stars and playlists live in Navidrome,
- * so they work only for published tracks, which Navidrome knows.
+ * Tracks with play buttons, stars, downloads, playlists and links to Spexflix. Stars, playlists and play counts live in
+ * Navidrome, so they work only for published tracks, which Navidrome knows. Hovering a row shows a play button in
+ * place of its number.
  */
 export function TrackList({tracks, starred: initialStarred, playlists, spexflixUrl, showAlbum, playlistId}: Props) {
     const t = useTranslations("Album");
     const player = usePlayer();
+    const {prompt} = useDialogs();
     const [starred, setStarred] = useState(() => new Set(initialStarred));
+    const [ratings, setRatings] = useState<Record<string, number>>({});
+    const ratingOf = (track: TrackRow) => ratings[track.id] ?? track.rating ?? 0;
     const [, startTransition] = useTransition();
     const playable = tracks.filter(track => !track.fileMissing);
     const discs = new Set(tracks.map(track => track.discNumber)).size > 1;
@@ -81,12 +94,38 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
         });
     };
 
-    const addTo = (track: TrackRow, playlistId: string | null) => {
+    const rate = (track: TrackRow, rating: number) => {
         if (!track.navidromeId) {
             return;
         }
 
-        const name = playlistId ? null : window.prompt(t("playlistName"));
+        const previous = ratingOf(track);
+        const id = track.navidromeId;
+
+        setRatings(current => ({...current, [track.id]: rating}));
+        startTransition(async () => {
+            const result = await rateAction(id, rating);
+
+            if (result.ok) {
+                trackEvent("track-rate", {rating});
+            } else {
+                setRatings(current => ({...current, [track.id]: previous}));
+                toast.error(t("rateFailed"));
+            }
+        });
+    };
+
+    const addTo = async (track: TrackRow, playlistId: string | null) => {
+        if (!track.navidromeId) {
+            return;
+        }
+
+        const name = playlistId ? null : await prompt({
+            title: t("newPlaylistTitle"),
+            label: t("playlistName"),
+            confirmLabel: t("createPlaylist"),
+            maxLength: 100,
+        });
 
         if (!playlistId && !name) {
             return;
@@ -117,14 +156,21 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
                                 {t("disc", {number: track.discNumber})}
                             </li>
                         )}
-                        <li className={cn("flex items-center gap-2 px-2 py-2 sm:gap-3 sm:px-3", isCurrent && "bg-accent")}>
+                        <li className={cn("group/track flex items-center gap-2 px-2 py-2 hover:bg-muted/50 sm:gap-3 sm:px-3",
+                            isCurrent && "bg-accent hover:bg-accent")}>
                             <Button variant="ghost" size="icon" className="size-10 shrink-0" disabled={track.fileMissing}
                                     aria-label={isCurrent && player.playing ? t("pause", {title: track.title}) : t("play", {title: track.title})}
                                     onClick={() => isCurrent ? player.toggle() : player.playQueue(playable, playIndex)}>
-                                {isCurrent && player.playing ? <Pause/> :
-                                    <span className="text-sm tabular-nums text-muted-foreground group-hover:hidden">
-                                        {isCurrent ? <Play/> : track.trackNumber}
-                                    </span>}
+                                {isCurrent && player.playing ? <Pause/> : isCurrent || track.fileMissing ? (
+                                    isCurrent ? <Play/> : <span className="text-sm tabular-nums text-muted-foreground">{track.trackNumber}</span>
+                                ) : (
+                                    <>
+                                        <span className="text-sm tabular-nums text-muted-foreground group-hover/track:hidden group-focus-within/track:hidden">
+                                            {track.trackNumber}
+                                        </span>
+                                        <Play className="hidden group-hover/track:block group-focus-within/track:block" data-testid="hover-play"/>
+                                    </>
+                                )}
                             </Button>
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
@@ -156,6 +202,18 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
                                     <Star className={cn(starred.has(track.navidromeId) && "fill-current text-yellow-500")}/>
                                 </Button>
                             )}
+                            {track.playCount !== undefined && (
+                                <span className="hidden w-28 shrink-0 text-right text-xs tabular-nums text-muted-foreground md:block"
+                                      title={track.played ? t("lastPlayed", {date: formatDate(track.played) ?? ""}) : undefined}>
+                                    {track.playCount > 0 ? (
+                                        <>
+                                            <span className="block">{t("plays", {count: track.playCount})}</span>
+                                            {track.played && <span className="block">{formatDate(track.played)}</span>}
+                                        </>
+                                    ) : t("neverPlayed")}
+                                    <RatingStars value={ratingOf(track)} className="justify-end"/>
+                                </span>
+                            )}
                             <span className="hidden w-12 shrink-0 text-right text-xs tabular-nums text-muted-foreground sm:block">
                                 {formatDuration(track.durationMs / 1000)}
                             </span>
@@ -170,12 +228,18 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
                                     {track.navidromeId && (
                                         <>
                                             <DropdownMenuSeparator/>
+                                            <div className="flex items-center justify-between gap-3 px-2 py-1 text-sm">
+                                                <span>{t("rateTrack")}</span>
+                                                <RatingInput value={ratingOf(track)} onChange={rating => rate(track, rating)}
+                                                             label={t("rate", {title: track.title})}/>
+                                            </div>
+                                            <DropdownMenuSeparator/>
                                             {playlists.map(playlist => (
-                                                <DropdownMenuItem key={playlist.id} onClick={() => addTo(track, playlist.id)}>
+                                                <DropdownMenuItem key={playlist.id} onClick={() => void addTo(track, playlist.id)}>
                                                     <ListPlus/>{t("addToPlaylist", {name: playlist.name})}
                                                 </DropdownMenuItem>
                                             ))}
-                                            <DropdownMenuItem onClick={() => addTo(track, null)}>
+                                            <DropdownMenuItem onClick={() => void addTo(track, null)}>
                                                 <ListPlus/>{t("newPlaylist")}
                                             </DropdownMenuItem>
                                         </>

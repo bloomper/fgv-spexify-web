@@ -1,7 +1,7 @@
 "use server";
 
 import {revalidatePath} from "next/cache";
-import {addToPlaylist, createPlaylist, deletePlaylist, removeFromPlaylist, star} from "@/lib/subsonic.server";
+import {addToPlaylist, createPlaylist, deletePlaylist, removeFromPlaylist, setRating, star, starAlbum} from "@/lib/subsonic.server";
 import {withPolicyAction} from "@/utils/route.server";
 import {Policies} from "@/utils/policy.server";
 
@@ -20,6 +20,26 @@ export async function starAction(navidromeId: string, starred: boolean): Promise
     return withPolicyAction(Policies.app.requireAccess, () => attempt(async () => {
         await star(navidromeId, starred);
         revalidatePath("/starred");
+    }));
+}
+
+export async function starAlbumAction(navidromeAlbumId: string, starred: boolean): Promise<SimpleResult> {
+    return withPolicyAction(Policies.app.requireAccess, () => attempt(async () => {
+        await starAlbum(navidromeAlbumId, starred);
+        revalidatePath("/starred");
+    }));
+}
+
+/**
+ * Rates a song or an album, by its Navidrome id, from 1 to 5; 0 removes the rating.
+ */
+export async function rateAction(navidromeId: string, rating: number): Promise<SimpleResult> {
+    return withPolicyAction(Policies.app.requireAccess, () => attempt(async () => {
+        if (!Number.isInteger(rating) || rating < 0 || rating > 5) {
+            throw new Error("Invalid rating");
+        }
+        await setRating(navidromeId, rating);
+        revalidatePath("/");
     }));
 }
 

@@ -4,7 +4,7 @@ import {PlayAllButtons, TrackList} from "@/components/album/track-list.client";
 import {toRows} from "@/components/album/to-rows";
 import {getTracksByNavidromeIds} from "@/lib/catalog/catalog.server";
 import {getListeningState} from "@/lib/catalog/listening.server";
-import {getPlaylist} from "@/lib/subsonic.server";
+import {getPlaylist, playsOf} from "@/lib/subsonic.server";
 import {Policies} from "@/utils/policy.server";
 import {withPolicyPage} from "@/utils/route.server";
 import {DeletePlaylistButton} from "./playlist-actions.client";
@@ -31,7 +31,7 @@ export default async function PlaylistPage({params}: { params: Promise<{ id: str
             getListeningState(),
         ]);
         // Positions are the playlist's own, so removing is offered only when every entry is a track Spexify still lists
-        const rows = toRows(tracks);
+        const rows = toRows(tracks, playsOf(playlist.entry));
 
         return (
             <div className="space-y-6 p-4 sm:p-6">

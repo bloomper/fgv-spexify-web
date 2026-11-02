@@ -21,3 +21,19 @@ export function formatInstant(value: string | Date | null | undefined): string |
 
     return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}`;
 }
+
+/**
+ * Formats an instant as yyyy-mm-dd in Swedish time, in every language.
+ */
+export function formatDate(value: string | Date | null | undefined): string | null {
+    return formatInstant(value)?.slice(0, 10) ?? null;
+}
+
+export type KindName = { nameSv: string; nameEn: string };
+
+/**
+ * An album kind's name in the given language: English for "en", otherwise Swedish.
+ */
+export function kindName(kind: KindName, locale: string): string {
+    return locale === "en" ? kind.nameEn : kind.nameSv;
+}

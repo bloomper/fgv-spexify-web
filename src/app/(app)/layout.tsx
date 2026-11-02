@@ -12,6 +12,7 @@ import {ModeToggle} from "@/components/mode-toggle.client";
 import {LanguageToggle} from "@/components/language-toggle.client";
 import {PlayerProvider} from "@/components/player/player-provider.client";
 import {PlayerBar} from "@/components/player/player-bar.client";
+import {DialogsProvider} from "@/components/dialogs.client";
 import {requireUser} from "@/utils/auth.server";
 import {hasAccess} from "@/utils/auth";
 
@@ -86,16 +87,18 @@ export default async function AppLayout({children}: { children: React.ReactNode 
     return (
         <div className="[--header-height:calc(--spacing(14))]">
             <PlayerProvider>
-                <SidebarProvider className="flex flex-col">
-                    <SiteHeader/>
-                    <div className="flex flex-1">
-                        <AppSidebar roles={roles} accountUrl={accountUrl}/>
-                        <SidebarInset className="min-w-0 pb-24">
-                            {children}
-                        </SidebarInset>
-                    </div>
-                </SidebarProvider>
-                <PlayerBar/>
+                <DialogsProvider>
+                    <SidebarProvider className="flex flex-col">
+                        <SiteHeader/>
+                        <div className="flex flex-1">
+                            <AppSidebar roles={roles} accountUrl={accountUrl}/>
+                            <SidebarInset className="min-w-0 pb-[calc(var(--player-height,0px)+1rem)]">
+                                {children}
+                            </SidebarInset>
+                        </div>
+                    </SidebarProvider>
+                    <PlayerBar/>
+                </DialogsProvider>
             </PlayerProvider>
         </div>
     );

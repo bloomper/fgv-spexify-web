@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import {getTranslations} from "next-intl/server";
-import {getAlbum} from "@/lib/catalog/catalog.server";
+import {getAlbum, getAlbumKinds} from "@/lib/catalog/catalog.server";
 import {Policies} from "@/utils/policy.server";
 import {withPolicyPage} from "@/utils/route.server";
 import {AlbumEditor} from "./album-editor.client";
@@ -17,7 +17,7 @@ export default async function EditAlbumPage({params}: { params: Promise<{ id: st
         }
 
         const t = await getTranslations("Manage");
-        const album = await getAlbum(id);
+        const [album, kinds] = await Promise.all([getAlbum(id), getAlbumKinds()]);
 
         if (!album || album.trashedAt) {
             notFound();
@@ -29,7 +29,7 @@ export default async function EditAlbumPage({params}: { params: Promise<{ id: st
                     <h1 className="text-2xl font-semibold tracking-tight">{album.title}</h1>
                     <Link href={`/albums/${album.id}`} className="text-sm text-primary hover:underline">{t("viewAsListener")}</Link>
                 </div>
-                <AlbumEditor album={album}/>
+                <AlbumEditor album={album} kinds={kinds}/>
             </div>
         );
     });

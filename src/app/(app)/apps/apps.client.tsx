@@ -12,6 +12,7 @@ import {Badge} from "@/components/ui/badge";
 import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
 import {createApiKeyAction, createAppPasswordAction, revokeApiKeyAction, revokeAppPasswordAction} from "./actions.server";
 import {track} from "@/utils/umami";
+import {useDialogs} from "@/components/dialogs.client";
 
 type Credential = { id: string; name: string; createdAt: string; lastUsedAt?: string | null; expiresAt?: string; expired?: boolean };
 
@@ -43,6 +44,7 @@ export function AppsManager({serverUrl, username, passwords, apiKeys}: {
     apiKeys: Credential[];
 }) {
     const t = useTranslations("Apps");
+    const {confirm} = useDialogs();
     const format = useFormatter();
     const [name, setName] = useState("");
     const [keyName, setKeyName] = useState("");
@@ -80,8 +82,8 @@ export function AppsManager({serverUrl, username, passwords, apiKeys}: {
         });
     };
 
-    const revoke = (id: string, apiKey: boolean) => {
-        if (!window.confirm(t("confirmRevoke"))) {
+    const revoke = async (id: string, apiKey: boolean) => {
+        if (!await confirm({title: t("confirmRevoke"), destructive: true})) {
             return;
         }
         startTransition(async () => {

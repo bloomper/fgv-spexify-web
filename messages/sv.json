@@ -245,7 +245,8 @@
     "adminLibrary": "Musikservern",
     "adminUsers": "Användare",
     "adminMaintenance": "Underhåll",
-    "adminSettings": "Inställningar"
+    "adminSettings": "Inställningar",
+    "adminKinds": "Albumsorter"
   },
   "Home": {
     "title": "Spexify",
@@ -256,7 +257,12 @@
     "recent": "Senast publicerat",
     "allAlbums": "Alla album",
     "empty": "Inga album är publicerade ännu.",
-    "years": "År"
+    "years": "År",
+    "recentlyPlayed": "Senast spelat av dig",
+    "mostPlayed": "Mest spelat av dig",
+    "lastPlayed": "Spelat {date}",
+    "plays": "{count, plural, =1 {# spelning} other {# spelningar}}",
+    "highestRated": "Högst betyg av dig"
   },
   "Albums": {
     "title": "Album",
@@ -267,12 +273,6 @@
     "none": "Inga album matchar."
   },
   "Album": {
-    "kind": {
-      "SHOW": "Föreställning",
-      "STUDIO": "Studio",
-      "COMPILATION": "Samling",
-      "OTHER": "Övrigt"
-    },
     "revival": "Nyuppsättning",
     "unpublished": "Opublicerad",
     "fileMissing": "Filen saknas",
@@ -299,7 +299,19 @@
     "addedToPlaylist": "Tillagd i spellistan",
     "removeFromPlaylist": "Ta bort ur spellistan",
     "goToAlbum": "Gå till albumet",
-    "watchInSpexflix": "Se i Spexflix: {video}"
+    "watchInSpexflix": "Se i Spexflix: {video}",
+    "newPlaylistTitle": "Ny spellista",
+    "createPlaylist": "Skapa",
+    "plays": "{count, plural, =1 {Spelad # gång} other {Spelad # gånger}}",
+    "lastPlayed": "Senast spelad {date}",
+    "neverPlayed": "Inte spelad",
+    "rate": "Betyg för {title}",
+    "rateAlbum": "Ditt betyg för albumet",
+    "rateTrack": "Betyg",
+    "rated": "Betyget är sparat",
+    "rateFailed": "Betyget kunde inte sparas.",
+    "starAlbum": "Stjärnmärk albumet",
+    "unstarAlbum": "Ta bort albumets stjärna"
   },
   "Player": {
     "label": "Spelare",
@@ -317,7 +329,8 @@
     "lyrics": "Text",
     "queue": "Kö",
     "error": "Låten kunde inte spelas upp.",
-    "retry": "Försök igen"
+    "retry": "Försök igen",
+    "restored": "Fortsätt där du slutade"
   },
   "Search": {
     "title": "Sök",
@@ -330,8 +343,10 @@
   },
   "Starred": {
     "title": "Stjärnmärkt",
-    "text": "Låtar du har stjärnmärkt, här och i dina appar.",
-    "none": "Du har inte stjärnmärkt något ännu."
+    "text": "Låtar och album du har stjärnmärkt, här och i dina appar.",
+    "none": "Du har inte stjärnmärkt något ännu.",
+    "albums": "Album",
+    "tracks": "Låtar"
   },
   "Playlists": {
     "title": "Spellistor",
@@ -527,5 +542,30 @@
     "minutes": "Spärrens längd (minuter)",
     "save": "Spara",
     "saved": "Sparat"
+  },
+  "AdminKinds": {
+    "title": "Albumsorter",
+    "text": "Sorterna som ett album kan ha, t.ex. föreställning eller studioinspelning. Den första är förvald för nya album och visas inte som etikett. En sort som något album har, även i papperskorgen, kan inte raderas.",
+    "nameSv": "Namn på svenska",
+    "nameEn": "Namn på engelska",
+    "albums": "{count, plural, =0 {Inga album} =1 {# album} other {# album}}",
+    "default": "Förvald",
+    "moveUp": "Flytta upp {name}",
+    "moveDown": "Flytta ner {name}",
+    "delete": "Radera",
+    "deleteKind": "Radera {name}",
+    "confirmDelete": "Radera albumsorten {name}?",
+    "inUse": "Används av album",
+    "add": "Lägg till sort",
+    "added": "Sorten är tillagd",
+    "saved": "Sparat",
+    "deleted": "Sorten är raderad",
+    "save": "Spara",
+    "edit": "Ändra {name}",
+    "cancel": "Avbryt"
+  },
+  "Rating": {
+    "stars": "{count, plural, =1 {# stjärna} other {# stjärnor}}",
+    "rated": "{count, plural, =1 {Betyg: # stjärna} other {Betyg: # stjärnor}}"
   }
 }

@@ -1,5 +1,22 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
-import {addToPlaylist, createPlaylist, getPlaylist, getPlaylists, getStarred, removeFromPlaylist, scrobble, star} from "@/lib/subsonic.server";
+import {
+    addToPlaylist,
+    createPlaylist,
+    getAlbumList,
+    getAlbumSongs,
+    getAlbumWithSongs,
+    getPlayQueue,
+    getPlaylist,
+    getPlaylists,
+    getStarred,
+    playsOf,
+    removeFromPlaylist,
+    savePlayQueue,
+    setRating,
+    scrobble,
+    star,
+    starAlbum
+} from "@/lib/subsonic.server";
 
 const apiFetch = vi.hoisted(() => vi.fn());
 
@@ -57,5 +74,60 @@ describe("the Subsonic client", () => {
         answer({error: {code: 70, message: "Playlist not found"}}, "failed");
 
         await expect(getPlaylist("x")).rejects.toThrow("Playlist not found");
+    });
+
+    it("reads play counts of an album's songs and the recently and most played albums", async () => {
+        answer({album: {id: "al-1", song: [{id: "nd-1", title: "Ouvertyr", playCount: 3, played: "2026-10-31T18:00:00Z"}, {id: "nd-2", title: "Final"}]}});
+        const songs = await getAlbumSongs("al-1");
+
+        expect(calledWith().pathname).toBe("/rest/getAlbum");
+        expect(playsOf(songs)).toEqual({
+            "nd-1": {playCount: 3, played: "2026-10-31T18:00:00Z", rating: 0},
+            "nd-2": {playCount: 0, played: null, rating: 0},
+        });
+
+        answer({albumList2: {album: [{id: "al-1", name: "Nobel", playCount: 7}]}});
+        expect(await getAlbumList("frequent", 6)).toEqual([{id: "al-1", name: "Nobel", playCount: 7}]);
+        expect(calledWith().pathname).toBe("/rest/getAlbumList2");
+        expect(calledWith().searchParams.get("type")).toBe("frequent");
+        expect(calledWith().searchParams.get("size")).toBe("6");
+
+        answer({albumList2: {}});
+        expect(await getAlbumList("recent", 6)).toEqual([]);
+    });
+
+    it("rates, stars albums and reads an album's rating and star", async () => {
+        answer({});
+        await setRating("nd-1", 4);
+        expect(calledWith().pathname).toBe("/rest/setRating");
+        expect(calledWith().searchParams.get("rating")).toBe("4");
+
+        answer({});
+        await starAlbum("al-1", true);
+        expect(calledWith().pathname).toBe("/rest/star");
+        expect(calledWith().searchParams.get("albumId")).toBe("al-1");
+        expect(calledWith().searchParams.has("id")).toBe(false);
+
+        answer({album: {id: "al-1", userRating: 5, starred: "2026-10-31T18:00:00Z", song: [{id: "nd-1", title: "Ouvertyr", userRating: 2}]}});
+        const album = await getAlbumWithSongs("al-1");
+
+        expect(album.rating).toBe(5);
+        expect(album.starred).toBe(true);
+        expect(playsOf(album.songs)["nd-1"].rating).toBe(2);
+    });
+
+    it("saves and reads the play queue, also when there is none", async () => {
+        answer({});
+        await savePlayQueue(["nd-1", "nd-2"], "nd-2", 12345.6);
+        expect(calledWith().pathname).toBe("/rest/savePlayQueue");
+        expect(calledWith().searchParams.getAll("id")).toEqual(["nd-1", "nd-2"]);
+        expect(calledWith().searchParams.get("current")).toBe("nd-2");
+        expect(calledWith().searchParams.get("position")).toBe("12346");
+
+        answer({playQueue: {current: "nd-2", position: 5000, entry: [{id: "nd-1"}, {id: "nd-2"}]}});
+        expect(await getPlayQueue()).toEqual({ids: ["nd-1", "nd-2"], current: "nd-2", positionMs: 5000});
+
+        answer({});
+        expect(await getPlayQueue()).toBeNull();
     });
 });

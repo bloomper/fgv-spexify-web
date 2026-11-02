@@ -16,10 +16,10 @@ import {Checkbox} from "@/components/ui/checkbox";
 import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle} from "@/components/ui/dialog";
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
 import {CoverImage} from "@/components/album/cover-image.client";
-import {AlbumForm} from "@/components/album/album-form.client";
+import {AlbumForm, type KindOption} from "@/components/album/album-form.client";
 import {formatDuration} from "@/components/player/lyrics";
 import {uploadFile} from "@/components/upload/tus.client";
-import type {AlbumKind, TrackInput} from "@/gql/graphql";
+import type {TrackInput} from "@/gql/graphql";
 import {
     createTrackAction,
     publishAlbumAction,
@@ -33,6 +33,7 @@ import {
     updateTrackAction
 } from "@/app/(app)/manage/actions.server";
 import {track as trackEvent} from "@/utils/umami";
+import {useDialogs} from "@/components/dialogs.client";
 
 export type EditorTrack = {
     id: string;
@@ -57,7 +58,7 @@ export type EditorAlbum = {
     id: string;
     title: string;
     year?: number | null;
-    kind: AlbumKind;
+    kind: { id: string };
     description?: string | null;
     hasCover: boolean;
     published: boolean;
@@ -157,8 +158,9 @@ function TrackDialog({albumId, track, onClose}: { albumId: string; track: Editor
  * Editing an album: its fields, cover, publishing, and its tracks, which are uploaded here, edited, reordered,
  * published one by one and moved to the trash.
  */
-export function AlbumEditor({album}: { album: EditorAlbum }) {
+export function AlbumEditor({album, kinds}: { album: EditorAlbum; kinds: KindOption[] }) {
     const t = useTranslations("Manage");
+    const {confirm} = useDialogs();
     const router = useRouter();
     const {pending, run} = useAction();
     const [uploads, setUploads] = useState<UploadState[]>([]);
@@ -273,12 +275,12 @@ export function AlbumEditor({album}: { album: EditorAlbum }) {
                             <span className="block text-xs text-muted-foreground">{t("publishText")}</span>
                         </span>
                     </label>
-                    <AlbumForm submitLabel={t("save")}
+                    <AlbumForm kinds={kinds} submitLabel={t("save")}
                                initial={{
                                    spex: album.spex ? {...album.spex, revival: album.spex.revival === true} : null,
                                    title: album.title,
                                    year: album.year,
-                                   kind: album.kind,
+                                   kindId: album.kind.id,
                                    description: album.description
                                }}
                                onSubmit={async input => {
@@ -394,8 +396,8 @@ export function AlbumEditor({album}: { album: EditorAlbum }) {
             <section className="space-y-2 rounded-lg border border-destructive/40 p-4">
                 <h2 className="font-semibold">{t("trashAlbum")}</h2>
                 <p className="text-sm text-muted-foreground">{t("trashAlbumText")}</p>
-                <Button variant="destructive" disabled={pending} onClick={() => {
-                    if (window.confirm(t("confirmTrashAlbum", {title: album.title}))) {
+                <Button variant="destructive" disabled={pending} onClick={async () => {
+                    if (await confirm({title: t("confirmTrashAlbum", {title: album.title}), confirmLabel: t("toTrash"), destructive: true})) {
                         run(async () => {
                             const result = await trashAlbumAction(album.id, true);
 
