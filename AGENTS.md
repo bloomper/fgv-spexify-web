@@ -30,6 +30,9 @@ lives in Navidrome per user (stars, playlists, play counts). Stack and setup: `R
   `src/auth.ts`, Next.js reserved file names, and shadcn's `src/components/ui/**` and `src/hooks/use-mobile.ts`.
 - Cache Components is on. A page that fetches at the top needs a `loading.tsx`, and `(app)/layout.tsx` keeps
   `export const instant = false`. The root layout's metadata stays static.
+- Cache Components keeps visited pages alive, so a client component that copies a server prop into state (an
+  optimistic toggle or rating) uses `useServerState` (`src/hooks/use-server-state.client.ts`), never `useState(prop)`,
+  which would show the old value when the page is shown again.
 - Locale is a cookie (`sv` default); messages in `messages/{sv,en}.json`.
 - Auth: Better Auth + Keycloak, stateless. `getSessionContext()` in `src/utils/auth.server.ts` is the single entry
   point; roles come from `resource_access["fgv-spexify"].roles`: `USER` (access), `EDITOR`, `ADMIN`. Gate pages with
@@ -60,12 +63,13 @@ lives in Navidrome per user (stars, playlists, play counts). Stack and setup: `R
 - **Uploads** use tus through `/api/uploads/[[...path]]`, which forwards to the server with the token; `uploadFile` in
   `src/components/upload/tus.client.ts` resolves with the upload id, which `trackCreate` or `trackReplaceAudio` turns
   into a track. Chunks are 50 MB, below Cloudflare's request limit, and `proxyClientMaxBodySize` is 55 MB.
-- **Stars, ratings, playlists, plays and the play queue** live in Navidrome per user and are reached through the server's Subsonic gateway
+- **Likes (stars), ratings, playlists, plays and the play queue** live in Navidrome per user and are reached through the server's Subsonic gateway
   (`src/lib/subsonic.server.ts`) with the user's token. They work only for published tracks, which have a
   `navidromeId`; `tracksByNavidromeIds` and `albumsByNavidromeIds` map Navidrome's songs and albums back. Play counts
   and when last played come from `getAlbum`, `getStarred2` and `getPlaylist` (`toRows(tracks, plays)`); the start
   page's "recently played", "most played" and "highest rated" rows from `getAlbumList2` (`getPlayedAlbums`). Songs and
-  albums are starred and rated (`setRating`, 1–5, 0 removes) with their Navidrome ids. Playlists are renamed, described,
+  albums are starred and rated (`setRating`, 1–5, 0 removes) with their Navidrome ids. The UI calls a star a like
+  ("Gilla", a heart, the page "Gillat" at `/starred`) so that stars only mean ratings. Playlists are renamed, described,
   made public (`updatePlaylist`) and reordered (`createPlaylist` with the playlist's id); others' public playlists are
   `readonly` and only played. All of it falls back to nothing when Navidrome is unavailable.
 - **The play queue** is shared with the user's apps through `savePlayQueue`/`getPlayQueue`: `PlayerProvider` saves it

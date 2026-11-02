@@ -19,16 +19,41 @@ test.describe("Listening", () => {
         await expect(page.getByText("Här står vi nu på scenen")).toBeVisible();
     });
 
-    test("stars a track and finds it under Starred", async ({page, loginAs, mock}) => {
+    test("likes a track and finds it under Liked", async ({page, loginAs, mock}) => {
         await loginAs("listener");
         await page.goto(`/albums/${uuidOf(1)}`);
-        await page.getByRole("button", {name: "Stjärnmärk Kärleksduetten"}).click();
-        await expect(page.getByRole("button", {name: "Ta bort stjärnan från Kärleksduetten"})).toBeVisible();
+        await page.getByRole("button", {name: "Gilla Kärleksduetten"}).click();
+        await expect(page.getByRole("button", {name: "Sluta gilla Kärleksduetten"})).toBeVisible();
         // The star shows at once and is saved in the background; leaving the page before that would cancel it
         await expect.poll(async () => (await mock.state()).starred).toHaveLength(1);
 
         await page.goto("/starred");
         await expect(page.getByText("Kärleksduetten")).toBeVisible();
+    });
+
+    test("shows a like made elsewhere on pages visited before, without reloading", async ({page, loginAs, mock}) => {
+        await loginAs("listener");
+        const sidebar = page.locator('[data-slot="sidebar"]:visible');
+        // Next keeps visited pages alive but hidden, with the same buttons
+        const button = (name: string) => page.getByRole("button", {name, exact: true}).filter({visible: true});
+
+        await page.goto("/starred");
+        await expect(page.getByText("Du har inte gillat något ännu.")).toBeVisible();
+        await sidebar.getByRole("link", {name: "Album"}).click();
+        await page.getByRole("link", {name: /Nobel/}).filter({visible: true}).first().click();
+        await expect(page.getByRole("heading", {level: 1, name: "Nobel"})).toBeVisible();
+        await button("Gilla Kärleksduetten").click();
+        await expect.poll(async () => (await mock.state()).starred).toHaveLength(1);
+
+        await sidebar.getByRole("link", {name: "Gillat"}).click();
+        await expect(page.getByRole("heading", {level: 1, name: "Gillat"})).toBeVisible();
+        await expect(button("Sluta gilla Kärleksduetten")).toHaveAttribute("aria-pressed", "true");
+
+        await button("Sluta gilla Kärleksduetten").click();
+        await expect.poll(async () => (await mock.state()).starred).toHaveLength(0);
+        await page.goBack();
+        await expect(page.getByRole("heading", {level: 1, name: "Nobel"})).toBeVisible();
+        await expect(button("Gilla Kärleksduetten")).toHaveAttribute("aria-pressed", "false");
     });
 
     test("searches tracks", async ({page, loginAs}) => {
@@ -158,7 +183,7 @@ test.describe("What the listener played", () => {
     });
 });
 
-test.describe("Ratings and starred albums", () => {
+test.describe("Ratings and liked albums", () => {
     test("rates an album and a track, and the album is listed as highest rated", async ({page, loginAs, mock}) => {
         await loginAs("listener");
         await page.goto(`/albums/${uuidOf(1)}`);
@@ -183,11 +208,11 @@ test.describe("Ratings and starred albums", () => {
         await expect(page.getByRole("listitem").filter({hasText: "Ouvertyr"}).getByRole("img", {name: "Betyg: 5 stjärnor"})).toBeVisible();
     });
 
-    test("stars an album and finds it under Starred", async ({page, loginAs, mock}) => {
+    test("likes an album and finds it under Liked", async ({page, loginAs, mock}) => {
         await loginAs("listener");
         await page.goto(`/albums/${uuidOf(1)}`);
-        await page.getByRole("button", {name: "Stjärnmärk albumet"}).click();
-        await expect(page.getByRole("button", {name: "Ta bort albumets stjärna"})).toBeVisible();
+        await page.getByRole("button", {name: "Gilla albumet"}).click();
+        await expect(page.getByRole("button", {name: "Sluta gilla albumet"})).toBeVisible();
         await expect.poll(async () => (await mock.state()).starredAlbums).toEqual(["al-1"]);
 
         await page.goto("/starred");
