@@ -25,7 +25,7 @@ describe("the admin client", () => {
 
         runQuery.mockResolvedValueOnce({auditLog: {totalCount: 0}});
         expect(await admin.getAuditLog(2, 50)).toEqual({totalCount: 0});
-        expect(runQuery.mock.calls.at(-1)?.[1]).toEqual({page: 2, size: 50});
+        expect(runQuery.mock.calls.at(-1)?.[1]).toEqual({page: 2, size: 50, filter: {}});
 
         runQuery.mockResolvedValueOnce({settings: {lockoutMinutes: 15}});
         expect(await admin.getSettings()).toEqual({lockoutMinutes: 15});

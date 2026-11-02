@@ -21,7 +21,8 @@ function playing(overrides: Record<string, unknown> = {}) {
     player.state = {
         queue, index: 0, current: queue[0], playing: false, failed: false, time: 0, duration: 0, shuffle: false, repeat: "off",
         playQueue: vi.fn(), enqueue: vi.fn(), toggle: vi.fn(), next: vi.fn(), previous: vi.fn(), seek: vi.fn(), jump: vi.fn(),
-        setShuffle: vi.fn(), cycleRepeat: vi.fn(),
+        setShuffle: vi.fn(), cycleRepeat: vi.fn(), volume: 0.8, muted: false, setVolume: vi.fn(), toggleMute: vi.fn(),
+        replayGain: "track", setReplayGain: vi.fn(), remove: vi.fn(), move: vi.fn(), clear: vi.fn(), plays: {},
         ...overrides,
     };
     return player.state as Record<string, ReturnType<typeof vi.fn>>;
@@ -104,11 +105,17 @@ describe("PlayerBar", () => {
         const items = within(panel).getAllByRole("listitem");
 
         expect(items).toHaveLength(2);
-        expect(within(items[0]).getByRole("button")).toHaveAttribute("aria-current", "true");
+        expect(within(items[0]).getAllByRole("button")[0]).toHaveAttribute("aria-current", "true");
         expect(within(items[1]).getByText("2:05")).toBeInTheDocument();
 
-        fireEvent.click(within(items[1]).getByRole("button"));
+        fireEvent.click(within(items[1]).getAllByRole("button")[0]);
         expect(state.jump).toHaveBeenCalledWith(1);
+
+        expect(within(items[0]).getByRole("button", {name: /moveUp/})).toBeDisabled();
+        fireEvent.click(within(items[0]).getByRole("button", {name: /moveDown/}));
+        expect(state.move).toHaveBeenCalledWith(0, 1);
+        fireEvent.click(within(items[1]).getByRole("button", {name: /removeFromQueue/}));
+        expect(state.remove).toHaveBeenCalledWith(1);
 
         fireEvent.click(within(panel).getByRole("button", {name: /shuffle/}));
         expect(state.setShuffle).toHaveBeenCalledWith(false);
@@ -143,5 +150,24 @@ describe("PlayerBar", () => {
         playing();
         rerender(<PlayerBar/>);
         expect(screen.queryByRole("button", {name: "lyrics"})).not.toBeInTheDocument();
+    });
+
+    it("clears the queue from its panel", () => {
+        const state = playing();
+
+        render(<PlayerBar/>);
+        fireEvent.click(screen.getByRole("button", {name: "queue"}));
+        fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", {name: /clearQueue/}));
+        expect(state.clear).toHaveBeenCalled();
+    });
+
+    it("sets the volume and mutes", () => {
+        const state = playing();
+
+        render(<PlayerBar/>);
+        fireEvent.change(screen.getByRole("slider", {name: "volume"}), {target: {value: "0.3"}});
+        expect(state.setVolume).toHaveBeenCalledWith(0.3);
+        fireEvent.click(screen.getByRole("button", {name: "mute"}));
+        expect(state.toggleMute).toHaveBeenCalled();
     });
 });

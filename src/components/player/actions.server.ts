@@ -1,7 +1,7 @@
 "use server";
 
 import {getPlayQueue, savePlayQueue, scrobble} from "@/lib/subsonic.server";
-import {getTracksByNavidromeIds} from "@/lib/catalog/catalog.server";
+import {getRadio, getTracksByNavidromeIds} from "@/lib/catalog/catalog.server";
 import type {PlayerTrack} from "@/components/player/player-provider.client";
 import {withPolicyAction} from "@/utils/route.server";
 import {Policies} from "@/utils/policy.server";
@@ -16,6 +16,33 @@ export async function scrobbleAction(navidromeId: string, submission: boolean): 
             await scrobble(navidromeId, submission);
         } catch {
             // Navidrome is unavailable; the track still plays
+        }
+    });
+}
+
+type TrackLike = {
+    id: string; title: string; albumId: string; albumTitle: string; performers?: string | null; durationMs: number;
+    navidromeId?: string | null; lyrics?: string | null; lyricsSynced: boolean; replayGain?: PlayerTrack["replayGain"];
+};
+
+function toPlayerTrack(track: TrackLike): PlayerTrack {
+    return {
+        id: track.id, title: track.title, albumId: track.albumId, albumTitle: track.albumTitle,
+        performers: track.performers, durationMs: track.durationMs, navidromeId: track.navidromeId,
+        lyrics: track.lyrics, lyricsSynced: track.lyricsSynced, replayGain: track.replayGain,
+    };
+}
+
+/**
+ * Tracks for a radio station: tracks that go with the track or album, or random tracks without either. Null when the
+ * server could not be reached.
+ */
+export async function radioAction(seed: { trackId?: string; albumId?: string }): Promise<PlayerTrack[] | null> {
+    return withPolicyAction(Policies.app.requireAccess, async () => {
+        try {
+            return (await getRadio(seed, 50)).filter(track => !track.fileMissing).map(toPlayerTrack);
+        } catch {
+            return null;
         }
     });
 }
@@ -45,11 +72,7 @@ export async function loadPlayQueueAction(): Promise<SavedQueue | null> {
             const atCurrent = tracks[index]?.navidromeId === saved.current;
 
             return {
-                tracks: tracks.map(track => ({
-                    id: track.id, title: track.title, albumId: track.albumId, albumTitle: track.albumTitle,
-                    performers: track.performers, durationMs: track.durationMs, navidromeId: track.navidromeId,
-                    lyrics: track.lyrics, lyricsSynced: track.lyricsSynced,
-                })),
+                tracks: tracks.map(toPlayerTrack),
                 index,
                 positionSeconds: atCurrent ? saved.positionMs / 1000 : 0,
             };

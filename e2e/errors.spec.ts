@@ -6,7 +6,7 @@ test.describe("When something is unavailable", () => {
         await mock.spexregister(false);
         await loginAs("editor");
         await page.goto("/manage/albums/new");
-        await page.getByLabel("Spex", {exact: true}).fill("Nob");
+        await page.getByLabel("Sök spex på titel eller år").fill("Nob");
 
         await expect(page.getByText("Spexregistret går inte att nå just nu. Försök igen om en stund.")).toBeVisible();
         await page.goto(`/albums/${uuidOf(1)}`);

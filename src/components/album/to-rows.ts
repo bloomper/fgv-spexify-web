@@ -10,6 +10,8 @@ type TrackLike = {
     trackNumber: number;
     performers?: string | null;
     melody?: string | null;
+    lyricsAuthor?: string | null;
+    arranger?: string | null;
     durationMs: number;
     navidromeId?: string | null;
     lyrics?: string | null;
@@ -17,6 +19,7 @@ type TrackLike = {
     listed: boolean;
     fileMissing: boolean;
     videoLinks?: { videoId: string; videoTitle: string; chapterTitle: string; startSeconds: number }[];
+    replayGain?: TrackRow["replayGain"];
 };
 
 /**
@@ -32,6 +35,9 @@ export function toRows(tracks: TrackLike[], plays: Plays = {}): TrackRow[] {
         trackNumber: track.trackNumber,
         performers: track.performers,
         melody: track.melody,
+        lyricsAuthor: track.lyricsAuthor,
+        arranger: track.arranger,
+        replayGain: track.replayGain,
         durationMs: track.durationMs,
         navidromeId: track.navidromeId,
         lyrics: track.lyrics,

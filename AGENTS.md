@@ -42,7 +42,18 @@ lives in Navidrome per user (stars, playlists, play counts). Stack and setup: `R
 - **Audio** plays through one `<audio>` element in `PlayerProvider` (`src/components/player/`), which lives in the
   `(app)` layout so playing continues across pages. Its source is `/api/audio/[id]`, a route handler that streams the
   server's `/api/tracks/{id}/audio` with the user's token and passes byte ranges both ways. Never give the browser the
-  token. The Media Session API gives lock screen controls. Plays are reported to Navidrome (`scrobbleAction`).
+  token. There are two such elements: one plays while the other loads the next track, three seconds into the current
+  one, so the next starts at once (nearly gapless; HTML audio leaves a few milliseconds between files). Volume, mute and
+  the ReplayGain mode (off, track, album; `gainFactor` only turns down) are kept in `localStorage` (`spexify.player`).
+  The queue can be reordered, pruned and cleared. The Media Session API gives lock screen controls. Plays are reported
+  to Navidrome (`scrobbleAction`), and counted at once in the track lists (`player.plays`) until Navidrome's own numbers
+  include them (`playedSince`).
+- **Keyboard shortcuts** (`src/components/player/shortcuts.client.tsx`) work anywhere except where the focused element
+  uses the key; `?` lists them.
+- **Radio** (`useRadio`, `radioAction`) plays `radio(trackId | albumId)`: tracks that share the melody, original artist,
+  performers, authors or spex, or random tracks without a seed (the start page's button).
+- **Credits** (`/credits/[kind]/[name]`) list the tracks of a performer, melody, original artist (the parentheses after
+  the melody), lyricist or arranger; `splitCredits` splits names the way the server does.
 - **Covers** come from `/api/cover/[id]` (the album's cover, else the spex poster, else 404 and `CoverImage`'s
   placeholder). Never `next/image`, whose optimizer has no session.
 - **Downloads**: `/api/download/track/[id]` and `/api/download/album/[id]` (a zip streamed by the server).
@@ -54,11 +65,16 @@ lives in Navidrome per user (stars, playlists, play counts). Stack and setup: `R
   `navidromeId`; `tracksByNavidromeIds` and `albumsByNavidromeIds` map Navidrome's songs and albums back. Play counts
   and when last played come from `getAlbum`, `getStarred2` and `getPlaylist` (`toRows(tracks, plays)`); the start
   page's "recently played", "most played" and "highest rated" rows from `getAlbumList2` (`getPlayedAlbums`). Songs and
-  albums are starred and rated (`setRating`, 1–5, 0 removes) with their Navidrome ids. All of it falls back to nothing
-  when Navidrome is unavailable.
+  albums are starred and rated (`setRating`, 1–5, 0 removes) with their Navidrome ids. Playlists are renamed, described,
+  made public (`updatePlaylist`) and reordered (`createPlaylist` with the playlist's id); others' public playlists are
+  `readonly` and only played. All of it falls back to nothing when Navidrome is unavailable.
 - **The play queue** is shared with the user's apps through `savePlayQueue`/`getPlayQueue`: `PlayerProvider` saves it
   when it changes, on pause and every 30 s while playing, and an empty player takes it up again, paused, on the first
   page load. It saves nothing before the saved queue was read.
+- **Spex**: an album is about a list of spex, the main one first (poster, category, default title and year), or none,
+  which the editor marks explicitly (`SpexPicker` in `src/components/spex/`). Each spex has a `familyId`, its original's
+  id for a revival; `/albums?spex=<familyId>` and the album page's "more from the same spex" list an original with its
+  revivals, and `spexSearch` returns revivals right after their original, which the picker indents.
 - **Album kinds** are configured by admins (`/admin/kinds`) and come from `albumKinds`; show them with
   `kindName(kind, locale)`. The first kind is the default and is not shown as a badge (`kind.isDefault`).
 - **The player bar** sets `--player-height` on `<html>` while it shows; the page and the sidebar (with the account
@@ -67,6 +83,9 @@ lives in Navidrome per user (stars, playlists, play counts). Stack and setup: `R
   `prompt`, from `DialogsProvider` in `src/components/dialogs.client.tsx`, which the `(app)` layout mounts). The e2e
   fixture `noNativeDialogs` fails any test that opens a native dialog; answer the app's own with `answerDialog`.
 - **App passwords and API keys** (`/apps`) are shown once, right after they are created.
+- **The change log** (`ChangeLog` in `src/components/audit/change-log.tsx`) filters by kind, event, person (ADMIN),
+  period and text through the address, links each change to its record, and `RecordHistory` shows an album's latest
+  changes on its edit page. Record kinds and their pages are in `src/app/(app)/manage/audit/links.ts`.
 - **Editors** work under `/manage` (albums, the trash, the change log), **admins** under `/admin` (the music server,
   users, settings). New albums start unpublished; publishing an album or a track puts it into Navidrome.
 - **Links to Spexflix** (`Track.videoLinks`) are shown only when `me.spexflixUser` and `SPEXFLIX_WEB_URL` are set.
@@ -90,7 +109,7 @@ drops query strings.
 Custom events go through `track()` (`src/utils/umami.ts`; import it as `trackEvent` where `track` is a variable), a
 no-op when the tracker isn't loaded. Event data is enum values, counts and booleans only — never names, emails, ids or
 typed text. Events: `album-create` (`defaultKind`), `track-upload`, `album-publish` (`published`), `track-star` (`starred`), `track-rate` (`rating`), `album-star` (`starred`), `album-rate` (`rating`), `playlist-add`
-(`created`), `app-password-create`, `api-key-create`, `language-change` and `theme-change`, and through
+(`created`), `radio-start` (`seed`), `app-password-create`, `api-key-create`, `language-change` and `theme-change`, and through
 `data-umami-event` on the links `track-download` and `album-download`.
 
 ## Testing

@@ -5,11 +5,21 @@ import userEvent from "@testing-library/user-event";
 import {TrackList, type TrackRow} from "@/components/album/track-list.client";
 import {DialogsProvider} from "@/components/dialogs.client";
 
-const player = vi.hoisted(() => ({current: null as null | { id: string }, playing: false, playQueue: vi.fn(), toggle: vi.fn(), enqueue: vi.fn()}));
-const actions = vi.hoisted(() => ({starAction: vi.fn(), addToPlaylistAction: vi.fn(), removeFromPlaylistAction: vi.fn(), rateAction: vi.fn()}));
+const player = vi.hoisted(() => ({
+    current: null as null | { id: string }, playing: false, playQueue: vi.fn(), toggle: vi.fn(), enqueue: vi.fn(),
+    plays: {} as Record<string, { count: number; at: string }>,
+}));
+const radio = vi.hoisted(() => ({start: vi.fn(), pending: false}));
+const actions = vi.hoisted(() => ({
+    starAction: vi.fn(), addToPlaylistAction: vi.fn(), removeFromPlaylistAction: vi.fn(), rateAction: vi.fn(), reorderPlaylistAction: vi.fn(),
+}));
 const toast = vi.hoisted(() => ({success: vi.fn(), error: vi.fn()}));
 
-vi.mock("@/components/player/player-provider.client", () => ({usePlayer: () => player}));
+vi.mock("@/components/player/player-provider.client", async importOriginal => ({
+    ...await importOriginal<typeof import("@/components/player/player-provider.client")>(),
+    usePlayer: () => player,
+}));
+vi.mock("@/components/player/radio.client", () => ({useRadio: () => radio}));
 vi.mock("@/app/(app)/actions.server", () => actions);
 vi.mock("sonner", () => ({toast}));
 vi.mock("next/link", () => ({
@@ -31,6 +41,8 @@ describe("TrackList", () => {
         vi.clearAllMocks();
         player.current = null;
         player.playing = false;
+        player.plays = {};
+        actions.reorderPlaylistAction.mockResolvedValue({ok: true});
         actions.starAction.mockResolvedValue({ok: true});
         actions.addToPlaylistAction.mockResolvedValue({ok: true});
         actions.removeFromPlaylistAction.mockResolvedValue({ok: true});
@@ -104,6 +116,15 @@ describe("TrackList", () => {
         await waitFor(() => expect(actions.removeFromPlaylistAction).toHaveBeenCalledWith("pl-1", 1));
     });
 
+    it("on a playlist moves a track by saving the new order", async () => {
+        show([row("1"), row("2"), row("3")], {playlistId: "pl-1"});
+
+        await userEvent.click(screen.getAllByRole("button", {name: /more/})[2]);
+        await userEvent.click(await screen.findByRole("menuitem", {name: "moveUp"}));
+
+        await waitFor(() => expect(actions.reorderPlaylistAction).toHaveBeenCalledWith("pl-1", ["nd-1", "nd-3", "nd-2"]));
+    });
+
     it("splits discs and links to Spexflix when there are links", () => {
         show([row("1"), row("2", {discNumber: 2, videoLinks: [{videoId: "7", videoTitle: "Nobel", chapterTitle: "Ouvertyr", startSeconds: 42}]})],
             {spexflixUrl: "https://spexflix.test"});
@@ -143,7 +164,29 @@ describe("TrackList", () => {
 
         expect(screen.getByText(/plays:.*"count":3/)).toBeInTheDocument();
         expect(screen.getByText("2026-10-31")).toBeInTheDocument();
-        expect(screen.getByText("neverPlayed")).toBeInTheDocument();
+        // On a line of its own, above the stars
+        expect(screen.getByText("neverPlayed").tagName).toBe("SPAN");
+        expect(screen.getByText("neverPlayed")).toHaveClass("block");
+    });
+
+    it("counts a play this session at once, until Navidrome's numbers include it", () => {
+        player.plays = {"nd-1": {count: 1, at: "2026-11-02T10:00:00Z"}, "nd-2": {count: 1, at: "2026-11-02T10:00:00Z"}};
+        show([row("1", {playCount: 0, played: null}), row("2", {playCount: 5, played: "2026-11-02T10:00:03Z"})]);
+
+        expect(screen.getByText(/plays:.*"count":1/)).toBeInTheDocument();
+        expect(screen.getByText(/plays:.*"count":5/)).toBeInTheDocument();
+        expect(screen.queryByText("neverPlayed")).not.toBeInTheDocument();
+    });
+
+    it("links performers and melodies to their pages and starts radio from a track", async () => {
+        show([row("1", {performers: "Kungen, Drottningen", melody: "Dancing Queen (ABBA)"})]);
+
+        expect(screen.getByRole("link", {name: "Drottningen"})).toHaveAttribute("href", "/credits/performers/Drottningen");
+        expect(screen.getByRole("link", {name: "Dancing Queen (ABBA)"})).toHaveAttribute("href", "/credits/melodies/Dancing%20Queen%20(ABBA)");
+
+        await userEvent.click(screen.getByRole("button", {name: /more/}));
+        await userEvent.click(await screen.findByRole("menuitem", {name: "startRadio"}));
+        expect(radio.start).toHaveBeenCalledWith({trackId: "1"});
     });
 
     it("rates a track from its menu, shows the rating, and takes it back when it cannot be saved", async () => {

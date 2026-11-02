@@ -55,4 +55,23 @@ test.describe("Playlists", () => {
         await page.getByRole("button", {name: "Spela allt"}).click();
         await expect(page.getByRole("region", {name: "Spelare"})).toContainText("Ouvertyr");
     });
+
+    test("renames a playlist, makes it public and moves its tracks", async ({page, mock}) => {
+        await page.goto(`/albums/${uuidOf(1)}`);
+        await page.getByRole("button", {name: "Mer för Kärleksduetten"}).click();
+        await page.getByRole("menuitem", {name: "Lägg till i Favoriter"}).click();
+        await expect(page.getByText("Tillagd i spellistan")).toBeVisible();
+
+        await page.goto("/playlists/pl-1");
+        await page.getByRole("button", {name: "Byt namn"}).click();
+        await answerDialog(page, "Spara", "Bästa låtarna");
+        await expect(page.getByRole("heading", {level: 1, name: "Bästa låtarna"})).toBeVisible();
+
+        await page.getByRole("button", {name: "Gör offentlig"}).click();
+        await expect(page.getByText("Offentlig", {exact: true})).toBeVisible();
+
+        await page.getByRole("button", {name: "Mer för Kärleksduetten"}).click();
+        await page.getByRole("menuitem", {name: "Flytta upp"}).click();
+        await expect.poll(async () => (await mock.state()).playlists[0].entries).toEqual([`nd-${uuidOf(12)}`, `nd-${uuidOf(11)}`]);
+    });
 });

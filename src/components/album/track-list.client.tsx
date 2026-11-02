@@ -5,7 +5,7 @@ import {useState, useTransition} from "react";
 import Link from "next/link";
 import {useTranslations} from "next-intl";
 import {toast} from "sonner";
-import {Download, Film, ListPlus, MoreHorizontal, Pause, Play, Star, X} from "lucide-react";
+import {ArrowDown, ArrowUp, Download, Film, ListPlus, MoreHorizontal, Pause, Play, Radio, Star, X} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Badge} from "@/components/ui/badge";
 import {
@@ -17,7 +17,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {type PlayerTrack, usePlayer} from "@/components/player/player-provider.client";
 import {formatDuration} from "@/components/player/lyrics";
-import {addToPlaylistAction, rateAction, removeFromPlaylistAction, starAction} from "@/app/(app)/actions.server";
+import {addToPlaylistAction, rateAction, removeFromPlaylistAction, reorderPlaylistAction, starAction} from "@/app/(app)/actions.server";
+import {playedSince} from "@/components/player/player-provider.client";
+import {useRadio} from "@/components/player/radio.client";
+import {creditHref, splitCredits} from "@/lib/credits";
 import {RatingInput, RatingStars} from "@/components/rating.client";
 import {cn} from "@/utils/utils";
 import {formatDate} from "@/utils/format";
@@ -28,6 +31,8 @@ export type TrackRow = PlayerTrack & {
     discNumber: number;
     trackNumber: number;
     melody?: string | null;
+    lyricsAuthor?: string | null;
+    arranger?: string | null;
     listed: boolean;
     fileMissing: boolean;
     videoLinks?: { videoId: string; videoTitle: string; chapterTitle: string; startSeconds: number }[];
@@ -45,9 +50,42 @@ type Props = {
     playlists: { id: string; name: string }[];
     spexflixUrl: string | null;
     showAlbum?: boolean;
-    /** On a playlist's page: offers removing a track from it, by its position. */
+    /** On a playlist's page: offers removing a track from it, by its position, and moving it. */
     playlistId?: string;
 };
+
+/**
+ * The names in a credit as links to their pages, separated by commas.
+ */
+function CreditLinks({value, kind}: { value: string; kind: "PERFORMER" | "MELODY" }) {
+    const names = kind === "MELODY" ? [value.trim()] : splitCredits(value);
+
+    return names.map((name, i) => (
+        <React.Fragment key={name}>
+            {i > 0 && ", "}
+            <Link href={creditHref(kind, name)} className="hover:text-foreground hover:underline">{name}</Link>
+        </React.Fragment>
+    ));
+}
+
+/**
+ * The row's subtitle: album, performers and melody, the latter two linking to everything else they are in.
+ */
+function TrackSubtitle({track, showAlbum}: { track: TrackRow; showAlbum?: boolean }) {
+    const t = useTranslations("Album");
+    const parts: React.ReactNode[] = [];
+
+    if (showAlbum) {
+        parts.push(<Link key="album" href={`/albums/${track.albumId}`} className="hover:text-foreground hover:underline">{track.albumTitle}</Link>);
+    }
+    if (track.performers) {
+        parts.push(<CreditLinks key="performers" value={track.performers} kind="PERFORMER"/>);
+    }
+    if (track.melody) {
+        parts.push(<React.Fragment key="melody">{t("melodyLabel")} <CreditLinks value={track.melody} kind="MELODY"/></React.Fragment>);
+    }
+    return parts.map((part, i) => <React.Fragment key={i}>{i > 0 && " · "}{part}</React.Fragment>);
+}
 
 /**
  * Tracks with play buttons, stars, downloads, playlists and links to Spexflix. Stars, playlists and play counts live in
@@ -57,6 +95,7 @@ type Props = {
 export function TrackList({tracks, starred: initialStarred, playlists, spexflixUrl, showAlbum, playlistId}: Props) {
     const t = useTranslations("Album");
     const player = usePlayer();
+    const radio = useRadio();
     const {prompt} = useDialogs();
     const [starred, setStarred] = useState(() => new Set(initialStarred));
     const [ratings, setRatings] = useState<Record<string, number>>({});
@@ -64,6 +103,34 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
     const [, startTransition] = useTransition();
     const playable = tracks.filter(track => !track.fileMissing);
     const discs = new Set(tracks.map(track => track.discNumber)).size > 1;
+
+    // Plays this session reported count at once, until Navidrome's own numbers include them
+    const playsOf = (track: TrackRow) => {
+        const session = track.navidromeId ? player.plays[track.navidromeId] : undefined;
+
+        if (!session || track.playCount === undefined || !playedSince(track.played, session.at)) {
+            return {playCount: track.playCount, played: track.played};
+        }
+        return {playCount: track.playCount + session.count, played: session.at};
+    };
+
+    const moveInPlaylist = (from: number, to: number) => {
+        if (!playlistId || to < 0 || to >= tracks.length) {
+            return;
+        }
+
+        const ids = tracks.map(track => track.navidromeId!);
+        const [moved] = ids.splice(from, 1);
+
+        ids.splice(to, 0, moved);
+        startTransition(async () => {
+            const result = await reorderPlaylistAction(playlistId, ids);
+
+            if (!result.ok) {
+                toast.error(result.message);
+            }
+        });
+    };
 
     const toggleStar = (track: TrackRow) => {
         if (!track.navidromeId) {
@@ -148,6 +215,7 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
                 const isCurrent = player.current?.id === track.id;
                 const playIndex = playable.indexOf(track);
                 const newDisc = discs && (i === 0 || tracks[i - 1].discNumber !== track.discNumber);
+                const {playCount, played} = playsOf(track);
 
                 return (
                     <React.Fragment key={track.id}>
@@ -179,8 +247,7 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
                                     {track.fileMissing && <Badge variant="destructive">{t("fileMissing")}</Badge>}
                                 </div>
                                 <div className="truncate text-xs text-muted-foreground">
-                                    {[showAlbum ? track.albumTitle : null, track.performers, track.melody ? t("melody", {melody: track.melody}) : null]
-                                        .filter(Boolean).join(" · ")}
+                                    <TrackSubtitle track={track} showAlbum={showAlbum}/>
                                 </div>
                                 {spexflixUrl && track.videoLinks && track.videoLinks.length > 0 && (
                                     <div className="mt-1 flex flex-wrap gap-2">
@@ -202,15 +269,15 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
                                     <Star className={cn(starred.has(track.navidromeId) && "fill-current text-yellow-500")}/>
                                 </Button>
                             )}
-                            {track.playCount !== undefined && (
+                            {playCount !== undefined && (
                                 <span className="hidden w-28 shrink-0 text-right text-xs tabular-nums text-muted-foreground md:block"
-                                      title={track.played ? t("lastPlayed", {date: formatDate(track.played) ?? ""}) : undefined}>
-                                    {track.playCount > 0 ? (
+                                      title={played ? t("lastPlayed", {date: formatDate(played) ?? ""}) : undefined}>
+                                    {playCount > 0 ? (
                                         <>
-                                            <span className="block">{t("plays", {count: track.playCount})}</span>
-                                            {track.played && <span className="block">{formatDate(track.played)}</span>}
+                                            <span className="block">{t("plays", {count: playCount})}</span>
+                                            {played && <span className="block">{formatDate(played)}</span>}
                                         </>
-                                    ) : t("neverPlayed")}
+                                    ) : <span className="block">{t("neverPlayed")}</span>}
                                     <RatingStars value={ratingOf(track)} className="justify-end"/>
                                 </span>
                             )}
@@ -225,6 +292,11 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
                                     <DropdownMenuItem onClick={() => player.enqueue([track])} disabled={track.fileMissing}>
                                         <ListPlus/>{t("addToQueue")}
                                     </DropdownMenuItem>
+                                    {track.listed && !track.fileMissing && (
+                                        <DropdownMenuItem onClick={() => radio.start({trackId: track.id})} disabled={radio.pending}>
+                                            <Radio/>{t("startRadio")}
+                                        </DropdownMenuItem>
+                                    )}
                                     {track.navidromeId && (
                                         <>
                                             <DropdownMenuSeparator/>
@@ -259,6 +331,16 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
                                             <X/>{t("removeFromPlaylist")}
                                         </DropdownMenuItem>
                                     )}
+                                    {playlistId && i > 0 && (
+                                        <DropdownMenuItem onClick={() => moveInPlaylist(i, i - 1)}>
+                                            <ArrowUp/>{t("moveUp")}
+                                        </DropdownMenuItem>
+                                    )}
+                                    {playlistId && i < tracks.length - 1 && (
+                                        <DropdownMenuItem onClick={() => moveInPlaylist(i, i + 1)}>
+                                            <ArrowDown/>{t("moveDown")}
+                                        </DropdownMenuItem>
+                                    )}
                                     {showAlbum && (
                                         <DropdownMenuItem render={<Link href={`/albums/${track.albumId}`}/>}>
                                             {t("goToAlbum")}
@@ -274,9 +356,10 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
     );
 }
 
-export function PlayAllButtons({tracks}: { tracks: TrackRow[] }) {
+export function PlayAllButtons({tracks, radioAlbumId}: { tracks: TrackRow[]; radioAlbumId?: string }) {
     const t = useTranslations("Album");
     const player = usePlayer();
+    const radio = useRadio();
     const playable = tracks.filter(track => !track.fileMissing);
 
     return (
@@ -290,6 +373,11 @@ export function PlayAllButtons({tracks}: { tracks: TrackRow[] }) {
             }} disabled={playable.length === 0}>
                 {t("shuffle")}
             </Button>
+            {radioAlbumId && (
+                <Button variant="outline" onClick={() => radio.start({albumId: radioAlbumId})} disabled={radio.pending}>
+                    <Radio/>{t("albumRadio")}
+                </Button>
+            )}
         </div>
     );
 }

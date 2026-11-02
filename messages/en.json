@@ -246,7 +246,8 @@
     "adminUsers": "Users",
     "adminMaintenance": "Maintenance",
     "adminSettings": "Settings",
-    "adminKinds": "Album kinds"
+    "adminKinds": "Album kinds",
+    "credits": "Credits"
   },
   "Home": {
     "title": "Spexify",
@@ -270,7 +271,9 @@
     "allCategories": "All",
     "years": "Years",
     "allYears": "All years",
-    "none": "No albums match."
+    "none": "No albums match.",
+    "spexFilter": "Albums of {title}, revivals included",
+    "clearSpex": "Show all albums"
   },
   "Album": {
     "revival": "Revival",
@@ -311,7 +314,15 @@
     "rated": "The rating was saved",
     "rateFailed": "The rating could not be saved.",
     "starAlbum": "Star the album",
-    "unstarAlbum": "Remove the album's star"
+    "unstarAlbum": "Remove the album's star",
+    "melodyLabel": "Melody:",
+    "startRadio": "Start radio",
+    "albumRadio": "Radio",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "inSpexregisterOf": "{title} in Spexregister",
+    "sameSpex": "More from the same spex",
+    "allFromSpex": "All albums of {title}"
   },
   "Player": {
     "label": "Player",
@@ -330,7 +341,25 @@
     "queue": "Queue",
     "error": "The track could not be played.",
     "retry": "Try again",
-    "restored": "Continue where you left off"
+    "restored": "Continue where you left off",
+    "volume": "Volume",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "settings": "Playback",
+    "shortcuts": "Keyboard shortcuts",
+    "replayGain": {
+      "label": "Even out loudness (ReplayGain)",
+      "off": "Off",
+      "track": "Per track",
+      "album": "Per album"
+    },
+    "clearQueue": "Clear the queue",
+    "moveUp": "Move {title} up",
+    "moveDown": "Move {title} down",
+    "removeFromQueue": "Remove {title} from the queue",
+    "radioFailed": "The radio could not be started. Try again.",
+    "radioEmpty": "There are no tracks to play.",
+    "randomRadio": "Random radio"
   },
   "Search": {
     "title": "Search",
@@ -356,7 +385,20 @@
     "songs": "{count, plural, =1 {# track} other {# tracks}}",
     "delete": "Delete playlist",
     "confirmDelete": "Delete the playlist?",
-    "empty": "The playlist is empty."
+    "empty": "The playlist is empty.",
+    "rename": "Rename",
+    "name": "Name",
+    "save": "Save",
+    "renamed": "The playlist was renamed.",
+    "describe": "Description",
+    "description": "Description",
+    "described": "The description was saved.",
+    "makePublic": "Make public",
+    "makePrivate": "Make private",
+    "madePublic": "The playlist is public: everyone in Spexify can listen to it.",
+    "madePrivate": "The playlist is private.",
+    "public": "Public",
+    "by": "By {owner}"
   },
   "Apps": {
     "title": "My apps",
@@ -392,7 +434,7 @@
   "Manage": {
     "albums": "Albums",
     "newAlbum": "New album",
-    "newAlbumText": "Pick the spex the album belongs to. Title and year come from the spex unless you give others. The album is unpublished until you publish it.",
+    "newAlbumText": "Choose the spex the album is about, or mark that it is not about any. Title and year are taken from the spex unless you give others. The album stays unpublished until you publish it.",
     "title": "Title",
     "year": "Year",
     "category": "Spex",
@@ -401,10 +443,6 @@
     "published": "Published",
     "unpublished": "Unpublished",
     "spex": "Spex",
-    "spexSearch": "Search spex by title or year",
-    "spexHint": "Leave empty for an album not about one spex, e.g. a compilation.",
-    "searching": "Searching…",
-    "change": "Change",
     "kind": "Kind",
     "description": "Description",
     "create": "Create",
@@ -475,7 +513,48 @@
     "pages": "Pages",
     "newer": "Newer",
     "older": "Older",
-    "pageOf": "Page {page} of {pages}"
+    "pageOf": "Page {page} of {pages}",
+    "event": "Event",
+    "filters": "Filter the change log",
+    "search": "Search the descriptions",
+    "typeLabel": "Kind",
+    "allTypes": "All kinds",
+    "actionLabel": "Event",
+    "allActions": "All events",
+    "everyone": "Everyone",
+    "from": "From",
+    "to": "To",
+    "filter": "Filter",
+    "reset": "Clear the filter",
+    "count": "{count, plural, =0 {No changes} one {# change} other {# changes}}",
+    "none": "No changes yet.",
+    "noneFiltered": "No changes match the filter.",
+    "oneRecord": "Showing the changes of one record.",
+    "allRecords": "Show all records",
+    "history": "History",
+    "historyOf": "History of {summary}",
+    "recordHistory": "Changes",
+    "allChanges": "All {count} changes",
+    "action": {
+      "CREATE": "Created",
+      "UPDATE": "Changed",
+      "PUBLISH": "Published",
+      "UNPUBLISH": "Unpublished",
+      "TRASH": "Trashed",
+      "RESTORE": "Restored",
+      "DELETE": "Deleted",
+      "UPLOAD": "Uploaded",
+      "REPLACE": "New file",
+      "REPROCESS": "Reprocessed",
+      "REVOKE": "Revoked"
+    },
+    "type": {
+      "ALBUM": "Album",
+      "TRACK": "Track",
+      "ALBUM_KIND": "Album kind",
+      "SETTINGS": "Settings",
+      "USER": "User"
+    }
   },
   "AdminLibrary": {
     "title": "Music server",
@@ -516,6 +595,10 @@
       "UPLOAD_CLEANUP": {
         "title": "Upload cleanup",
         "description": "Removes uploads that were started but never used, with their files."
+      },
+      "LOUDNESS_SCAN": {
+        "title": "Loudness measurement",
+        "description": "Measures the loudness of tracks that have none yet, for ReplayGain, and writes it into the files."
       }
     }
   },
@@ -567,5 +650,57 @@
   "Rating": {
     "stars": "{count, plural, =1 {# star} other {# stars}}",
     "rated": "{count, plural, =1 {Rated # star} other {Rated # stars}}"
+  },
+  "Shortcuts": {
+    "title": "Keyboard shortcuts",
+    "description": "They work everywhere except while you type in a field.",
+    "toggle": "Play or pause",
+    "seek": "Go back or forward 10 seconds",
+    "skip": "Previous or next track",
+    "volume": "Turn the volume up or down",
+    "mute": "Mute or unmute",
+    "shuffle": "Shuffle",
+    "repeat": "Repeat",
+    "help": "Show the keyboard shortcuts"
+  },
+  "Credits": {
+    "title": "Credits",
+    "kinds": "Kinds of credit",
+    "none": "None yet.",
+    "noTracks": "No tracks were found.",
+    "tracks": "{count, plural, one {# track} other {# tracks}}",
+    "kind": {
+      "performers": "Singers",
+      "melodies": "Melodies",
+      "original-artists": "Original artists",
+      "lyrics-authors": "Lyricists",
+      "arrangers": "Arrangers"
+    },
+    "text": {
+      "performers": "Everyone who sings in the tracks, or the roles who do.",
+      "melodies": "The original songs the spex songs are sung to.",
+      "original-artists": "The artists behind the original songs, from the parentheses after the melody.",
+      "lyrics-authors": "Who wrote the lyrics.",
+      "arrangers": "Who arranged the music."
+    }
+  },
+  "SpexPicker": {
+    "spex": "Spex",
+    "none": "Not about any spex",
+    "noneHint": "E.g. a jubilee recording or mixed songs. Give a title.",
+    "picked": "Chosen spex",
+    "main": "Main spex",
+    "makeMain": "Make main spex",
+    "makeMainOf": "Make {title} the main spex",
+    "remove": "Remove",
+    "removeOf": "Remove {title}",
+    "search": "Search spex by title or year",
+    "searchMore": "Add more spex, e.g. for a compilation",
+    "hint": "Revivals are shown under their original spex. Title and year are taken from the spex unless you give others.",
+    "mainHint": "The main spex comes first: the poster, the category and the default title and year come from it.",
+    "searching": "Searching…",
+    "results": "Search results",
+    "alreadyPicked": "chosen",
+    "revival": "Revival"
   }
 }

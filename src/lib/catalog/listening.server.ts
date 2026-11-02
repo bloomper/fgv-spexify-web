@@ -16,7 +16,9 @@ export async function getListeningState(): Promise<{
 }> {
     const [starred, playlists] = await Promise.all([
         getStarredAll().catch(() => ({songs: [], albums: []})),
-        getPlaylists().then(list => list.map(playlist => ({id: playlist.id, name: playlist.name}))).catch(() => []),
+        // Others' public playlists can be listened to but not added to
+        getPlaylists().then(list => list.filter(playlist => !playlist.readonly).map(playlist => ({id: playlist.id, name: playlist.name})))
+            .catch(() => []),
     ]);
 
     return {

@@ -48,11 +48,49 @@ test.describe("Editing", () => {
         await expect(page.getByRole("link", {name: "Opublicerat album"})).toBeVisible();
 
         await page.getByText("Nytt album").click();
-        await page.getByLabel("Spex", {exact: true}).fill("Nob");
+        await page.getByLabel("Sök spex på titel eller år").fill("Nob");
         await page.getByRole("button", {name: /Nobel 1975/}).click();
         await page.getByRole("button", {name: "Skapa"}).click();
         await expect(page).toHaveURL(/\/manage\/albums\/[0-9a-f-]{36}$/);
         await expect(page.getByRole("switch").first()).not.toBeChecked();
+
+        // The next new album starts without the previous one's spex, although the page stayed mounted
+        await page.goBack();
+        await expect(page).toHaveURL(/\/manage\/albums\/new$/);
+        await expect(page.getByLabel("Sök spex på titel eller år").filter({visible: true})).toHaveValue("");
+        await expect(page.getByRole("list", {name: "Valda spex"}).filter({visible: true})).toHaveCount(0);
+    });
+
+    test("creates an album about an original and its revival, shown together, and one about no spex", async ({page, loginAs}) => {
+        await loginAs("editor");
+        await page.goto("/manage/albums/new");
+        await page.getByLabel("Sök spex på titel eller år").fill("Nob");
+        await page.getByRole("button", {name: /Nobel 2026 \(nyuppsättning\)/}).click();
+        await page.getByLabel("Lägg till fler spex, t.ex. för en samling").fill("Nob");
+        await expect(page.getByRole("button", {name: /Nobel 2026/}).filter({hasText: "vald"})).toBeDisabled();
+        await page.getByRole("button", {name: /Nobel 1975/}).click();
+        await page.getByRole("button", {name: "Gör Nobel 1975 till huvudspex"}).click();
+        await expect(page.getByRole("list", {name: "Valda spex"}).getByRole("listitem").first()).toContainText("Huvudspex");
+        await page.getByLabel("Titel").fill("Nobel genom tiderna");
+        await page.getByRole("button", {name: "Skapa"}).click();
+        await expect(page).toHaveURL(/\/manage\/albums\/[0-9a-f-]{36}$/);
+        await page.getByRole("switch").first().click();
+        await expect(page.getByRole("switch").first()).toBeChecked();
+
+        await page.goto(`/albums/${uuidOf(1)}`);
+        const same = page.getByRole("region", {name: "Mer från samma spex"});
+        await expect(same.getByRole("link", {name: /Nobel genom tiderna/})).toBeVisible();
+        await page.getByRole("link", {name: "Alla album från Nobel"}).click();
+        await expect(page.getByText("Album från Nobel, med nyuppsättningar")).toBeVisible();
+        await expect(page.getByRole("link", {name: /Nobel genom tiderna/})).toBeVisible();
+
+        await page.goto("/manage/albums/new");
+        await expect(page.getByRole("button", {name: "Skapa"}).filter({visible: true})).toBeDisabled();
+        await page.getByRole("checkbox", {name: "Inte kopplat till något spex"}).filter({visible: true}).click();
+        await page.getByLabel("Titel").filter({visible: true}).fill("Jubileumskonserten");
+        await page.getByRole("button", {name: "Skapa"}).filter({visible: true}).click();
+        await expect(page.getByRole("heading", {level: 1, name: "Jubileumskonserten"})).toBeVisible();
+        await expect(page.getByRole("checkbox", {name: "Inte kopplat till något spex"})).toBeChecked();
     });
 });
 
@@ -177,5 +215,59 @@ test.describe("The play queue", () => {
 
         await expect.poll(async () => (await mock.state()).playQueue)
             .toMatchObject({ids: [`nd-${uuidOf(11)}`, `nd-${uuidOf(12)}`], current: `nd-${uuidOf(12)}`});
+    });
+});
+
+test.describe("Playing more", () => {
+    test.beforeEach(async ({loginAs}) => {
+        await loginAs("listener");
+    });
+
+    test("edits the queue, sets the volume and plays with the keyboard", async ({page}) => {
+        await page.goto(`/albums/${uuidOf(1)}`);
+        await page.getByRole("button", {name: "Spela allt"}).click();
+
+        const player = page.getByRole("region", {name: "Spelare"});
+
+        await expect(player).toContainText("Ouvertyr");
+        await player.getByRole("button", {name: "Kö"}).click();
+        const queue = page.getByRole("dialog");
+
+        await expect(queue.getByRole("listitem")).toHaveCount(2);
+        await queue.getByRole("button", {name: "Flytta ner Ouvertyr"}).click();
+        await expect(queue.getByRole("listitem").first()).toContainText("Kärleksduetten");
+        await queue.getByRole("button", {name: "Ta bort Kärleksduetten ur kön"}).click();
+        await expect(queue.getByRole("listitem")).toHaveCount(1);
+        await page.keyboard.press("Escape");
+        await expect(player).toContainText("Ouvertyr");
+
+        await player.getByRole("button", {name: "Stäng av ljudet"}).click();
+        await expect(player.getByRole("button", {name: "Slå på ljudet"})).toBeVisible();
+        await page.reload();
+        await page.getByRole("button", {name: "Spela allt"}).click();
+        await expect(page.getByRole("region", {name: "Spelare"}).getByRole("button", {name: "Slå på ljudet"})).toBeVisible();
+
+        await page.keyboard.press("?");
+        await expect(page.getByRole("dialog", {name: "Kortkommandon"})).toBeVisible();
+        await page.keyboard.press("Escape");
+
+        await page.getByRole("region", {name: "Spelare"}).getByRole("button", {name: "Uppspelning"}).click();
+        await page.getByRole("menuitemradio", {name: "Per album"}).click();
+        await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("spexify.player") ?? "{}").replayGain)).toBe("album");
+    });
+
+    test("starts radio from a track and browses credits", async ({page}) => {
+        await page.goto(`/albums/${uuidOf(1)}`);
+        await page.getByRole("button", {name: "Mer för Kärleksduetten"}).click();
+        await page.getByRole("menuitem", {name: "Starta radio"}).click();
+        await expect(page.getByRole("region", {name: "Spelare"})).toContainText("Kärleksduetten");
+
+        await page.getByRole("link", {name: "Drottningen"}).first().click();
+        await expect(page.getByRole("heading", {level: 1, name: "Drottningen"})).toBeVisible();
+        await expect(page.getByText("Ouvertyr").filter({visible: true})).toBeVisible();
+
+        await page.getByRole("link", {name: "Sångare"}).click();
+        await page.getByRole("link", {name: "Originalartister"}).click();
+        await expect(page.getByRole("link", {name: /ABBA/})).toBeVisible();
     });
 });

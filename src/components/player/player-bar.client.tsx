@@ -4,7 +4,40 @@ import * as React from "react";
 import {useEffect, useMemo, useRef, useState} from "react";
 import Link from "next/link";
 import {useTranslations} from "next-intl";
-import {ListMusic, Mic2, Pause, Play, Repeat, Repeat1, RotateCcw, Shuffle, SkipBack, SkipForward} from "lucide-react";
+import {
+    ArrowDown,
+    ArrowUp,
+    Keyboard,
+    ListMusic,
+    ListX,
+    Mic2,
+    Pause,
+    Play,
+    Repeat,
+    Repeat1,
+    RotateCcw,
+    Settings2,
+    Shuffle,
+    SkipBack,
+    SkipForward,
+    Volume1,
+    Volume2,
+    VolumeX,
+    X,
+} from "lucide-react";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {type ReplayGainMode} from "@/components/player/player-provider.client";
+import {SHOW_SHORTCUTS} from "@/components/player/shortcuts.client";
 import {Button} from "@/components/ui/button";
 import {Sheet, SheetContent, SheetHeader, SheetTitle} from "@/components/ui/sheet";
 import {usePlayer} from "@/components/player/player-provider.client";
@@ -13,7 +46,8 @@ import {CoverImage} from "@/components/album/cover-image.client";
 import {cn} from "@/utils/utils";
 
 /**
- * The player at the bottom of every page: what plays, controls, a seek bar, and panels for the queue and lyrics.
+ * The player at the bottom of every page: what plays, controls, a seek bar, the volume, a menu with ReplayGain and the
+ * keyboard shortcuts, and panels for the queue (which can be reordered and pruned) and the lyrics.
  */
 export function PlayerBar() {
     const t = useTranslations("Player");
@@ -102,6 +136,16 @@ export function PlayerBar() {
                 <div className="hidden w-24 shrink-0 text-right text-xs tabular-nums text-muted-foreground md:block">
                     {formatDuration(player.time)} / {formatDuration(player.duration || current.durationMs / 1000)}
                 </div>
+                <div className="hidden shrink-0 items-center lg:flex">
+                    <Button variant="ghost" size="icon" onClick={player.toggleMute}
+                            aria-label={player.muted ? t("unmute") : t("mute")} aria-pressed={player.muted}>
+                        {player.muted || player.volume === 0 ? <VolumeX/> : player.volume < 0.5 ? <Volume1/> : <Volume2/>}
+                    </Button>
+                    <input type="range" min={0} max={1} step={0.01} value={player.muted ? 0 : player.volume}
+                           onChange={event => player.setVolume(Number(event.target.value))}
+                           aria-label={t("volume")} aria-valuetext={`${Math.round((player.muted ? 0 : player.volume) * 100)} %`}
+                           className="w-24 cursor-pointer accent-primary"/>
+                </div>
                 <div className="flex shrink-0 items-center">
                     {current.lyrics && (
                         <Button variant="ghost" size="icon" onClick={() => setPanel("lyrics")} aria-label={t("lyrics")}>
@@ -111,6 +155,26 @@ export function PlayerBar() {
                     <Button variant="ghost" size="icon" onClick={() => setPanel("queue")} aria-label={t("queue")}>
                         <ListMusic/>
                     </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label={t("settings")}/>}>
+                            <Settings2/>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" side="top" className="w-60">
+                            <DropdownMenuGroup>
+                                <DropdownMenuLabel>{t("replayGain.label")}</DropdownMenuLabel>
+                                <DropdownMenuRadioGroup value={player.replayGain}
+                                                        onValueChange={value => player.setReplayGain(value as ReplayGainMode)}>
+                                    {(["off", "track", "album"] as const).map(mode => (
+                                        <DropdownMenuRadioItem key={mode} value={mode}>{t(`replayGain.${mode}`)}</DropdownMenuRadioItem>
+                                    ))}
+                                </DropdownMenuRadioGroup>
+                            </DropdownMenuGroup>
+                            <DropdownMenuSeparator/>
+                            <DropdownMenuItem onClick={() => window.dispatchEvent(new Event(SHOW_SHORTCUTS))}>
+                                <Keyboard/>{t("shortcuts")}
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
             <Sheet open={panel !== null} onOpenChange={open => !open && setPanel(null)}>
@@ -134,6 +198,16 @@ export function PlayerBar() {
                             <p className="whitespace-pre-line text-base leading-relaxed">{current.lyrics}</p>
                         ))}
                         {panel === "queue" && (
+                            <div className="mb-3 flex flex-wrap gap-2">
+                                <Button variant="outline" size="sm" onClick={() => {
+                                    setPanel(null);
+                                    player.clear();
+                                }}>
+                                    <ListX/>{t("clearQueue")}
+                                </Button>
+                            </div>
+                        )}
+                        {panel === "queue" && (
                             // Shuffle and repeat have no room in the bar on a phone, so they are offered here
                             <div className="mb-3 flex gap-2 sm:hidden">
                                 <Button variant="outline" size="sm" onClick={() => player.setShuffle(!player.shuffle)}
@@ -151,9 +225,9 @@ export function PlayerBar() {
                         {panel === "queue" && (
                             <ol className="space-y-1">
                                 {player.queue.map((track, i) => (
-                                    <li key={`${track.id}-${i}`}>
+                                    <li key={`${track.id}-${i}`} className="group/queue flex items-center gap-1">
                                         <button type="button" onClick={() => player.jump(i)}
-                                                className={cn("flex w-full items-center gap-3 rounded px-2 py-2 text-left hover:bg-muted",
+                                                className={cn("flex min-w-0 flex-1 items-center gap-3 rounded px-2 py-2 text-left hover:bg-muted",
                                                     i === player.index && "bg-muted font-medium")}
                                                 aria-current={i === player.index ? "true" : undefined}>
                                             <span className="w-6 text-right text-xs tabular-nums text-muted-foreground">{i + 1}</span>
@@ -163,6 +237,18 @@ export function PlayerBar() {
                                             </span>
                                             <span className="text-xs tabular-nums text-muted-foreground">{formatDuration(track.durationMs / 1000)}</span>
                                         </button>
+                                        <Button variant="ghost" size="icon-sm" disabled={i === 0} onClick={() => player.move(i, i - 1)}
+                                                aria-label={t("moveUp", {title: track.title})}>
+                                            <ArrowUp/>
+                                        </Button>
+                                        <Button variant="ghost" size="icon-sm" disabled={i === player.queue.length - 1}
+                                                onClick={() => player.move(i, i + 1)} aria-label={t("moveDown", {title: track.title})}>
+                                            <ArrowDown/>
+                                        </Button>
+                                        <Button variant="ghost" size="icon-sm" onClick={() => player.remove(i)}
+                                                aria-label={t("removeFromQueue", {title: track.title})}>
+                                            <X/>
+                                        </Button>
                                     </li>
                                 ))}
                             </ol>

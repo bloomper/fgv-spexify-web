@@ -1,7 +1,7 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import {act, renderHook} from "@testing-library/react";
 import * as React from "react";
-import {PlayerProvider, type PlayerTrack, usePlayer} from "@/components/player/player-provider.client";
+import {gainFactor, PlayerProvider, playedSince, type PlayerTrack, usePlayer} from "@/components/player/player-provider.client";
 
 const scrobbleAction = vi.hoisted(() => vi.fn());
 const loadPlayQueueAction = vi.hoisted(() => vi.fn());
@@ -13,7 +13,12 @@ const track = (id: string, navidromeId: string | null = `nd-${id}`): PlayerTrack
     ({id, title: `Låt ${id}`, albumId: "1", albumTitle: "Nobel", durationMs: 60_000, navidromeId});
 const TRACKS = [track("1"), track("2"), track("3", null)];
 
-const audio = () => document.querySelector("audio") as HTMLAudioElement;
+// The element that plays; the other one holds the preloaded next track
+const audio = () => {
+    const [first, second] = Array.from(document.querySelectorAll("audio"));
+
+    return second?.getAttribute("src") && !first.getAttribute("src") ? second : first;
+};
 
 function render() {
     return renderHook(() => usePlayer(), {wrapper: ({children}: { children: React.ReactNode }) => <PlayerProvider>{children}</PlayerProvider>});
@@ -24,6 +29,7 @@ describe("PlayerProvider", () => {
         scrobbleAction.mockReset();
         loadPlayQueueAction.mockReset().mockResolvedValue(null);
         savePlayQueueAction.mockReset().mockResolvedValue(undefined);
+        localStorage.clear();
         vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(function (this: HTMLMediaElement) {
             this.dispatchEvent(new Event("play"));
             return Promise.resolve();
@@ -237,5 +243,101 @@ describe("PlayerProvider", () => {
         } finally {
             vi.useRealTimers();
         }
+    });
+
+    it("removes, moves and clears tracks in the queue, keeping the playing track", () => {
+        const {result} = render();
+
+        act(() => result.current.playQueue([track("1"), track("2"), track("4"), track("5")], 1));
+        act(() => result.current.move(3, 0));
+        expect(result.current.queue.map(t => t.id)).toEqual(["5", "1", "2", "4"]);
+        expect(result.current.current?.id).toBe("2");
+
+        act(() => result.current.remove(0));
+        expect(result.current.queue.map(t => t.id)).toEqual(["1", "2", "4"]);
+        expect(result.current.current?.id).toBe("2");
+
+        act(() => result.current.remove(1));
+        expect(result.current.current?.id).toBe("4");
+        expect(audio().src).toMatch(/\/api\/audio\/4$/);
+
+        act(() => result.current.clear());
+        expect(result.current.queue).toEqual([]);
+        expect(result.current.current).toBeNull();
+    });
+
+    it("keeps the volume and mute in the browser and turns tracks down by their ReplayGain", () => {
+        const {result, unmount} = render();
+        const loud: PlayerTrack = {...track("1"), replayGain: {trackGain: -6, trackPeak: 0.9, albumGain: -3, albumPeak: 0.9}};
+
+        act(() => result.current.playQueue([loud], 0));
+        expect(audio().volume).toBeCloseTo(0.501, 2);
+
+        act(() => result.current.setVolume(0.5));
+        expect(audio().volume).toBeCloseTo(0.2506, 3);
+        act(() => result.current.setReplayGain("album"));
+        expect(audio().volume).toBeCloseTo(0.354, 2);
+        act(() => result.current.toggleMute());
+        expect(audio().volume).toBe(0);
+        unmount();
+
+        const again = render();
+
+        expect(again.result.current.volume).toBe(0.5);
+        expect(again.result.current.muted).toBe(true);
+        expect(again.result.current.replayGain).toBe("album");
+    });
+
+    it("preloads the next track in the other element and switches to it", () => {
+        vi.useFakeTimers();
+        try {
+            const {result} = render();
+            const [first, second] = Array.from(document.querySelectorAll("audio"));
+
+            act(() => result.current.playQueue(TRACKS, 0));
+            act(() => {
+                vi.advanceTimersByTime(3000);
+            });
+            expect(second.getAttribute("src")).toBe("/api/audio/2");
+
+            Object.defineProperty(second, "readyState", {value: 4, configurable: true});
+            act(() => {
+                first.dispatchEvent(new Event("ended"));
+            });
+            expect(result.current.current?.id).toBe("2");
+            expect(first.getAttribute("src")).toBeNull();
+            expect(second.getAttribute("src")).toBe("/api/audio/2");
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it("counts a heard track among this session's plays", () => {
+        const {result} = render();
+
+        act(() => result.current.playQueue(TRACKS, 0));
+        Object.defineProperty(audio(), "duration", {value: 60, configurable: true});
+        audio().currentTime = 31;
+        act(() => {
+            audio().dispatchEvent(new Event("timeupdate"));
+        });
+        expect(result.current.plays["nd-1"]?.count).toBe(1);
+    });
+});
+
+describe("gainFactor and playedSince", () => {
+    it("only turns down, and never past the peak", () => {
+        expect(gainFactor({trackGain: -6.0206, trackPeak: 0.5}, "track")).toBeCloseTo(0.5, 3);
+        expect(gainFactor({trackGain: 6, trackPeak: 0.5}, "track")).toBe(1);
+        expect(gainFactor({trackGain: 6, trackPeak: 1.25}, "track")).toBeCloseTo(0.8, 3);
+        expect(gainFactor({trackGain: -6, trackPeak: 0.5, albumGain: null}, "album")).toBeCloseTo(0.501, 2);
+        expect(gainFactor({trackGain: -6, trackPeak: 0.5}, "off")).toBe(1);
+        expect(gainFactor(null, "track")).toBe(1);
+    });
+
+    it("tells whether Navidrome's numbers lag behind a play", () => {
+        expect(playedSince(null, "2026-11-02T10:00:00Z")).toBe(true);
+        expect(playedSince("2026-11-01T10:00:00Z", "2026-11-02T10:00:00Z")).toBe(true);
+        expect(playedSince("2026-11-02T10:00:05Z", "2026-11-02T10:00:00Z")).toBe(false);
     });
 });

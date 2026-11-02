@@ -2,7 +2,7 @@ import "server-only";
 
 import {graphql} from "@/gql";
 import {runMutation, runQuery} from "@/lib/graphql.server";
-import type {MaintenanceJob, SettingsInput} from "@/gql/graphql";
+import type {AuditFilter, MaintenanceJob, SettingsInput} from "@/gql/graphql";
 
 const UsersQuery = graphql(`
     query Users {
@@ -23,12 +23,15 @@ const LibraryStatusQuery = graphql(`
     }
 `);
 const AuditLogQuery = graphql(`
-    query AuditLog($page: Int, $size: Int) {
-        auditLog(page: $page, size: $size) {
+    query AuditLog($page: Int, $size: Int, $filter: AuditFilter) {
+        auditLog(page: $page, size: $size, filter: $filter) {
             totalCount page size
-            entries { id at actorName action entityType entityId summary }
+            entries { id at actorId actorName action entityType entityId summary }
         }
     }
+`);
+const AuditActorsQuery = graphql(`
+    query AuditActors { auditActors { id name } }
 `);
 const SettingsQuery = graphql(`
     query Settings { settings { welcomeSv welcomeEn appPasswordExpiryMonths lockoutAttempts lockoutMinutes } }
@@ -50,7 +53,9 @@ const MaintenanceJobRunMutation = graphql(`mutation MaintenanceJobRun($job: Main
 
 export const getTrash = async () => (await runQuery(TrashQuery, {}))?.trash;
 export const getLibraryStatus = async () => (await runQuery(LibraryStatusQuery, {}))?.libraryStatus;
-export const getAuditLog = async (page: number, size: number) => (await runQuery(AuditLogQuery, {page, size}))?.auditLog;
+export const getAuditLog = async (page: number, size: number, filter: AuditFilter = {}) =>
+    (await runQuery(AuditLogQuery, {page, size, filter}))?.auditLog;
+export const getAuditActors = async () => (await runQuery(AuditActorsQuery, {}))?.auditActors ?? [];
 export const getSettings = async () => (await runQuery(SettingsQuery, {}))?.settings;
 export const userCredentialsRevoke = (userId: string) => runMutation(UserCredentialsRevokeMutation, {userId});
 export const userUnlock = (userId: string) => runMutation(UserUnlockMutation, {userId});

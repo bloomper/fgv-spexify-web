@@ -2,7 +2,7 @@ import "server-only";
 
 import {graphql} from "@/gql";
 import {runMutation, runQuery} from "@/lib/graphql.server";
-import type {AlbumFilter, AlbumInput, AlbumKindInput, TrackInput} from "@/gql/graphql";
+import type {AlbumFilter, AlbumInput, AlbumKindInput, CreditKind, TrackInput} from "@/gql/graphql";
 
 export const KindFieldsFragment = graphql(`
     fragment KindFields on AlbumKind { id nameSv nameEn isDefault }
@@ -19,7 +19,7 @@ const HomeQuery = graphql(`
     query Home {
         recentAlbums(limit: 12) {
             id title year kind { ...KindFields } hasCover trackCount durationMs
-            spex { id title year revival categoryId categoryName }
+            spex { id title year revival parentId familyId categoryId categoryName }
         }
         categories { id name albumCount }
         years
@@ -30,10 +30,19 @@ const AlbumsQuery = graphql(`
     query Albums($filter: AlbumFilter) {
         albums(filter: $filter) {
             id title year kind { ...KindFields } hasCover published trackCount durationMs
-            spex { id title year revival categoryId categoryName }
+            spex { id title year revival parentId familyId categoryId categoryName }
         }
         categories { id name albumCount }
         years
+    }
+`);
+
+const SpexAlbumsQuery = graphql(`
+    query SpexAlbums($filter: AlbumFilter) {
+        albums(filter: $filter) {
+            id title year kind { ...KindFields } hasCover published trackCount durationMs
+            spex { id title year revival parentId familyId categoryId categoryName }
+        }
     }
 `);
 
@@ -42,10 +51,11 @@ const AlbumQuery = graphql(`
         album(id: $id) {
             id title year kind { ...KindFields } description hasCover published publishedAt trashedAt navidromeId trackCount durationMs
             createdAt lastModifiedAt
-            spex { id title year revival categoryId categoryName }
+            spex { id title year revival parentId familyId categoryId categoryName }
             tracks {
                 id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
                 lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing
+                replayGain { trackGain trackPeak albumGain albumPeak }
                 videoLinks { videoId videoTitle chapterTitle startSeconds }
             }
         }
@@ -57,11 +67,12 @@ const SearchQuery = graphql(`
         search(q: $q) {
             albums {
                 id title year kind { ...KindFields } hasCover published trackCount durationMs
-                spex { id title year revival categoryId categoryName }
+                spex { id title year revival parentId familyId categoryId categoryName }
             }
             tracks {
                 id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
                 lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing
+                replayGain { trackGain trackPeak albumGain albumPeak }
             }
         }
     }
@@ -77,14 +88,14 @@ const AlbumsByNavidromeIdsQuery = graphql(`
     query AlbumsByNavidromeIds($ids: [String!]!) {
         albumsByNavidromeIds(ids: $ids) {
             id title year kind { ...KindFields } hasCover trackCount durationMs navidromeId
-            spex { id title year revival categoryId categoryName }
+            spex { id title year revival parentId familyId categoryId categoryName }
         }
     }
 `);
 
 const SpexSearchQuery = graphql(`
     query SpexSearch($q: String!) {
-        spexSearch(q: $q) { id title year revival categoryName }
+        spexSearch(q: $q) { id title year revival parentId categoryName }
     }
 `);
 
@@ -93,6 +104,7 @@ const TracksByNavidromeIdsQuery = graphql(`
         tracksByNavidromeIds(ids: $ids) {
             id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
             lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing
+                replayGain { trackGain trackPeak albumGain albumPeak }
         }
     }
 `);
@@ -152,6 +164,31 @@ const AlbumKindsReorderMutation = graphql(`
 const AlbumKindDeleteMutation = graphql(`
     mutation AlbumKindDelete($id: ID!) { albumKindDelete(id: $id) }
 `);
+const CreditsQuery = graphql(`
+    query Credits($kind: CreditKind!) {
+        credits(kind: $kind) { name trackCount }
+    }
+`);
+
+const CreditTracksQuery = graphql(`
+    query CreditTracks($kind: CreditKind!, $name: String!) {
+        creditTracks(kind: $kind, name: $name) {
+            id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
+            lyricsSynced durationMs listed navidromeId fileMissing
+            replayGain { trackGain trackPeak albumGain albumPeak }
+        }
+    }
+`);
+
+const RadioQuery = graphql(`
+    query Radio($trackId: ID, $albumId: ID, $limit: Int) {
+        radio(trackId: $trackId, albumId: $albumId, limit: $limit) {
+            id albumId albumTitle title performers durationMs navidromeId lyrics lyricsSynced fileMissing
+            replayGain { trackGain trackPeak albumGain albumPeak }
+        }
+    }
+`);
+
 const TrackDeleteMutation = graphql(`
     mutation TrackDelete($id: ID!) { trackDelete(id: $id) }
 `);
@@ -166,6 +203,16 @@ export async function getHome() {
 
 export async function getAlbums(filter: AlbumFilter) {
     return runQuery(AlbumsQuery, {filter});
+}
+
+/**
+ * The albums of the spex and, for originals, their revivals, oldest first, each album once.
+ */
+export async function getAlbumsOfSpex(spexIds: string[]) {
+    const lists = await Promise.all([...new Set(spexIds)].map(spexId => runQuery(SpexAlbumsQuery, {filter: {spexId}})));
+    const albums = new Map(lists.flatMap(list => list?.albums ?? []).map(album => [album.id, album]));
+
+    return [...albums.values()].sort((a, b) => (a.year ?? 0) - (b.year ?? 0) || a.title.localeCompare(b.title));
 }
 
 export async function getAlbum(id: string) {
@@ -190,6 +237,18 @@ export async function searchSpex(q: string) {
 
 export async function getTracksByNavidromeIds(ids: string[]) {
     return ids.length === 0 ? [] : (await runQuery(TracksByNavidromeIdsQuery, {ids}))?.tracksByNavidromeIds ?? [];
+}
+
+export async function getCredits(kind: CreditKind) {
+    return (await runQuery(CreditsQuery, {kind}))?.credits ?? [];
+}
+
+export async function getCreditTracks(kind: CreditKind, name: string) {
+    return (await runQuery(CreditTracksQuery, {kind, name}))?.creditTracks ?? [];
+}
+
+export async function getRadio(seed: { trackId?: string; albumId?: string }, limit = 50) {
+    return (await runQuery(RadioQuery, {trackId: seed.trackId ?? null, albumId: seed.albumId ?? null, limit}))?.radio ?? [];
 }
 
 export const albumCreate = async (input: AlbumInput) => (await runMutation(AlbumCreateMutation, {input}))?.albumCreate;
