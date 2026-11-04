@@ -1,4 +1,4 @@
-import {AccessTokenClaims, type Role} from "@/types/auth";
+import { AccessTokenClaims, type Role } from "@/types/auth";
 
 export const CLIENT_ID = "fgv-spexify";
 
@@ -8,11 +8,11 @@ export const isEditor = (roles: Role[]) => hasAccess(roles) && (roles.includes("
 export const isAdmin = (roles: Role[]) => hasAccess(roles) && roles.includes("ADMIN");
 
 function normalizeRole(value: string): Role | null {
-    const v = value.trim().toUpperCase();
-    if (v === "USER" || v === "EDITOR" || v === "ADMIN") {
-        return v;
-    }
-    return null;
+  const v = value.trim().toUpperCase();
+  if (v === "USER" || v === "EDITOR" || v === "ADMIN") {
+    return v;
+  }
+  return null;
 }
 
 /**
@@ -20,37 +20,37 @@ function normalizeRole(value: string): Role | null {
  * enforces every rule.
  */
 export function extractRolesFromClaims(claims: AccessTokenClaims): Role[] {
-    const rawRoles = claims.resource_access?.[CLIENT_ID]?.roles ?? [];
-    const roles = rawRoles
-        .map(normalizeRole)
-        .filter((r): r is Role => r !== null);
+  const rawRoles = claims.resource_access?.[CLIENT_ID]?.roles ?? [];
+  const roles = rawRoles
+    .map(normalizeRole)
+    .filter((r): r is Role => r !== null);
 
-    return Array.from(new Set(roles));
+  return Array.from(new Set(roles));
 }
 
 export const appendLogoutParams = (
-    logoutUrl: string,
-    locale?: string,
-    theme?: "light" | "dark" | "system"
+  logoutUrl: string,
+  locale?: string,
+  theme?: "light" | "dark" | "system",
 ): string => {
-    if (!locale && !theme) {
-        return logoutUrl;
-    }
+  if (!locale && !theme) {
+    return logoutUrl;
+  }
 
-    const separator = logoutUrl.includes("?") ? "&" : "?";
-    const urlParams = new URLSearchParams();
+  const separator = logoutUrl.includes("?") ? "&" : "?";
+  const urlParams = new URLSearchParams();
 
-    if (locale) {
-        urlParams.append("ui_locales", locale);
-    }
-    if (theme) {
-        urlParams.append("theme", theme);
-    }
+  if (locale) {
+    urlParams.append("ui_locales", locale);
+  }
+  if (theme) {
+    urlParams.append("theme", theme);
+  }
 
-    return `${logoutUrl}${separator}${urlParams.toString()}`;
+  return `${logoutUrl}${separator}${urlParams.toString()}`;
 };
 
 export function normalizeTheme(value?: string): "light" | "dark" | "system" | undefined {
-    if (value === "light" || value === "dark" || value === "system") return value;
-    return undefined;
+  if (value === "light" || value === "dark" || value === "system") return value;
+  return undefined;
 }

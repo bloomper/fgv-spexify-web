@@ -1,50 +1,50 @@
 "use client";
 
-import * as React from "react"
-import Link from "next/link"
-import {type LucideIcon} from "lucide-react"
-import {usePathname} from "next/navigation"
+import * as React from "react";
+import Link from "next/link";
+import { type LucideIcon } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 import {
-    SidebarGroup,
-    SidebarGroupContent,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-} from "@/components/ui/sidebar"
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
 
 export function NavSecondary({
-                                 items,
-                                 ...props
+                               items,
+                               ...props
                              }: {
-    items: {
-        title: string
-        url: string
-        icon: LucideIcon
-    }[]
+  items: {
+    title: string
+    url: string
+    icon: LucideIcon
+  }[]
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
-    const pathname = usePathname();
+  const pathname = usePathname();
 
-    return (
-        <SidebarGroup {...props}>
-            <SidebarGroupContent>
-                <SidebarMenu>
-                    {items.map((item) => {
-                        const isInternal = item.url.startsWith("/");
-                        const LinkComponent = isInternal ? Link : "a";
+  return (
+    <SidebarGroup {...props}>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map((item) => {
+            const isInternal = item.url.startsWith("/");
+            const LinkComponent = isInternal ? Link : "a";
 
-                        return (
-                            <SidebarMenuItem key={item.title}>
-                                <SidebarMenuButton size="sm" isActive={pathname === item.url}
-                                                   render={<LinkComponent href={item.url}/>}>
-                                    <item.icon/>
-                                    <span>{item.title}</span>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                        );
-                    })}
-                </SidebarMenu>
-            </SidebarGroupContent>
-        </SidebarGroup>
-    )
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton size="sm" isActive={pathname === item.url}
+                                   render={<LinkComponent href={item.url} />}>
+                  <item.icon />
+                  <span>{item.title}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
 }

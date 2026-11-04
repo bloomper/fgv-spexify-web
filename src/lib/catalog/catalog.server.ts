@@ -1,8 +1,8 @@
 import "server-only";
 
-import {graphql} from "@/gql";
-import {runMutation, runQuery} from "@/lib/graphql.server";
-import type {AlbumFilter, AlbumInput, AlbumKindInput, CreditKind, TopBy, TrackInput} from "@/gql/graphql";
+import { graphql } from "@/gql";
+import { runMutation, runQuery } from "@/lib/graphql.server";
+import type { AlbumFilter, AlbumInput, AlbumKindInput, CreditKind, TopBy, TrackInput } from "@/gql/graphql";
 
 export const KindFieldsFragment = graphql(`
     fragment KindFields on AlbumKind { id nameSv nameEn isDefault }
@@ -125,7 +125,7 @@ const TracksByNavidromeIdsQuery = graphql(`
         tracksByNavidromeIds(ids: $ids) {
             id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
             lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing averageRating ratingCount
-                replayGain { trackGain trackPeak albumGain albumPeak }
+            replayGain { trackGain trackPeak albumGain albumPeak }
         }
     }
 `);
@@ -215,84 +215,100 @@ const TrackDeleteMutation = graphql(`
 `);
 
 export async function getMe() {
-    return runQuery(MeQuery, {});
+  return runQuery(MeQuery, {});
 }
 
 export async function getHome() {
-    return runQuery(HomeQuery, {});
+  return runQuery(HomeQuery, {});
 }
 
 export async function getTop(by: TopBy, filter: AlbumFilter, limit = 50) {
-    return runQuery(TopQuery, {by, filter, limit});
+  return runQuery(TopQuery, { by, filter, limit });
 }
 
 export async function getAlbums(filter: AlbumFilter) {
-    return runQuery(AlbumsQuery, {filter});
+  return runQuery(AlbumsQuery, { filter });
 }
 
 /**
  * The albums of the spex and, for originals, their revivals, oldest first, each album once.
  */
 export async function getAlbumsOfSpex(spexIds: string[]) {
-    const lists = await Promise.all([...new Set(spexIds)].map(spexId => runQuery(SpexAlbumsQuery, {filter: {spexId}})));
-    const albums = new Map(lists.flatMap(list => list?.albums ?? []).map(album => [album.id, album]));
+  const lists = await Promise.all([...new Set(spexIds)].map(spexId => runQuery(SpexAlbumsQuery, { filter: { spexId } })));
+  const albums = new Map(lists.flatMap(list => list?.albums ?? []).map(album => [album.id, album]));
 
-    return [...albums.values()].sort((a, b) => (a.year ?? 0) - (b.year ?? 0) || a.title.localeCompare(b.title));
+  return [...albums.values()].sort((a, b) => (a.year ?? 0) - (b.year ?? 0) || a.title.localeCompare(b.title));
 }
 
 export async function getAlbum(id: string) {
-    return (await runQuery(AlbumQuery, {id}))?.album ?? null;
+  return (await runQuery(AlbumQuery, { id }))?.album ?? null;
 }
 
 export async function search(q: string) {
-    return (await runQuery(SearchQuery, {q}))?.search;
+  return (await runQuery(SearchQuery, { q }))?.search;
 }
 
 export async function getAlbumKinds() {
-    return (await runQuery(AlbumKindsQuery, {}))?.albumKinds ?? [];
+  return (await runQuery(AlbumKindsQuery, {}))?.albumKinds ?? [];
 }
 
 export async function getAlbumsByNavidromeIds(ids: string[]) {
-    return ids.length === 0 ? [] : (await runQuery(AlbumsByNavidromeIdsQuery, {ids}))?.albumsByNavidromeIds ?? [];
+  return ids.length === 0 ? [] : (await runQuery(AlbumsByNavidromeIdsQuery, { ids }))?.albumsByNavidromeIds ?? [];
 }
 
 export async function searchSpex(q: string) {
-    return (await runQuery(SpexSearchQuery, {q}))?.spexSearch ?? [];
+  return (await runQuery(SpexSearchQuery, { q }))?.spexSearch ?? [];
 }
 
 export async function getTracksByNavidromeIds(ids: string[]) {
-    return ids.length === 0 ? [] : (await runQuery(TracksByNavidromeIdsQuery, {ids}))?.tracksByNavidromeIds ?? [];
+  return ids.length === 0 ? [] : (await runQuery(TracksByNavidromeIdsQuery, { ids }))?.tracksByNavidromeIds ?? [];
 }
 
 export async function getCredits(kind: CreditKind) {
-    return (await runQuery(CreditsQuery, {kind}))?.credits ?? [];
+  return (await runQuery(CreditsQuery, { kind }))?.credits ?? [];
 }
 
 export async function getCreditTracks(kind: CreditKind, name: string) {
-    return (await runQuery(CreditTracksQuery, {kind, name}))?.creditTracks ?? [];
+  return (await runQuery(CreditTracksQuery, { kind, name }))?.creditTracks ?? [];
 }
 
 export async function getRadio(seed: { trackId?: string; albumId?: string }, limit = 50) {
-    return (await runQuery(RadioQuery, {trackId: seed.trackId ?? null, albumId: seed.albumId ?? null, limit}))?.radio ?? [];
+  return (await runQuery(RadioQuery, {
+    trackId: seed.trackId ?? null,
+    albumId: seed.albumId ?? null,
+    limit,
+  }))?.radio ?? [];
 }
 
-export const albumCreate = async (input: AlbumInput) => (await runMutation(AlbumCreateMutation, {input}))?.albumCreate;
-export const albumUpdate = (id: string, input: AlbumInput) => runMutation(AlbumUpdateMutation, {id, input});
-export const albumPublish = (id: string, published: boolean) => runMutation(AlbumPublishMutation, {id, published});
-export const albumTrash = (id: string) => runMutation(AlbumTrashMutation, {id});
-export const albumRestore = (id: string) => runMutation(AlbumRestoreMutation, {id});
-export const albumDelete = (id: string) => runMutation(AlbumDeleteMutation, {id});
-export const albumCoverRemove = (id: string) => runMutation(AlbumCoverRemoveMutation, {id});
-export const tracksReorder = (albumId: string, trackIds: string[]) => runMutation(TracksReorderMutation, {albumId, trackIds});
-export const trackCreate = (albumId: string, uploadId: string) => runMutation(TrackCreateMutation, {albumId, uploadId});
-export const trackUpdate = (id: string, input: TrackInput) => runMutation(TrackUpdateMutation, {id, input});
-export const trackReplaceAudio = (id: string, uploadId: string) => runMutation(TrackReplaceAudioMutation, {id, uploadId});
-export const trackPublish = (id: string, published: boolean) => runMutation(TrackPublishMutation, {id, published});
-export const trackTrash = (id: string) => runMutation(TrackTrashMutation, {id});
-export const trackRestore = (id: string) => runMutation(TrackRestoreMutation, {id});
-export const trackDelete = (id: string) => runMutation(TrackDeleteMutation, {id});
+export const albumCreate = async (input: AlbumInput) => (await runMutation(AlbumCreateMutation, { input }))?.albumCreate;
+export const albumUpdate = (id: string, input: AlbumInput) => runMutation(AlbumUpdateMutation, { id, input });
+export const albumPublish = (id: string, published: boolean) => runMutation(AlbumPublishMutation, { id, published });
+export const albumTrash = (id: string) => runMutation(AlbumTrashMutation, { id });
+export const albumRestore = (id: string) => runMutation(AlbumRestoreMutation, { id });
+export const albumDelete = (id: string) => runMutation(AlbumDeleteMutation, { id });
+export const albumCoverRemove = (id: string) => runMutation(AlbumCoverRemoveMutation, { id });
+export const tracksReorder = (albumId: string, trackIds: string[]) => runMutation(TracksReorderMutation, {
+  albumId,
+  trackIds,
+});
+export const trackCreate = (albumId: string, uploadId: string) => runMutation(TrackCreateMutation, {
+  albumId,
+  uploadId,
+});
+export const trackUpdate = (id: string, input: TrackInput) => runMutation(TrackUpdateMutation, { id, input });
+export const trackReplaceAudio = (id: string, uploadId: string) => runMutation(TrackReplaceAudioMutation, {
+  id,
+  uploadId,
+});
+export const trackPublish = (id: string, published: boolean) => runMutation(TrackPublishMutation, { id, published });
+export const trackTrash = (id: string) => runMutation(TrackTrashMutation, { id });
+export const trackRestore = (id: string) => runMutation(TrackRestoreMutation, { id });
+export const trackDelete = (id: string) => runMutation(TrackDeleteMutation, { id });
 
-export const albumKindCreate = (input: AlbumKindInput) => runMutation(AlbumKindCreateMutation, {input});
-export const albumKindUpdate = (id: string, input: AlbumKindInput) => runMutation(AlbumKindUpdateMutation, {id, input});
-export const albumKindsReorder = (ids: string[]) => runMutation(AlbumKindsReorderMutation, {ids});
-export const albumKindDelete = (id: string) => runMutation(AlbumKindDeleteMutation, {id});
+export const albumKindCreate = (input: AlbumKindInput) => runMutation(AlbumKindCreateMutation, { input });
+export const albumKindUpdate = (id: string, input: AlbumKindInput) => runMutation(AlbumKindUpdateMutation, {
+  id,
+  input,
+});
+export const albumKindsReorder = (ids: string[]) => runMutation(AlbumKindsReorderMutation, { ids });
+export const albumKindDelete = (id: string) => runMutation(AlbumKindDeleteMutation, { id });

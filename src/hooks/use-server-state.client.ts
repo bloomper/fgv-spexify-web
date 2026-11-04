@@ -1,6 +1,6 @@
 "use client";
 
-import {useState} from "react";
+import { useState } from "react";
 
 /**
  * Local state over a value from the server, for changes shown at once while they are saved: it starts as the value and
@@ -10,13 +10,13 @@ import {useState} from "react";
  * and objects that arrive as new copies with the same content.
  */
 export function useServerState<T>(value: T, key: (value: T) => unknown = value => value) {
-    const [state, setState] = useState(value);
-    const [seen, setSeen] = useState(() => key(value));
-    const current = key(value);
+  const [state, setState] = useState(value);
+  const [seen, setSeen] = useState(() => key(value));
+  const current = key(value);
 
-    if (!Object.is(current, seen)) {
-        setSeen(current);
-        setState(value);
-    }
-    return [state, setState] as const;
+  if (!Object.is(current, seen)) {
+    setSeen(current);
+    setState(value);
+  }
+  return [state, setState] as const;
 }
