@@ -191,21 +191,59 @@ test.describe("Ratings and liked albums", () => {
         await page.getByRole("radiogroup", {name: "Ditt betyg för albumet"}).getByRole("radio", {name: "4 stjärnor"}).click();
         await expect.poll(async () => (await mock.state()).ratings["al-1"]).toBe(4);
 
-        await page.getByRole("button", {name: "Mer för Ouvertyr"}).click();
-        await page.getByRole("radiogroup", {name: "Betyg för Ouvertyr"}).getByRole("radio", {name: "5 stjärnor"}).click();
+        // The stars are in the track's row, beside everyone's average
+        await page.getByRole("listitem").filter({hasText: "Ouvertyr"}).getByRole("radiogroup", {name: "Betyg för Ouvertyr"})
+            .getByRole("radio", {name: "5 stjärnor"}).click();
         await expect.poll(async () => (await mock.state()).ratings[`nd-${uuidOf(11)}`]).toBe(5);
-        await page.keyboard.press("Escape");
+        await expect(page.getByRole("listitem").filter({hasText: "Ouvertyr"}).getByRole("img", {name: /Snittbetyg 5,0 av 5 från 1 betyg/}).first())
+            .toBeVisible();
 
         await page.goto("/");
         const highest = page.getByRole("region", {name: "Högst betyg av dig"});
 
         await expect(highest.getByRole("link", {name: /Nobel/})).toBeVisible();
-        await expect(highest.getByText("Betyg: 4 stjärnor")).toBeVisible();
+        await expect(highest.getByRole("img", {name: "Betyg: 4 stjärnor"})).toBeVisible();
+        await expect(page.getByRole("region", {name: "Topplistan: högst betyg"}).getByRole("link", {name: /Nobel/})).toBeVisible();
 
         await page.goto(`/albums/${uuidOf(1)}`);
         await expect(page.getByRole("radiogroup", {name: "Ditt betyg för albumet"}).getByRole("radio", {name: "4 stjärnor"}))
             .toHaveAttribute("aria-checked", "true");
-        await expect(page.getByRole("listitem").filter({hasText: "Ouvertyr"}).getByRole("img", {name: "Betyg: 5 stjärnor"})).toBeVisible();
+        await expect(page.getByRole("listitem").filter({hasText: "Ouvertyr"}).getByRole("radio", {name: "5 stjärnor"}))
+            .toHaveAttribute("aria-checked", "true");
+    });
+
+    test("lists everyone's favourites on the top list, by rating, likes or plays", async ({page, loginAs, mock}) => {
+        await loginAs("listener");
+        await page.goto(`/albums/${uuidOf(1)}`);
+        await page.getByRole("listitem").filter({hasText: "Kärleksduetten"}).getByRole("radiogroup", {name: "Betyg för Kärleksduetten"})
+            .getByRole("radio", {name: "3 stjärnor"}).click();
+        await expect.poll(async () => (await mock.state()).ratings[`nd-${uuidOf(12)}`]).toBe(3);
+
+        await page.getByRole("link", {name: "Topplistan", exact: true}).first().click();
+        await expect(page.getByRole("heading", {name: "Topplistan", level: 1})).toBeVisible();
+        await expect(page.getByRole("listitem").filter({hasText: "Kärleksduetten"})).toBeVisible();
+        await expect(page.getByRole("listitem").filter({hasText: "Ouvertyr"})).toHaveCount(0);
+
+        await page.getByRole("link", {name: "Mest gillat"}).click();
+        await expect(page.getByText("Inget har fått betyg, gillats eller spelats här ännu.")).toBeVisible();
+    });
+
+    test("sorts the albums and shows only the liked ones", async ({page, loginAs, mock}) => {
+        await loginAs("listener");
+        await page.goto("/albums?liked=1");
+        await expect(page.getByText("Inga album matchar.")).toBeVisible();
+
+        await page.goto(`/albums/${uuidOf(1)}`);
+        await page.getByRole("button", {name: "Gilla albumet"}).click();
+        await expect.poll(async () => (await mock.state()).starredAlbums).toEqual(["al-1"]);
+        await page.goto("/albums?liked=1");
+        await expect(page.getByRole("link", {name: /Nobel/})).toBeVisible();
+
+        await page.getByRole("combobox", {name: "Ordning"}).selectOption("TITLE");
+        await expect(page).toHaveURL(/sort=TITLE/);
+        await page.getByRole("link", {name: "1970-talet"}).click();
+        await expect(page).toHaveURL(/decade=1970/);
+        await expect(page.getByRole("link", {name: "1975", exact: true})).toBeVisible();
     });
 
     test("likes an album and finds it under Liked", async ({page, loginAs, mock}) => {

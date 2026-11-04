@@ -1,7 +1,9 @@
+import type {ReactNode} from "react";
 import Link from "next/link";
 import {useLocale, useTranslations} from "next-intl";
 import {Badge} from "@/components/ui/badge";
 import {CoverImage} from "@/components/album/cover-image.client";
+import {AverageRating} from "@/components/rating.client";
 import {type KindName, kindName} from "@/utils/format";
 
 export type AlbumSummary = {
@@ -11,18 +13,22 @@ export type AlbumSummary = {
     kind: KindName & { isDefault: boolean };
     published?: boolean;
     trackCount: number;
+    /** Everyone's average rating, or null when nobody rated it. */
+    averageRating?: number | null;
+    ratingCount?: number;
     /** The main spex first. */
     spex?: { categoryName?: string | null; revival?: boolean | null }[];
 };
 
 /**
- * Albums as cover cards. A link per card; the badges say what is not obvious from the title.
+ * Albums as cover cards with everyone's average rating. A link per card; the badges say what is not obvious from the
+ * title.
  */
 export function AlbumGrid({albums, hrefFor, label}: {
     albums: AlbumSummary[];
     hrefFor?: (id: string) => string;
     /** An extra line per album, e.g. how often it was played. */
-    label?: (album: AlbumSummary) => string | null;
+    label?: (album: AlbumSummary) => ReactNode;
 }) {
     const t = useTranslations("Album");
     const locale = useLocale();
@@ -40,6 +46,7 @@ export function AlbumGrid({albums, hrefFor, label}: {
                             <div className="text-xs text-muted-foreground">
                                 {[album.year, album.spex?.[0]?.categoryName].filter(Boolean).join(" · ")}
                             </div>
+                            <AverageRating average={album.averageRating} count={album.ratingCount}/>
                             {label?.(album) && <div className="text-xs text-muted-foreground">{label(album)}</div>}
                             <div className="flex flex-wrap gap-1 pt-0.5">
                                 {!album.kind.isDefault && <Badge variant="secondary">{kindName(album.kind, locale)}</Badge>}

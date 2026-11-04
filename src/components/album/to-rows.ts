@@ -20,6 +20,8 @@ type TrackLike = {
     fileMissing: boolean;
     videoLinks?: { videoId: string; videoTitle: string; chapterTitle: string; startSeconds: number }[];
     replayGain?: TrackRow["replayGain"];
+    averageRating?: number | null;
+    ratingCount?: number;
 };
 
 /**
@@ -48,5 +50,7 @@ export function toRows(tracks: TrackLike[], plays: Plays = {}): TrackRow[] {
         playCount: track.navidromeId ? plays[track.navidromeId]?.playCount : undefined,
         played: track.navidromeId ? plays[track.navidromeId]?.played : undefined,
         rating: track.navidromeId ? plays[track.navidromeId]?.rating ?? 0 : undefined,
+        averageRating: track.averageRating,
+        ratingCount: track.ratingCount,
     }));
 }

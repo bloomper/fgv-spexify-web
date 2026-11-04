@@ -254,7 +254,8 @@
     "adminMaintenance": "Underhåll",
     "adminSettings": "Inställningar",
     "adminKinds": "Albumsorter",
-    "credits": "Medverkande"
+    "credits": "Medverkande",
+    "top": "Topplistan"
   },
   "Home": {
     "title": "Spexify",
@@ -270,7 +271,14 @@
     "mostPlayed": "Mest spelat av dig",
     "lastPlayed": "Spelat {date}",
     "plays": "{count, plural, =1 {# spelning} other {# spelningar}}",
-    "highestRated": "Högst betyg av dig"
+    "highestRated": "Högst betyg av dig",
+    "browse": "Bläddra",
+    "topList": "Topplistan",
+    "decade": "{decade}-talet",
+    "topRated": "Topplistan: högst betyg",
+    "wholeTopList": "Hela topplistan",
+    "liked": "Gillat av dig",
+    "allLiked": "Allt du gillat"
   },
   "Albums": {
     "title": "Album",
@@ -280,7 +288,19 @@
     "allYears": "Alla år",
     "none": "Inga album matchar.",
     "spexFilter": "Album från {title}, med nyuppsättningar",
-    "clearSpex": "Visa alla album"
+    "clearSpex": "Visa alla album",
+    "onlyLiked": "Gillade",
+    "sortLabel": "Ordning",
+    "decade": "{decade}-talet",
+    "sort": {
+      "YEAR_DESC": "Nyast först",
+      "YEAR_ASC": "Äldst först",
+      "TITLE": "Titel",
+      "PUBLISHED": "Senast publicerat",
+      "RATING": "Högst betyg",
+      "LIKES": "Mest gillat",
+      "PLAYS": "Mest spelat"
+    }
   },
   "Album": {
     "revival": "Nyuppsättning",
@@ -606,6 +626,10 @@
       "LOUDNESS_SCAN": {
         "title": "Mätning av ljudnivå",
         "description": "Mäter ljudnivån för låtar som saknar den, för ReplayGain, och skriver in den i filerna."
+      },
+      "LISTENING_SYNC": {
+        "title": "Kopiering av betyg, gillningar och spelningar",
+        "description": "Kopierar allas betyg, gillningar och spelningar från musikservern, för snittbetyg och topplistan. Det som görs i webben och apparna kommer med direkt; den här körningen fyller på det som saknas."
       }
     }
   },
@@ -656,7 +680,8 @@
   },
   "Rating": {
     "stars": "{count, plural, =1 {# stjärna} other {# stjärnor}}",
-    "rated": "{count, plural, =1 {Betyg: # stjärna} other {Betyg: # stjärnor}}"
+    "rated": "{count, plural, =1 {Betyg: # stjärna} other {Betyg: # stjärnor}}",
+    "average": "Snittbetyg {average} av 5 från {count, plural, =1 {# betyg} other {# betyg}}"
   },
   "Shortcuts": {
     "title": "Kortkommandon",
@@ -709,5 +734,29 @@
     "results": "Sökträffar",
     "alreadyPicked": "vald",
     "revival": "Nyuppsättning"
+  },
+  "Top": {
+    "title": "Topplistan",
+    "what": "Visa",
+    "tracks": "Låtar",
+    "albums": "Album",
+    "by": "Rangordna efter",
+    "filters": "Urval",
+    "byLabel": {
+      "RATED": "Högst betyg",
+      "LIKED": "Mest gillat",
+      "PLAYED": "Mest spelat"
+    },
+    "text": {
+      "RATED": "Allas betyg. Få betyg vägs mot snittet av alla betyg, så att ett enda femstjärnigt inte hamnar överst.",
+      "LIKED": "Det som flest gillar.",
+      "PLAYED": "Det som spelats mest, här och i apparna."
+    },
+    "allCategories": "Alla",
+    "allYears": "Alla år",
+    "decade": "{decade}-talet",
+    "none": "Inget har fått betyg, gillats eller spelats här ännu.",
+    "likes": "{count, plural, =1 {# gillar} other {# gillar}}",
+    "plays": "{count, plural, =1 {# spelning} other {# spelningar}}"
   }
 }

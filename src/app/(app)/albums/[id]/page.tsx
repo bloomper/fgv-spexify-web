@@ -12,6 +12,7 @@ import {getAlbum, getAlbumsOfSpex, getMe} from "@/lib/catalog/catalog.server";
 import {AlbumGrid} from "@/components/album/album-grid";
 import {getAlbumListening, getListeningState, spexflixUrl} from "@/lib/catalog/listening.server";
 import {AlbumListening} from "@/components/album/album-listening.client";
+import {AverageRating} from "@/components/rating.client";
 import {Policies} from "@/utils/policy.server";
 import {withPolicyPage} from "@/utils/route.server";
 import {isEditor} from "@/utils/auth";
@@ -59,6 +60,7 @@ export default async function AlbumPage({params}: { params: Promise<{ id: string
                             {[album.year, main?.categoryName, t("tracks", {count: album.trackCount}),
                                 formatDuration(album.durationMs / 1000)].filter(Boolean).join(" · ")}
                         </p>
+                        <AverageRating average={album.averageRating} count={album.ratingCount} stars className="text-sm"/>
                         {album.description && <p className="max-w-prose whitespace-pre-line text-sm">{album.description}</p>}
                         {album.navidromeId && albumListening && (
                             <AlbumListening navidromeId={album.navidromeId} starred={albumListening.starred} rating={albumListening.rating}/>

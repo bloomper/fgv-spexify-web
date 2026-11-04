@@ -254,7 +254,8 @@
     "adminMaintenance": "Maintenance",
     "adminSettings": "Settings",
     "adminKinds": "Album kinds",
-    "credits": "Credits"
+    "credits": "Credits",
+    "top": "Top list"
   },
   "Home": {
     "title": "Spexify",
@@ -270,7 +271,14 @@
     "mostPlayed": "Most played by you",
     "lastPlayed": "Played {date}",
     "plays": "{count, plural, =1 {# play} other {# plays}}",
-    "highestRated": "Highest rated by you"
+    "highestRated": "Highest rated by you",
+    "browse": "Browse",
+    "topList": "Top list",
+    "decade": "{decade}s",
+    "topRated": "Top list: highest rated",
+    "wholeTopList": "The whole top list",
+    "liked": "Liked by you",
+    "allLiked": "Everything you like"
   },
   "Albums": {
     "title": "Albums",
@@ -280,7 +288,19 @@
     "allYears": "All years",
     "none": "No albums match.",
     "spexFilter": "Albums of {title}, revivals included",
-    "clearSpex": "Show all albums"
+    "clearSpex": "Show all albums",
+    "onlyLiked": "Liked",
+    "sortLabel": "Order",
+    "decade": "{decade}s",
+    "sort": {
+      "YEAR_DESC": "Newest first",
+      "YEAR_ASC": "Oldest first",
+      "TITLE": "Title",
+      "PUBLISHED": "Recently published",
+      "RATING": "Highest rated",
+      "LIKES": "Most liked",
+      "PLAYS": "Most played"
+    }
   },
   "Album": {
     "revival": "Revival",
@@ -606,6 +626,10 @@
       "LOUDNESS_SCAN": {
         "title": "Loudness measurement",
         "description": "Measures the loudness of tracks that have none yet, for ReplayGain, and writes it into the files."
+      },
+      "LISTENING_SYNC": {
+        "title": "Copying ratings, likes and plays",
+        "description": "Copies everyone's ratings, likes and plays from the music server, for average ratings and the top list. What is done in the web and the apps is included at once; this run fills in what is missing."
       }
     }
   },
@@ -656,7 +680,8 @@
   },
   "Rating": {
     "stars": "{count, plural, =1 {# star} other {# stars}}",
-    "rated": "{count, plural, =1 {Rated # star} other {Rated # stars}}"
+    "rated": "{count, plural, =1 {Rated # star} other {Rated # stars}}",
+    "average": "Average {average} out of 5 from {count, plural, =1 {# rating} other {# ratings}}"
   },
   "Shortcuts": {
     "title": "Keyboard shortcuts",
@@ -709,5 +734,29 @@
     "results": "Search results",
     "alreadyPicked": "chosen",
     "revival": "Revival"
+  },
+  "Top": {
+    "title": "Top list",
+    "what": "Show",
+    "tracks": "Tracks",
+    "albums": "Albums",
+    "by": "Rank by",
+    "filters": "Selection",
+    "byLabel": {
+      "RATED": "Highest rated",
+      "LIKED": "Most liked",
+      "PLAYED": "Most played"
+    },
+    "text": {
+      "RATED": "Everyone's ratings. Few ratings are weighed against the average of all ratings, so that a single five-star rating does not end up on top.",
+      "LIKED": "What most people like.",
+      "PLAYED": "What has been played most, here and in the apps."
+    },
+    "allCategories": "All",
+    "allYears": "All years",
+    "decade": "{decade}s",
+    "none": "Nothing has been rated, liked or played here yet.",
+    "likes": "{count, plural, =1 {# like} other {# likes}}",
+    "plays": "{count, plural, =1 {# play} other {# plays}}"
   }
 }

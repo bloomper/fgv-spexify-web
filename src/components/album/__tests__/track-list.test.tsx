@@ -189,6 +189,23 @@ describe("TrackList", () => {
         expect(radio.start).toHaveBeenCalledWith({trackId: "1"});
     });
 
+    it("rates a track with the stars in its row and shows everyone's average", async () => {
+        show([row("1", {rating: 0, averageRating: 4.5, ratingCount: 2})]);
+
+        const groups = screen.getAllByRole("radiogroup", {name: /rate:/});
+
+        await userEvent.click(within(groups[0]).getAllByRole("radio")[2]);
+        await waitFor(() => expect(actions.rateAction).toHaveBeenCalledWith("nd-1", 3));
+        expect(screen.getAllByRole("img", {name: /average:.*"count":2/}).length).toBeGreaterThan(0);
+    });
+
+    it("leaves out the stars when the user's own rating is not known", () => {
+        show([row("1", {averageRating: 4, ratingCount: 1})]);
+
+        expect(screen.queryByRole("radiogroup")).not.toBeInTheDocument();
+        expect(screen.getAllByRole("img", {name: /average:/}).length).toBeGreaterThan(0);
+    });
+
     it("rates a track from its menu, shows the rating, and takes it back when it cannot be saved", async () => {
         show([row("1", {playCount: 1, played: null, rating: 0})]);
 

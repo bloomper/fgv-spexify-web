@@ -2,7 +2,7 @@ import "server-only";
 
 import {graphql} from "@/gql";
 import {runMutation, runQuery} from "@/lib/graphql.server";
-import type {AlbumFilter, AlbumInput, AlbumKindInput, CreditKind, TrackInput} from "@/gql/graphql";
+import type {AlbumFilter, AlbumInput, AlbumKindInput, CreditKind, TopBy, TrackInput} from "@/gql/graphql";
 
 export const KindFieldsFragment = graphql(`
     fragment KindFields on AlbumKind { id nameSv nameEn isDefault }
@@ -18,8 +18,28 @@ const MeQuery = graphql(`
 const HomeQuery = graphql(`
     query Home {
         recentAlbums(limit: 12) {
-            id title year kind { ...KindFields } hasCover trackCount durationMs
+            id title year kind { ...KindFields } hasCover trackCount durationMs averageRating ratingCount
             spex { id title year revival parentId familyId categoryId categoryName }
+        }
+        topAlbums(by: RATED, limit: 6) {
+            id title year kind { ...KindFields } hasCover trackCount durationMs averageRating ratingCount
+            spex { id title year revival parentId familyId categoryId categoryName }
+        }
+        categories { id name albumCount }
+        years
+    }
+`);
+
+const TopQuery = graphql(`
+    query Top($by: TopBy!, $filter: AlbumFilter, $limit: Int) {
+        topAlbums(by: $by, filter: $filter, limit: $limit) {
+            id title year kind { ...KindFields } hasCover trackCount durationMs averageRating ratingCount likeCount totalPlays
+            spex { id title year revival parentId familyId categoryId categoryName }
+        }
+        topTracks(by: $by, filter: $filter, limit: $limit) {
+            id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
+            lyricsSynced durationMs listed navidromeId fileMissing averageRating ratingCount likeCount totalPlays
+            replayGain { trackGain trackPeak albumGain albumPeak }
         }
         categories { id name albumCount }
         years
@@ -29,7 +49,7 @@ const HomeQuery = graphql(`
 const AlbumsQuery = graphql(`
     query Albums($filter: AlbumFilter) {
         albums(filter: $filter) {
-            id title year kind { ...KindFields } hasCover published trackCount durationMs
+            id title year kind { ...KindFields } hasCover published trackCount durationMs averageRating ratingCount
             spex { id title year revival parentId familyId categoryId categoryName }
         }
         categories { id name albumCount }
@@ -40,7 +60,7 @@ const AlbumsQuery = graphql(`
 const SpexAlbumsQuery = graphql(`
     query SpexAlbums($filter: AlbumFilter) {
         albums(filter: $filter) {
-            id title year kind { ...KindFields } hasCover published trackCount durationMs
+            id title year kind { ...KindFields } hasCover published trackCount durationMs averageRating ratingCount
             spex { id title year revival parentId familyId categoryId categoryName }
         }
     }
@@ -50,11 +70,12 @@ const AlbumQuery = graphql(`
     query Album($id: ID!) {
         album(id: $id) {
             id title year kind { ...KindFields } description hasCover published publishedAt trashedAt navidromeId trackCount durationMs
+            averageRating ratingCount likeCount totalPlays
             createdAt lastModifiedAt
             spex { id title year revival parentId familyId categoryId categoryName }
             tracks {
                 id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
-                lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing
+                lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing averageRating ratingCount
                 replayGain { trackGain trackPeak albumGain albumPeak }
                 videoLinks { videoId videoTitle chapterTitle startSeconds }
             }
@@ -66,12 +87,12 @@ const SearchQuery = graphql(`
     query Search($q: String!) {
         search(q: $q) {
             albums {
-                id title year kind { ...KindFields } hasCover published trackCount durationMs
+                id title year kind { ...KindFields } hasCover published trackCount durationMs averageRating ratingCount
                 spex { id title year revival parentId familyId categoryId categoryName }
             }
             tracks {
                 id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
-                lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing
+                lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing averageRating ratingCount
                 replayGain { trackGain trackPeak albumGain albumPeak }
             }
         }
@@ -87,7 +108,7 @@ const AlbumKindsQuery = graphql(`
 const AlbumsByNavidromeIdsQuery = graphql(`
     query AlbumsByNavidromeIds($ids: [String!]!) {
         albumsByNavidromeIds(ids: $ids) {
-            id title year kind { ...KindFields } hasCover trackCount durationMs navidromeId
+            id title year kind { ...KindFields } hasCover trackCount durationMs navidromeId averageRating ratingCount
             spex { id title year revival parentId familyId categoryId categoryName }
         }
     }
@@ -103,7 +124,7 @@ const TracksByNavidromeIdsQuery = graphql(`
     query TracksByNavidromeIds($ids: [String!]!) {
         tracksByNavidromeIds(ids: $ids) {
             id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
-            lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing
+            lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing averageRating ratingCount
                 replayGain { trackGain trackPeak albumGain albumPeak }
         }
     }
@@ -174,7 +195,7 @@ const CreditTracksQuery = graphql(`
     query CreditTracks($kind: CreditKind!, $name: String!) {
         creditTracks(kind: $kind, name: $name) {
             id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
-            lyricsSynced durationMs listed navidromeId fileMissing
+            lyricsSynced durationMs listed navidromeId fileMissing averageRating ratingCount
             replayGain { trackGain trackPeak albumGain albumPeak }
         }
     }
@@ -199,6 +220,10 @@ export async function getMe() {
 
 export async function getHome() {
     return runQuery(HomeQuery, {});
+}
+
+export async function getTop(by: TopBy, filter: AlbumFilter, limit = 50) {
+    return runQuery(TopQuery, {by, filter, limit});
 }
 
 export async function getAlbums(filter: AlbumFilter) {

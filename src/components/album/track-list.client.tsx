@@ -21,7 +21,7 @@ import {addToPlaylistAction, rateAction, removeFromPlaylistAction, reorderPlayli
 import {playedSince} from "@/components/player/player-provider.client";
 import {useRadio} from "@/components/player/radio.client";
 import {creditHref, splitCredits} from "@/lib/credits";
-import {RatingInput, RatingStars} from "@/components/rating.client";
+import {AverageRating, RatingInput, RatingStars} from "@/components/rating.client";
 import {cn} from "@/utils/utils";
 import {formatDate} from "@/utils/format";
 import {useDialogs} from "@/components/dialogs.client";
@@ -43,6 +43,9 @@ export type TrackRow = PlayerTrack & {
     played?: string | null;
     /** The user's rating, 1 to 5, or 0 when not rated; undefined when not known. */
     rating?: number;
+    /** Everyone's average rating, or null when nobody rated it. */
+    averageRating?: number | null;
+    ratingCount?: number;
 };
 
 type Props = {
@@ -261,6 +264,15 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
                                 <div className="truncate text-xs text-muted-foreground">
                                     <TrackSubtitle track={track} showAlbum={showAlbum}/>
                                 </div>
+                                {track.navidromeId && track.rating === undefined && (
+                                    <AverageRating average={track.averageRating} count={track.ratingCount} className="hidden sm:inline-flex"/>
+                                )}
+                                {track.navidromeId && (
+                                    <div className="flex items-center gap-2 sm:hidden">
+                                        <RatingStars value={ratingOf(track)}/>
+                                        <AverageRating average={track.averageRating} count={track.ratingCount}/>
+                                    </div>
+                                )}
                                 {spexflixUrl && track.videoLinks && track.videoLinks.length > 0 && (
                                     <div className="mt-1 flex flex-wrap gap-2">
                                         {track.videoLinks.map(link => (
@@ -281,8 +293,15 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
                                     <Heart className={cn(starred.has(track.navidromeId) && "fill-current text-rose-500")}/>
                                 </Button>
                             )}
+                            {track.navidromeId && track.rating !== undefined && (
+                                <span className="hidden shrink-0 flex-col items-end gap-0.5 sm:flex">
+                                    <RatingInput value={ratingOf(track)} onChange={rating => rate(track, rating)}
+                                                 label={t("rate", {title: track.title})}/>
+                                    <AverageRating average={track.averageRating} count={track.ratingCount}/>
+                                </span>
+                            )}
                             {playCount !== undefined && (
-                                <span className="hidden w-28 shrink-0 text-right text-xs tabular-nums text-muted-foreground md:block"
+                                <span className="hidden w-28 shrink-0 text-right text-xs tabular-nums text-muted-foreground lg:block"
                                       title={played ? t("lastPlayed", {date: formatDate(played) ?? ""}) : undefined}>
                                     {playCount > 0 ? (
                                         <>
@@ -290,7 +309,6 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
                                             {played && <span className="block">{formatDate(played)}</span>}
                                         </>
                                     ) : <span className="block">{t("neverPlayed")}</span>}
-                                    <RatingStars value={ratingOf(track)} className="justify-end"/>
                                 </span>
                             )}
                             <span className="hidden w-12 shrink-0 text-right text-xs tabular-nums text-muted-foreground sm:block">
@@ -311,8 +329,8 @@ export function TrackList({tracks, starred: initialStarred, playlists, spexflixU
                                     )}
                                     {track.navidromeId && (
                                         <>
-                                            <DropdownMenuSeparator/>
-                                            <div className="flex items-center justify-between gap-3 px-2 py-1 text-sm">
+                                            <DropdownMenuSeparator className="sm:hidden"/>
+                                            <div className="flex items-center justify-between gap-3 px-2 py-1 text-sm sm:hidden">
                                                 <span>{t("rateTrack")}</span>
                                                 <RatingInput value={ratingOf(track)} onChange={rating => rate(track, rating)}
                                                              label={t("rate", {title: track.title})}/>

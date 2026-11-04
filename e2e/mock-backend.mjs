@@ -63,6 +63,7 @@ function resetState() {
             {job: "SPEX_REFRESH", schedule: "0 15 3 * * *", running: false, lastStartedAt: null, lastFinishedAt: null, lastSucceeded: null},
             {job: "UPLOAD_CLEANUP", schedule: "0 5 * * * *", running: true, lastStartedAt: "2026-11-01T10:05:00Z", lastFinishedAt: null, lastSucceeded: null},
             {job: "LOUDNESS_SCAN", schedule: "0 45 3 * * *", running: false, lastStartedAt: null, lastFinishedAt: null, lastSucceeded: null},
+            {job: "LISTENING_SYNC", schedule: "0 15 4 * * *", running: false, lastStartedAt: null, lastFinishedAt: null, lastSucceeded: null},
         ],
         kinds: [
             {id: uuidOf(901), nameSv: "Föreställning", nameEn: "Show", position: 1},
@@ -205,7 +206,14 @@ const resolvers = {
         me: {username: persona.email, displayName: persona.name, roles: persona.roles, spexflixUser: false},
         settings: state.settings,
     }),
+    Top: (persona, {by}) => ({
+        topAlbums: top(by, state.albums.filter(album => album.published && !album.trashedAt).map(album => withCounts(persona, album)), album => album.navidromeId),
+        topTracks: top(by, state.tracks.filter(t => t.listed), t => t.navidromeId),
+        categories: [{id: uuidOf(1), name: "Chalmersspexet", albumCount: 1}],
+        years: [1975],
+    }),
     Home: persona => ({
+        topAlbums: top("RATED", state.albums.filter(album => album.published && !album.trashedAt).map(album => withCounts(persona, album)), album => album.navidromeId),
         recentAlbums: state.albums.filter(album => album.published && !album.trashedAt).map(album => withCounts(persona, album)),
         categories: [{id: uuidOf(1), name: "Chalmersspexet", albumCount: 1}],
         years: [1975],
@@ -213,6 +221,10 @@ const resolvers = {
     Albums: (persona, {filter}) => ({
         albums: visibleAlbums(persona).filter(album => album.published || filter?.includeUnpublished)
             .filter(album => !filter?.spexId || album.spex.some(spex => spex.id === filter.spexId || spex.parentId === filter.spexId))
+            .filter(album => !filter?.liked || state.starredAlbums.includes(album.navidromeId))
+            .filter(album => !filter?.fromYear || (album.year ?? 0) >= filter.fromYear)
+            .filter(album => !filter?.toYear || (album.year ?? 0) <= filter.toYear)
+            .sort((a, b) => filter?.sort === "TITLE" ? a.title.localeCompare(b.title, "sv") : filter?.sort === "YEAR_ASC" ? (a.year ?? 0) - (b.year ?? 0) : 0)
             .map(album => withCounts(persona, album)),
         categories: [{id: uuidOf(1), name: "Chalmersspexet", albumCount: 1}],
         years: [1975],
@@ -705,6 +717,51 @@ function personaOf(req) {
     }
 }
 
+// Everyone's ratings, likes and plays: in the mock, only the listener's own, as the server's mirror of Navidrome would have them
+function everyone(navidromeId, plays) {
+    const rating = navidromeId ? state.ratings[navidromeId] : undefined;
+
+    return {
+        averageRating: rating ?? null,
+        ratingCount: rating ? 1 : 0,
+        likeCount: navidromeId && (state.starred.includes(navidromeId) || state.starredAlbums.includes(navidromeId)) ? 1 : 0,
+        totalPlays: plays,
+    };
+}
+
+function withEveryone(value) {
+    if (Array.isArray(value)) {
+        return value.map(withEveryone);
+    }
+    if (!value || typeof value !== "object") {
+        return value;
+    }
+
+    const result = Object.fromEntries(Object.entries(value).map(([key, item]) => [key, withEveryone(item)]));
+
+    if ("trackCount" in value && "kind" in value) {
+        const album = state.albums.find(candidate => candidate.id === value.id);
+        const plays = state.tracks.filter(t => t.albumId === value.id && t.navidromeId)
+            .reduce((sum, t) => sum + (state.plays[t.navidromeId]?.playCount ?? 0), 0);
+
+        return {...everyone(album?.navidromeId, plays), ...result};
+    }
+    if ("discNumber" in value && "albumId" in value) {
+        return {...everyone(value.navidromeId, state.plays[value.navidromeId]?.playCount ?? 0), ...result};
+    }
+    return result;
+}
+
+function top(by, items, navidromeIdOf) {
+    const score = item => {
+        const stats = withEveryone(item);
+
+        return by === "LIKED" ? stats.likeCount : by === "PLAYED" ? stats.totalPlays : stats.averageRating ?? 0;
+    };
+
+    return items.filter(item => score(item) > 0 && navidromeIdOf(item)).sort((a, b) => score(b) - score(a));
+}
+
 function handleGraphql(req, body, res) {
     let payload;
     try {
@@ -728,7 +785,7 @@ function handleGraphql(req, body, res) {
             state.failNext.delete(op);
             throw new GraphQLError(failure, MESSAGES[failure] ?? "Något gick fel.");
         }
-        res.end(JSON.stringify({data: resolver(persona, payload.variables || {})}));
+        res.end(JSON.stringify({data: withEveryone(resolver(persona, payload.variables || {}))}));
     } catch (error) {
         if (error instanceof GraphQLError) {
             res.end(JSON.stringify({

@@ -13,7 +13,7 @@ test.describe("Phone width: no page scrolls sideways", () => {
         await page.goto(`/albums/${uuidOf(1)}`);
         await page.getByRole("button", {name: "Spela allt"}).click();
 
-        for (const path of ["/", "/albums", `/albums/${uuidOf(1)}`, "/apps", "/starred", "/search?q=duett"]) {
+        for (const path of ["/", "/albums", `/albums/${uuidOf(1)}`, "/apps", "/starred", "/top", "/top?what=albums", "/search?q=duett"]) {
             await page.goto(path);
             await page.getByRole("heading", {level: 1}).first().waitFor();
             expect(await page.evaluate(() => document.documentElement.scrollWidth), path).toBeLessThanOrEqual(WIDTH);
