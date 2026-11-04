@@ -5,14 +5,14 @@ export type AuthzOk = { ok: true; roles: Role[] };
 export type AuthzResult = AuthzOk | AuthzFail;
 
 export type AccessTokenClaims = {
-    resource_access?: {
-        "fgv-spexify"?: {
-            roles?: string[];
-        };
-        [resource: string]:
-            | {
-            roles?: string[];
-        }
-            | undefined;
+  resource_access?: {
+    "fgv-spexify"?: {
+      roles?: string[];
     };
+    [resource: string]:
+      | {
+      roles?: string[];
+    }
+      | undefined;
+  };
 };

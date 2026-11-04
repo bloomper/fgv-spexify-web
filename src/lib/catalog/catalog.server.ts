@@ -1,8 +1,8 @@
 import "server-only";
 
-import {graphql} from "@/gql";
-import {runMutation, runQuery} from "@/lib/graphql.server";
-import type {AlbumFilter, AlbumInput, AlbumKindInput, CreditKind, TrackInput} from "@/gql/graphql";
+import { graphql } from "@/gql";
+import { runMutation, runQuery } from "@/lib/graphql.server";
+import type { AlbumFilter, AlbumInput, AlbumKindInput, CreditKind, TopBy, TrackInput } from "@/gql/graphql";
 
 export const KindFieldsFragment = graphql(`
     fragment KindFields on AlbumKind { id nameSv nameEn isDefault }
@@ -18,8 +18,28 @@ const MeQuery = graphql(`
 const HomeQuery = graphql(`
     query Home {
         recentAlbums(limit: 12) {
-            id title year kind { ...KindFields } hasCover trackCount durationMs
+            id title year kind { ...KindFields } hasCover trackCount durationMs averageRating ratingCount
             spex { id title year revival parentId familyId categoryId categoryName }
+        }
+        topAlbums(by: RATED, limit: 6) {
+            id title year kind { ...KindFields } hasCover trackCount durationMs averageRating ratingCount
+            spex { id title year revival parentId familyId categoryId categoryName }
+        }
+        categories { id name albumCount }
+        years
+    }
+`);
+
+const TopQuery = graphql(`
+    query Top($by: TopBy!, $filter: AlbumFilter, $limit: Int) {
+        topAlbums(by: $by, filter: $filter, limit: $limit) {
+            id title year kind { ...KindFields } hasCover trackCount durationMs averageRating ratingCount likeCount totalPlays
+            spex { id title year revival parentId familyId categoryId categoryName }
+        }
+        topTracks(by: $by, filter: $filter, limit: $limit) {
+            id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
+            lyricsSynced durationMs listed navidromeId fileMissing averageRating ratingCount likeCount totalPlays
+            replayGain { trackGain trackPeak albumGain albumPeak }
         }
         categories { id name albumCount }
         years
@@ -29,7 +49,7 @@ const HomeQuery = graphql(`
 const AlbumsQuery = graphql(`
     query Albums($filter: AlbumFilter) {
         albums(filter: $filter) {
-            id title year kind { ...KindFields } hasCover published trackCount durationMs
+            id title year kind { ...KindFields } hasCover published trackCount durationMs averageRating ratingCount
             spex { id title year revival parentId familyId categoryId categoryName }
         }
         categories { id name albumCount }
@@ -40,7 +60,7 @@ const AlbumsQuery = graphql(`
 const SpexAlbumsQuery = graphql(`
     query SpexAlbums($filter: AlbumFilter) {
         albums(filter: $filter) {
-            id title year kind { ...KindFields } hasCover published trackCount durationMs
+            id title year kind { ...KindFields } hasCover published trackCount durationMs averageRating ratingCount
             spex { id title year revival parentId familyId categoryId categoryName }
         }
     }
@@ -50,11 +70,12 @@ const AlbumQuery = graphql(`
     query Album($id: ID!) {
         album(id: $id) {
             id title year kind { ...KindFields } description hasCover published publishedAt trashedAt navidromeId trackCount durationMs
+            averageRating ratingCount likeCount totalPlays
             createdAt lastModifiedAt
             spex { id title year revival parentId familyId categoryId categoryName }
             tracks {
                 id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
-                lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing
+                lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing averageRating ratingCount
                 replayGain { trackGain trackPeak albumGain albumPeak }
                 videoLinks { videoId videoTitle chapterTitle startSeconds }
             }
@@ -66,12 +87,12 @@ const SearchQuery = graphql(`
     query Search($q: String!) {
         search(q: $q) {
             albums {
-                id title year kind { ...KindFields } hasCover published trackCount durationMs
+                id title year kind { ...KindFields } hasCover published trackCount durationMs averageRating ratingCount
                 spex { id title year revival parentId familyId categoryId categoryName }
             }
             tracks {
                 id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
-                lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing
+                lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing averageRating ratingCount
                 replayGain { trackGain trackPeak albumGain albumPeak }
             }
         }
@@ -87,7 +108,7 @@ const AlbumKindsQuery = graphql(`
 const AlbumsByNavidromeIdsQuery = graphql(`
     query AlbumsByNavidromeIds($ids: [String!]!) {
         albumsByNavidromeIds(ids: $ids) {
-            id title year kind { ...KindFields } hasCover trackCount durationMs navidromeId
+            id title year kind { ...KindFields } hasCover trackCount durationMs navidromeId averageRating ratingCount
             spex { id title year revival parentId familyId categoryId categoryName }
         }
     }
@@ -103,8 +124,8 @@ const TracksByNavidromeIdsQuery = graphql(`
     query TracksByNavidromeIds($ids: [String!]!) {
         tracksByNavidromeIds(ids: $ids) {
             id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
-            lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing
-                replayGain { trackGain trackPeak albumGain albumPeak }
+            lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing averageRating ratingCount
+            replayGain { trackGain trackPeak albumGain albumPeak }
         }
     }
 `);
@@ -174,7 +195,7 @@ const CreditTracksQuery = graphql(`
     query CreditTracks($kind: CreditKind!, $name: String!) {
         creditTracks(kind: $kind, name: $name) {
             id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
-            lyricsSynced durationMs listed navidromeId fileMissing
+            lyricsSynced durationMs listed navidromeId fileMissing averageRating ratingCount
             replayGain { trackGain trackPeak albumGain albumPeak }
         }
     }
@@ -194,80 +215,100 @@ const TrackDeleteMutation = graphql(`
 `);
 
 export async function getMe() {
-    return runQuery(MeQuery, {});
+  return runQuery(MeQuery, {});
 }
 
 export async function getHome() {
-    return runQuery(HomeQuery, {});
+  return runQuery(HomeQuery, {});
+}
+
+export async function getTop(by: TopBy, filter: AlbumFilter, limit = 50) {
+  return runQuery(TopQuery, { by, filter, limit });
 }
 
 export async function getAlbums(filter: AlbumFilter) {
-    return runQuery(AlbumsQuery, {filter});
+  return runQuery(AlbumsQuery, { filter });
 }
 
 /**
  * The albums of the spex and, for originals, their revivals, oldest first, each album once.
  */
 export async function getAlbumsOfSpex(spexIds: string[]) {
-    const lists = await Promise.all([...new Set(spexIds)].map(spexId => runQuery(SpexAlbumsQuery, {filter: {spexId}})));
-    const albums = new Map(lists.flatMap(list => list?.albums ?? []).map(album => [album.id, album]));
+  const lists = await Promise.all([...new Set(spexIds)].map(spexId => runQuery(SpexAlbumsQuery, { filter: { spexId } })));
+  const albums = new Map(lists.flatMap(list => list?.albums ?? []).map(album => [album.id, album]));
 
-    return [...albums.values()].sort((a, b) => (a.year ?? 0) - (b.year ?? 0) || a.title.localeCompare(b.title));
+  return [...albums.values()].sort((a, b) => (a.year ?? 0) - (b.year ?? 0) || a.title.localeCompare(b.title));
 }
 
 export async function getAlbum(id: string) {
-    return (await runQuery(AlbumQuery, {id}))?.album ?? null;
+  return (await runQuery(AlbumQuery, { id }))?.album ?? null;
 }
 
 export async function search(q: string) {
-    return (await runQuery(SearchQuery, {q}))?.search;
+  return (await runQuery(SearchQuery, { q }))?.search;
 }
 
 export async function getAlbumKinds() {
-    return (await runQuery(AlbumKindsQuery, {}))?.albumKinds ?? [];
+  return (await runQuery(AlbumKindsQuery, {}))?.albumKinds ?? [];
 }
 
 export async function getAlbumsByNavidromeIds(ids: string[]) {
-    return ids.length === 0 ? [] : (await runQuery(AlbumsByNavidromeIdsQuery, {ids}))?.albumsByNavidromeIds ?? [];
+  return ids.length === 0 ? [] : (await runQuery(AlbumsByNavidromeIdsQuery, { ids }))?.albumsByNavidromeIds ?? [];
 }
 
 export async function searchSpex(q: string) {
-    return (await runQuery(SpexSearchQuery, {q}))?.spexSearch ?? [];
+  return (await runQuery(SpexSearchQuery, { q }))?.spexSearch ?? [];
 }
 
 export async function getTracksByNavidromeIds(ids: string[]) {
-    return ids.length === 0 ? [] : (await runQuery(TracksByNavidromeIdsQuery, {ids}))?.tracksByNavidromeIds ?? [];
+  return ids.length === 0 ? [] : (await runQuery(TracksByNavidromeIdsQuery, { ids }))?.tracksByNavidromeIds ?? [];
 }
 
 export async function getCredits(kind: CreditKind) {
-    return (await runQuery(CreditsQuery, {kind}))?.credits ?? [];
+  return (await runQuery(CreditsQuery, { kind }))?.credits ?? [];
 }
 
 export async function getCreditTracks(kind: CreditKind, name: string) {
-    return (await runQuery(CreditTracksQuery, {kind, name}))?.creditTracks ?? [];
+  return (await runQuery(CreditTracksQuery, { kind, name }))?.creditTracks ?? [];
 }
 
 export async function getRadio(seed: { trackId?: string; albumId?: string }, limit = 50) {
-    return (await runQuery(RadioQuery, {trackId: seed.trackId ?? null, albumId: seed.albumId ?? null, limit}))?.radio ?? [];
+  return (await runQuery(RadioQuery, {
+    trackId: seed.trackId ?? null,
+    albumId: seed.albumId ?? null,
+    limit,
+  }))?.radio ?? [];
 }
 
-export const albumCreate = async (input: AlbumInput) => (await runMutation(AlbumCreateMutation, {input}))?.albumCreate;
-export const albumUpdate = (id: string, input: AlbumInput) => runMutation(AlbumUpdateMutation, {id, input});
-export const albumPublish = (id: string, published: boolean) => runMutation(AlbumPublishMutation, {id, published});
-export const albumTrash = (id: string) => runMutation(AlbumTrashMutation, {id});
-export const albumRestore = (id: string) => runMutation(AlbumRestoreMutation, {id});
-export const albumDelete = (id: string) => runMutation(AlbumDeleteMutation, {id});
-export const albumCoverRemove = (id: string) => runMutation(AlbumCoverRemoveMutation, {id});
-export const tracksReorder = (albumId: string, trackIds: string[]) => runMutation(TracksReorderMutation, {albumId, trackIds});
-export const trackCreate = (albumId: string, uploadId: string) => runMutation(TrackCreateMutation, {albumId, uploadId});
-export const trackUpdate = (id: string, input: TrackInput) => runMutation(TrackUpdateMutation, {id, input});
-export const trackReplaceAudio = (id: string, uploadId: string) => runMutation(TrackReplaceAudioMutation, {id, uploadId});
-export const trackPublish = (id: string, published: boolean) => runMutation(TrackPublishMutation, {id, published});
-export const trackTrash = (id: string) => runMutation(TrackTrashMutation, {id});
-export const trackRestore = (id: string) => runMutation(TrackRestoreMutation, {id});
-export const trackDelete = (id: string) => runMutation(TrackDeleteMutation, {id});
+export const albumCreate = async (input: AlbumInput) => (await runMutation(AlbumCreateMutation, { input }))?.albumCreate;
+export const albumUpdate = (id: string, input: AlbumInput) => runMutation(AlbumUpdateMutation, { id, input });
+export const albumPublish = (id: string, published: boolean) => runMutation(AlbumPublishMutation, { id, published });
+export const albumTrash = (id: string) => runMutation(AlbumTrashMutation, { id });
+export const albumRestore = (id: string) => runMutation(AlbumRestoreMutation, { id });
+export const albumDelete = (id: string) => runMutation(AlbumDeleteMutation, { id });
+export const albumCoverRemove = (id: string) => runMutation(AlbumCoverRemoveMutation, { id });
+export const tracksReorder = (albumId: string, trackIds: string[]) => runMutation(TracksReorderMutation, {
+  albumId,
+  trackIds,
+});
+export const trackCreate = (albumId: string, uploadId: string) => runMutation(TrackCreateMutation, {
+  albumId,
+  uploadId,
+});
+export const trackUpdate = (id: string, input: TrackInput) => runMutation(TrackUpdateMutation, { id, input });
+export const trackReplaceAudio = (id: string, uploadId: string) => runMutation(TrackReplaceAudioMutation, {
+  id,
+  uploadId,
+});
+export const trackPublish = (id: string, published: boolean) => runMutation(TrackPublishMutation, { id, published });
+export const trackTrash = (id: string) => runMutation(TrackTrashMutation, { id });
+export const trackRestore = (id: string) => runMutation(TrackRestoreMutation, { id });
+export const trackDelete = (id: string) => runMutation(TrackDeleteMutation, { id });
 
-export const albumKindCreate = (input: AlbumKindInput) => runMutation(AlbumKindCreateMutation, {input});
-export const albumKindUpdate = (id: string, input: AlbumKindInput) => runMutation(AlbumKindUpdateMutation, {id, input});
-export const albumKindsReorder = (ids: string[]) => runMutation(AlbumKindsReorderMutation, {ids});
-export const albumKindDelete = (id: string) => runMutation(AlbumKindDeleteMutation, {id});
+export const albumKindCreate = (input: AlbumKindInput) => runMutation(AlbumKindCreateMutation, { input });
+export const albumKindUpdate = (id: string, input: AlbumKindInput) => runMutation(AlbumKindUpdateMutation, {
+  id,
+  input,
+});
+export const albumKindsReorder = (ids: string[]) => runMutation(AlbumKindsReorderMutation, { ids });
+export const albumKindDelete = (id: string) => runMutation(AlbumKindDeleteMutation, { id });

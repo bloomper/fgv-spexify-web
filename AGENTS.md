@@ -74,6 +74,17 @@ lives in Navidrome per user (stars, playlists, play counts). Stack and setup: `R
   ("Gilla", a heart, the page "Gillat" at `/starred`) so that stars only mean ratings. Playlists are renamed, described,
   made public (`updatePlaylist`) and reordered (`createPlaylist` with the playlist's id); others' public playlists are
   `readonly` and only played. All of it falls back to nothing when Navidrome is unavailable.
+- **Everyone's ratings, likes and plays**: Navidrome keeps them per user, so the server mirrors what passes through its
+  gateway (and copies Navidrome's state nightly, `LISTENING_SYNC`). `Track`/`Album` carry `averageRating`,
+  `ratingCount`, `likeCount` and `totalPlays`; `AverageRating` (`src/components/rating.client.tsx`) shows them as a
+  star and the average. A track row has the user's own stars (`RatingInput`) beside everyone's average; the "…" menu
+  rates only on phones. Show ratings as stars, never as text. `/top` (Topplistan) lists `topTracks`/`topAlbums` by
+  `RATED` (weighted average), `LIKED` or `PLAYED`, per category and decade; rows whose own rating is not known
+  (`rating: undefined`) show the average alone. `/albums` takes `category`, `decade` (e.g. 1970) or `year`, `liked=1`
+  and `sort` (`SortSelect`).
+- **The start page** has the same order as Spexflix's: greeting, browsing (categories, the top list, decades), what
+  the user played, the top list, recently published, what they like, then their most played and highest rated
+  (`HomeSection`). Texts that can be long wrap with `text-pretty` up to `max-w-4xl`, not `max-w-prose`.
 - **The play queue** is shared with the user's apps through `savePlayQueue`/`getPlayQueue`: `PlayerProvider` saves it
   when it changes, on pause and every 30 s while playing, and an empty player takes it up again, paused, on the first
   page load. It saves nothing before the saved queue was read.
