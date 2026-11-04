@@ -5,12 +5,14 @@ import {useTranslations} from "next-intl";
 import {Button} from "@/components/ui/button";
 import {Separator} from "@/components/ui/separator";
 import {useSidebar} from "@/components/ui/sidebar";
+import {AppSwitcher} from "@/components/app-switcher.client";
+import type {Application} from "@/utils/applications";
 import {ModeToggle} from "@/components/mode-toggle.client";
 import {LanguageToggle} from "@/components/language-toggle.client";
 import {useIsClient} from "@/hooks/use-is-client.client";
 import {HeaderSearch} from "@/components/header-search.client";
 
-export function SiteHeader() {
+export function SiteHeader({applications}: { applications: Application[] }) {
     const {toggleSidebar} = useSidebar();
     const isClient = useIsClient();
     const t = useTranslations();
@@ -28,9 +30,7 @@ export function SiteHeader() {
                         <SidebarIcon/>
                     </Button>
                     <Separator orientation="vertical" className="mr-2 h-4"/>
-                    <h1 className="truncate text-base font-semibold whitespace-nowrap sm:text-lg">
-                        {t("Meta.title")}
-                    </h1>
+                    <AppSwitcher title={t("Meta.title")} applications={applications}/>
                 </div>
 
                 <div className="flex shrink-0 items-center gap-1 sm:gap-2">

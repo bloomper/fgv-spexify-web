@@ -47,6 +47,7 @@ The look (logo, favicon and colours) is FGV's, shared with Spexregister and Nyup
    SUBSONIC_URL=https://api.spexify.fgv.local.nu:8443
    SPEXFLIX_WEB_URL=http://localhost:3003
    SPEXREGISTER_WEB_URL=http://localhost:3000
+   FGV_REVIVAL_WEB_URL=http://localhost:3001
    ```
    The client secret is in `realm/fgv.json` in [fgv-keycloak][7]; search for `fgv-spexify`.
    For visitor statistics, run fgv-infra-deploy's `local/bin/configure-umami.sh` and put the ID it prints for Spexify
@@ -59,8 +60,9 @@ The look (logo, favicon and colours) is FGV's, shared with Spexregister and Nyup
    |----------------------------------|---------------------------------------------------------------------------|
    | `API_GRAPHQL_ENDPOINT`           | Spexify Server's GraphQL endpoint; its other endpoints share the origin     |
    | `SUBSONIC_URL`                   | The address Subsonic apps connect to, shown on *My apps*; defaults to `BETTER_AUTH_URL` |
-   | `SPEXFLIX_WEB_URL`               | Spexflix, for *Watch in Spexflix* links; without it there are none        |
-   | `SPEXREGISTER_WEB_URL`           | Spexregister, for links to a spex                                         |
+   | `SPEXFLIX_WEB_URL`               | Spexflix, for *Watch in Spexflix* links; without it there are none; also the application switcher |
+   | `SPEXREGISTER_WEB_URL`           | Spexregister, for links to a spex; also the application switcher          |
+   | `FGV_REVIVAL_WEB_URL`            | Nyuppsättning, for the application switcher in the header                 |
 
 3. **Generate GraphQL types:**
    If you change GraphQL queries or the schema, regenerate types from a sibling `fgv-spexify-server` checkout:
@@ -108,7 +110,7 @@ already on Docker Hub.
 
 The image contains no environment-specific values. All configuration is read at runtime: `BETTER_AUTH_URL`,
 `AUTH_SECRET`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET`, `KEYCLOAK_ISSUER`, `API_GRAPHQL_ENDPOINT`,
-`SUBSONIC_URL`, `SPEXFLIX_WEB_URL`, `SPEXREGISTER_WEB_URL`, `SUPPORT_EMAIL`, `FEEDBACK_EMAIL`, `SUPPORTED_LOCALES`, `DEFAULT_LOCALE`, `UMAMI_URL` and
+`SUBSONIC_URL`, `SPEXFLIX_WEB_URL`, `SPEXREGISTER_WEB_URL`, `SUPPORT_EMAIL`, `FEEDBACK_EMAIL`, `SUPPORTED_LOCALES`, `DEFAULT_LOCALE`, `FGV_REVIVAL_WEB_URL`, `UMAMI_URL` and
 `UMAMI_WEBSITE_ID`. Visitor statistics go to Umami only when both Umami variables are set.
 [fgv-spexify-deploy][8] runs it.
 

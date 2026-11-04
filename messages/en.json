@@ -50,6 +50,13 @@
     "toggleLanguage": "Change language",
     "toggleTheme": "Change theme"
   },
+  "AppSwitcher": {
+    "heading": "Switch application",
+    "spexregister": "Spexregister",
+    "revival": "Nyuppsättning",
+    "spexflix": "Spexflix",
+    "spexify": "Spexify"
+  },
   "NoAccess": {
     "title": "You do not have access",
     "text": "Your FGV account ({email}) does not have access to Spexify. Ask a admin for access, or log out and log in with another account.",
