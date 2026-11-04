@@ -1,10 +1,25 @@
 import {type NextRequest, NextResponse} from "next/server";
 import {auth} from "@/auth";
+import {contentSecurityPolicy} from "@/utils/csp";
 
 const AUTH_BASE_PATH = "/api/auth";
 const ACCOUNT_COOKIE = "account_data";
 
+/**
+ * Refreshes the account cookie, and gives every page its Content Security Policy, which names the API's public address
+ * that the player's audio comes from.
+ */
 export async function proxy(request: NextRequest) {
+    const result = await refresh(request);
+
+    if (!request.nextUrl.pathname.startsWith("/api/")) {
+        result.headers.set("Content-Security-Policy",
+            contentSecurityPolicy(process.env.MEDIA_ORIGIN, process.env.NODE_ENV === "development"));
+    }
+    return result;
+}
+
+async function refresh(request: NextRequest): Promise<NextResponse> {
     const response = NextResponse.next();
 
     const {pathname} = request.nextUrl;

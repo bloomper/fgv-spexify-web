@@ -54,11 +54,18 @@ describe("PlayerProvider", () => {
         expect(scrobbleAction).toHaveBeenCalledWith("nd-2", false);
     });
 
-    it("says when a track cannot be loaded, retries from where it stopped, and clears the error on another track", () => {
+    it("renews an expired link once, then says when a track cannot be loaded, retries from where it stopped, and clears the error on another track", () => {
         const load = vi.spyOn(HTMLMediaElement.prototype, "load").mockImplementation(() => undefined);
         const {result} = render();
 
         act(() => result.current.playQueue(TRACKS, 0));
+        audio().currentTime = 42;
+        // The first error mid-track may be an expired link: a new one is asked for, without telling the user
+        act(() => {
+            audio().dispatchEvent(new Event("error"));
+        });
+        expect(result.current.failed).toBe(false);
+        expect(audio().src).toContain("/api/audio/1");
         audio().currentTime = 42;
         act(() => {
             audio().dispatchEvent(new Event("error"));

@@ -32,6 +32,26 @@ export const invalid = () => NextResponse.json({code: "BAD_REQUEST", message: "I
 export const crossSite = () => NextResponse.json({code: "FORBIDDEN", message: "Cross-site request"}, {status: 403});
 
 /**
+ * Asks the server, with the user's token, for a signed link to a file and redirects the browser to it. Audio and
+ * downloads then come straight from the API's public address, not through this web or the CDN in front of it.
+ */
+export async function redirectToLink(path: string): Promise<Response> {
+    const upstream = await apiFetch(path);
+
+    if (!upstream.ok) {
+        await upstream.body?.cancel();
+        return NextResponse.json({error: "Not available"}, {status: upstream.status});
+    }
+
+    const {url} = await upstream.json() as { url?: unknown };
+
+    if (typeof url !== "string" || !/^https?:\/\//.test(url)) {
+        return NextResponse.json({error: "Not available"}, {status: 502});
+    }
+    return new Response(null, {status: 302, headers: {Location: url, "Cache-Control": "no-store"}});
+}
+
+/**
  * Streams a GET from the server to the browser with the user's token, passing byte ranges both ways so that the
  * player can seek. The browser never holds the token.
  */

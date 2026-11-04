@@ -957,8 +957,16 @@ async function handle(req, res, chunks) {
             }
         } else if (path === "/api/uploads" || path.startsWith("/api/uploads/")) {
             handleTus(req, path, rawBody, res);
-        } else if (req.method === "GET" && /^\/api\/tracks\/[^/]+\/(audio|download)$/.test(path)) {
+        } else if (req.method === "GET" && /^\/api\/(tracks|albums)\/[^/]+\/(audio|download)\/link$/.test(path)) {
+            // A signed link, as the server hands out; the mock does not check signatures
+            const scope = path.slice("/api/".length, -"/link".length);
+
+            res.writeHead(200, {"content-type": "application/json"})
+                .end(JSON.stringify({url: `http://localhost:${PORT}/media/9999999999/signature/${scope}`, expiresAt: "2286-11-20T17:46:39Z"}));
+        } else if (req.method === "GET" && /^\/media\/\d+\/[^/]+\/tracks\/[^/]+\/(audio|download)$/.test(path)) {
             res.writeHead(200, {"content-type": "audio/flac", "accept-ranges": "bytes"}).end(Buffer.alloc(16));
+        } else if (req.method === "GET" && /^\/media\/\d+\/[^/]+\/albums\/[^/]+\/download$/.test(path)) {
+            res.writeHead(200, {"content-type": "application/zip", "content-disposition": "attachment; filename=\"album.zip\""}).end(Buffer.alloc(22));
         } else if (path.startsWith("/rest/")) {
             if (!personaOf(req)) {
                 res.writeHead(401).end();

@@ -7,6 +7,7 @@ const appEnv: Record<string, string> = {
     KEYCLOAK_CLIENT_SECRET: "e2e",
     KEYCLOAK_ISSUER: `http://localhost:${MOCK_PORT}/realms/fgv`,
     API_GRAPHQL_ENDPOINT: `http://localhost:${MOCK_PORT}/api/graphql`,
+    MEDIA_ORIGIN: `http://localhost:${MOCK_PORT}`,
     BETTER_AUTH_URL: BASE_URL,
     SUPPORT_EMAIL: "support.spexify@example.org",
     FEEDBACK_EMAIL: "feedback.spexify@example.org",
