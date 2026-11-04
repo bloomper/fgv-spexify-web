@@ -43,9 +43,11 @@ lives in Navidrome per user (stars, playlists, play counts). Stack and setup: `R
 ## How Spexify works in the web
 
 - **Audio** plays through one `<audio>` element in `PlayerProvider` (`src/components/player/`), which lives in the
-  `(app)` layout so playing continues across pages. Its source is `/api/audio/[id]`, a route handler that streams the
-  server's `/api/tracks/{id}/audio` with the user's token and passes byte ranges both ways. Never give the browser the
-  token. There are two such elements: one plays while the other loads the next track, three seconds into the current
+  `(app)` layout so playing continues across pages. Its source is `/api/audio/[id]`, a route handler that asks the
+  server for a signed, expiring link (`/api/tracks/{id}/audio/link`) with the user's token and redirects to it; the
+  downloads do the same. The link is on the API's public address (`MEDIA_ORIGIN`, allowed in the per-request CSP in
+  `proxy.ts`), so audio never passes through the web or the CDN in front of it. Never give the browser the token, and
+  never stream audio or downloads through the web again. There are two such elements: one plays while the other loads the next track, three seconds into the current
   one, so the next starts at once (nearly gapless; HTML audio leaves a few milliseconds between files). Volume, mute and
   the ReplayGain mode (off, track, album; `gainFactor` only turns down) are kept in `localStorage` (`spexify.player`).
   The queue can be reordered, pruned and cleared. The Media Session API gives lock screen controls. Plays are reported

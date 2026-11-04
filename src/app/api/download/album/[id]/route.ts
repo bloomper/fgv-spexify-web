@@ -1,11 +1,11 @@
 import {NextRequest} from "next/server";
-import {ID, invalid, streamFromApi} from "@/lib/http/proxy.server";
+import {ID, invalid, redirectToLink} from "@/lib/http/proxy.server";
 
 /**
- * An album's tracks as a zip, streamed as the server writes it.
+ * An album's tracks as a zip: a redirect to a signed link on the API's address, which streams it as it is written.
  */
-export async function GET(request: NextRequest, {params}: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, {params}: { params: Promise<{ id: string }> }) {
     const {id} = await params;
 
-    return ID.test(id) ? streamFromApi(request, `/api/albums/${id}/download`) : invalid();
+    return ID.test(id) ? redirectToLink(`/api/albums/${id}/download/link`) : invalid();
 }

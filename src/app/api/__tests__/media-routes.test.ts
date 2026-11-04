@@ -20,14 +20,32 @@ describe("the media routes", () => {
     });
 
     it.each([
-        ["audio", audio, "/api/tracks/01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e/audio"],
-        ["a track download", trackDownload, "/api/tracks/01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e/download"],
-        ["an album download", albumDownload, "/api/albums/01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e/download"],
-        ["a cover", cover, "/api/albums/01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e/cover"],
-    ])("streams %s from the server", async (_, route, path) => {
+        ["audio", audio, "/api/tracks/01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e/audio/link"],
+        ["a track download", trackDownload, "/api/tracks/01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e/download/link"],
+        ["an album download", albumDownload, "/api/albums/01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e/download/link"],
+    ])("redirects %s to a signed link from the server", async (_, route, path) => {
+        apiFetch.mockResolvedValue(Response.json({url: "https://api.spexify.test/media/1/sig/x", expiresAt: "2026-11-04T18:00:00Z"}));
+
         const response = await route(get(), params("01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e"));
 
-        expect(apiFetch).toHaveBeenCalledWith(path, expect.anything());
+        expect(apiFetch).toHaveBeenCalledWith(path);
+        expect(response.status).toBe(302);
+        expect(response.headers.get("location")).toBe("https://api.spexify.test/media/1/sig/x");
+        expect(response.headers.get("cache-control")).toBe("no-store");
+    });
+
+    it("passes on the server's refusal of a link, and refuses a link that is not one", async () => {
+        apiFetch.mockResolvedValue(new Response(null, {status: 404}));
+        expect((await audio(get(), params("01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e"))).status).toBe(404);
+
+        apiFetch.mockResolvedValue(Response.json({url: "javascript:alert(1)"}));
+        expect((await audio(get(), params("01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e"))).status).toBe(502);
+    });
+
+    it("streams a cover from the server", async () => {
+        const response = await cover(get(), params("01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e"));
+
+        expect(apiFetch).toHaveBeenCalledWith("/api/albums/01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e/cover", expect.anything());
         expect(response.status).toBe(200);
     });
 

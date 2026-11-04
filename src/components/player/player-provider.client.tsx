@@ -128,7 +128,9 @@ export function playedSince(played: string | null | undefined, at: string): bool
  * Plays tracks through two audio elements that live as long as the app's layout, so playing continues while the user
  * navigates. One plays while the other loads the next track, so the next track starts at once when one ends: nearly
  * gapless, though a browser's audio elements leave a few milliseconds between files. The volume, mute and ReplayGain
- * mode are kept in the browser; ReplayGain only turns tracks down. Audio comes from {@code /api/audio/[id]}, which streams with the user's session. The browser's media
+ * mode are kept in the browser; ReplayGain only turns tracks down. Audio comes from {@code /api/audio/[id]}, which checks
+ * the user's session and redirects to a signed, expiring link on the API's own address, so audio never passes through
+ * the CDN in front of the web; a link that runs out mid-track is renewed once. The browser's media
  * controls (lock screen, keyboard keys) work through the Media Session API. When a track cannot be loaded, the player
  * stops and says so instead of looking as if it is loading; playing again retries, and skipping moves on as usual.
  *
@@ -157,6 +159,8 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
     const [shuffle, setShuffleState] = useState(false);
     const [repeat, setRepeat] = useState<Repeat>("off");
     const scrobbled = useRef<string | null>(null);
+    // The track whose expired link has been renewed once, so a broken file does not retry forever
+    const renewed = useRef<string | null>(null);
     // Nothing is saved before the saved queue was read, or an empty player would overwrite it
     const restored = useRef(false);
     const current = queue[index] ?? null;
@@ -201,6 +205,7 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
             element.src = `/api/audio/${track.id}`;
         }
         preloaded.current = null;
+        renewed.current = null;
         applyVolume(element, track);
         setFailed(false);
         setTime(0);
@@ -453,6 +458,18 @@ export function PlayerProvider({children}: { children: React.ReactNode }) {
         const onPause = () => setPlaying(false);
         const onDuration = () => setDuration(Number.isFinite(element.duration) ? element.duration : 0);
         const onError = () => {
+            const position = element.currentTime;
+
+            // The signed link may have run out during a long pause: ask for a new one once and carry on where it was
+            if (current && renewed.current !== current.id && position > 0) {
+                renewed.current = current.id;
+                element.src = `/api/audio/${current.id}`;
+                element.addEventListener("loadedmetadata", () => {
+                    element.currentTime = position;
+                    void element.play().catch(() => setPlaying(false));
+                }, {once: true});
+                return;
+            }
             setFailed(true);
             setPlaying(false);
         };
