@@ -133,7 +133,7 @@ function resetState() {
     kinds: [
       { id: uuidOf(901), nameSv: "Föreställning", nameEn: "Show", position: 1 },
       { id: uuidOf(902), nameSv: "Studio", nameEn: "Studio", position: 2 },
-      { id: uuidOf(903), nameSv: "Samling", nameEn: "Compilation", position: 3 },
+      { id: uuidOf(903), nameSv: "Samlingsalbum", nameEn: "Compilation", position: 3 },
       { id: uuidOf(904), nameSv: "Övrigt", nameEn: "Other", position: 4 },
     ],
     albums: [

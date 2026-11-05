@@ -12,7 +12,7 @@ vi.mock("sonner", () => ({ toast }));
 const KINDS = [
   { id: "k-show", nameSv: "Föreställning", nameEn: "Show" },
   { id: "k-studio", nameSv: "Studio", nameEn: "Studio" },
-  { id: "k-compilation", nameSv: "Samling", nameEn: "Compilation" },
+  { id: "k-compilation", nameSv: "Samlingsalbum", nameEn: "Compilation" },
 ];
 const NOBEL = { id: "6", title: "Nobel", year: 1975, revival: false, parentId: null, categoryName: "Chalmersspexet" };
 const NOBEL_REVIVAL = {
@@ -51,7 +51,7 @@ describe("AlbumForm", () => {
     expect(screen.queryByLabelText("search")).not.toBeInTheDocument();
     expect(screen.getByText("noneHint")).toBeInTheDocument();
     expect(screen.getByLabelText("title")).toBeRequired();
-    await userEvent.selectOptions(screen.getByLabelText("kind"), "Samling");
+    await userEvent.selectOptions(screen.getByLabelText("kind"), "Samlingsalbum");
     await userEvent.click(screen.getByRole("button", { name: "Spara" }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({
