@@ -44,7 +44,8 @@
     "lastPage": "Last page",
     "clearSearch": "Clear search",
     "datePlaceholder": "YYYY-MM-DD",
-    "pickDate": "Pick a date"
+    "pickDate": "Pick a date",
+    "noMatches": "Nothing matches"
   },
   "Header": {
     "toggleLanguage": "Change language",
@@ -246,6 +247,7 @@
     "apps": "My apps",
     "manage": "Edit",
     "manageAlbums": "Albums",
+    "manageCollections": "Collections",
     "trash": "Trash",
     "auditLog": "Change log",
     "admin": "Administration",
@@ -255,6 +257,7 @@
     "adminSettings": "Settings",
     "adminKinds": "Album kinds",
     "credits": "Credits",
+    "collections": "Collections",
     "top": "Top list"
   },
   "Home": {
@@ -307,7 +310,6 @@
     "unpublished": "Unpublished",
     "fileMissing": "File missing",
     "tracks": "{count, plural, =1 {# track} other {# tracks}}",
-    "inSpexregister": "The spex in Spexregister",
     "playAll": "Play all",
     "shuffle": "Shuffle",
     "downloadAlbum": "Download album",
@@ -324,6 +326,8 @@
     "melody": "Melody: {melody}",
     "addToQueue": "Add to queue",
     "addToPlaylist": "Add to {name}",
+    "morePlaylists": "More playlists…",
+    "chooseTitle": "Add {title} to a playlist",
     "newPlaylist": "New playlist…",
     "playlistName": "Name of the new playlist",
     "addedToPlaylist": "Added to the playlist",
@@ -340,14 +344,14 @@
     "rateTrack": "Rating",
     "rated": "The rating was saved",
     "rateFailed": "The rating could not be saved.",
-    "starAlbum": "Like the album",
-    "unstarAlbum": "Unlike the album",
+    "starAlbum": "Like",
+    "unstarAlbum": "Liked",
     "melodyLabel": "Melody:",
     "startRadio": "Start radio",
-    "albumRadio": "Radio",
+    "albumRadio": "Play similar",
+    "albumRadioHint": "Plays songs from the same spex and with the same people, in a new order every time, then a mix",
     "moveUp": "Move up",
     "moveDown": "Move down",
-    "inSpexregisterOf": "{title} in Spexregister",
     "sameSpex": "More from the same spex",
     "allFromSpex": "All albums of {title}"
   },
@@ -578,6 +582,7 @@
     "type": {
       "ALBUM": "Album",
       "TRACK": "Track",
+      "COLLECTION": "Collection",
       "ALBUM_KIND": "Album kind",
       "SETTINGS": "Settings",
       "USER": "User"
@@ -758,5 +763,36 @@
     "none": "Nothing has been rated, liked or played here yet.",
     "likes": "{count, plural, =1 {# like} other {# likes}}",
     "plays": "{count, plural, =1 {# play} other {# plays}}"
+  },
+  "Collections": {
+    "title": "Collections",
+    "text": "Albums gathered in an order of their own, e.g. a spex over the years.",
+    "none": "There are no collections yet.",
+    "albums": "{count, plural, one {# album} other {# albums}}",
+    "empty": "The collection has no albums yet.",
+    "edit": "Edit",
+    "manageTitle": "Collections",
+    "manageText": "A collection shows its albums in the order you choose.",
+    "new": "New collection",
+    "titleLabel": "Title",
+    "descriptionLabel": "Description",
+    "albumsLabel": "Albums",
+    "changed": "Changed",
+    "noAlbums": "No albums yet.",
+    "unpublished": "unpublished",
+    "moveUp": "Move {title} up",
+    "moveDown": "Move {title} down",
+    "remove": "Remove {title} from the collection",
+    "addAlbum": "Add an album",
+    "chooseAlbum": "Choose an album",
+    "add": "Add",
+    "save": "Save",
+    "create": "Create",
+    "saved": "The collection was saved.",
+    "view": "Show the collection",
+    "delete": "Delete the collection",
+    "confirmDelete": "Delete the collection?",
+    "confirmDeleteText": "The albums stay.",
+    "inCollections": "In"
   }
 }

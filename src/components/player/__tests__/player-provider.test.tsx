@@ -319,12 +319,47 @@ describe("PlayerProvider", () => {
       expect(second.getAttribute("src")).toBe("/api/audio/2");
 
       Object.defineProperty(second, "readyState", { value: 4, configurable: true });
+      Object.defineProperty(second, "duration", { value: 95, configurable: true });
+      // The preloaded element says how long it is while it waits
+      act(() => {
+        second.dispatchEvent(new Event("durationchange"));
+      });
       act(() => {
         first.dispatchEvent(new Event("ended"));
       });
+      expect(result.current.duration).toBe(95);
       expect(result.current.current?.id).toBe("2");
       expect(first.getAttribute("src")).toBeNull();
       expect(second.getAttribute("src")).toBe("/api/audio/2");
+      expect(result.current.playing).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("stays playing when a track ends and the next one starts in the other element", () => {
+    vi.useFakeTimers();
+    try {
+      const { result } = render();
+      const [first, second] = Array.from(document.querySelectorAll("audio"));
+
+      act(() => result.current.playQueue(TRACKS, 0));
+      act(() => {
+        vi.advanceTimersByTime(3000);
+      });
+      Object.defineProperty(second, "readyState", { value: 4, configurable: true });
+      // A track that ends pauses before it says it ended, and the next one starts before React has rendered again
+      act(() => {
+        first.dispatchEvent(new Event("pause"));
+        first.dispatchEvent(new Event("ended"));
+      });
+      expect(result.current.playing).toBe(true);
+
+      // The element that stopped no longer speaks for the player
+      act(() => {
+        first.dispatchEvent(new Event("pause"));
+      });
+      expect(result.current.playing).toBe(true);
     } finally {
       vi.useRealTimers();
     }

@@ -9,6 +9,9 @@ import {
   albumRestore,
   albumTrash,
   albumUpdate,
+  collectionCreate,
+  collectionDelete,
+  collectionUpdate,
   searchSpex,
   trackCreate,
   trackDelete,
@@ -21,7 +24,7 @@ import {
 } from "@/lib/catalog/catalog.server";
 import { trashEmpty } from "@/lib/admin/admin.server";
 import { type ActionResult, toActionResult } from "@/lib/graphql.server";
-import type { AlbumInput, TrackInput } from "@/gql/graphql";
+import type { AlbumInput, CollectionInput, TrackInput } from "@/gql/graphql";
 import { withPolicyAction } from "@/utils/route.server";
 import { Policies } from "@/utils/policy.server";
 
@@ -180,6 +183,50 @@ export async function emptyTrashAction(): Promise<ActionResult<null>> {
   return admin(async () => {
     await trashEmpty();
     changed();
+    return null;
+  });
+}
+
+function collectionsChanged(id?: string) {
+  revalidatePath("/collections");
+  revalidatePath("/manage/collections");
+  if (id) {
+    revalidatePath(`/collections/${id}`);
+    revalidatePath(`/manage/collections/${id}`);
+  }
+}
+
+function checkCollection(input: CollectionInput) {
+  if (!input.albumIds.every(id => ID.test(String(id)))) {
+    throw new Error("Invalid id");
+  }
+}
+
+export async function createCollectionAction(input: CollectionInput): Promise<ActionResult<string | undefined>> {
+  checkCollection(input);
+  return editor(async () => {
+    const created = await collectionCreate(input);
+
+    collectionsChanged();
+    return created?.id;
+  });
+}
+
+export async function updateCollectionAction(id: string, input: CollectionInput): Promise<ActionResult<null>> {
+  requireId(id);
+  checkCollection(input);
+  return editor(async () => {
+    await collectionUpdate(id, input);
+    collectionsChanged(id);
+    return null;
+  });
+}
+
+export async function deleteCollectionAction(id: string): Promise<ActionResult<null>> {
+  requireId(id);
+  return admin(async () => {
+    await collectionDelete(id);
+    collectionsChanged(id);
     return null;
   });
 }

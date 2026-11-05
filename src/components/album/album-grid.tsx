@@ -24,8 +24,10 @@ export type AlbumSummary = {
  * Albums as cover cards with everyone's average rating. A link per card; the badges say what is not obvious from the
  * title.
  */
-export function AlbumGrid({ albums, hrefFor, label }: {
+export function AlbumGrid({ albums, hrefFor, label, ranked = false }: {
   albums: AlbumSummary[];
+  /** Numbers the covers 1, 2, 3…, for a top list. */
+  ranked?: boolean;
   hrefFor?: (id: string) => string;
   /** An extra line per album, e.g. how often it was played. */
   label?: (album: AlbumSummary) => ReactNode;
@@ -35,8 +37,13 @@ export function AlbumGrid({ albums, hrefFor, label }: {
 
   return (
     <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-      {albums.map(album => (
-        <li key={album.id}>
+      {albums.map((album, i) => (
+        <li key={album.id} className="relative">
+          {ranked && (
+            <span className="pointer-events-none absolute left-2 top-2 z-10 flex size-7 items-center justify-center rounded-full bg-background/90 text-sm font-semibold tabular-nums shadow">
+              {i + 1}
+            </span>
+          )}
           <Link href={hrefFor ? hrefFor(album.id) : `/albums/${album.id}`}
                 className="group block rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <CoverImage albumId={album.id} title={album.title}

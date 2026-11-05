@@ -209,6 +209,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     applyVolume(element, track);
     setFailed(false);
     setTime(0);
+    // A preloaded track told its length while it waited, when nobody listened to it yet
+    setDuration(element.readyState > 0 && Number.isFinite(element.duration) ? element.duration : 0);
     scrobbled.current = null;
     if (autoplay) {
       void element.play().catch(() => setPlaying(false));
@@ -425,13 +427,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     setRepeat(value => value === "off" ? "all" : value === "all" ? "one" : "off");
   }, []);
 
-  useEffect(() => {
-    const element = activeIndex === 0 ? first.current : second.current;
-
-    if (!element) {
-      return;
-    }
-
+  // Both elements are listened to all the time, and only the playing one counts: when a track ends, the next one
+  // starts in the other element at once, and its play event must not be missed while React catches up
+  const listen = useCallback((element: HTMLAudioElement) => {
+    const ifPlaying = (handler: () => void) => () => {
+      if (element === playingElement()) {
+        handler();
+      }
+    };
     const onTime = () => {
       setTime(element.currentTime);
       if (current?.navidromeId && scrobbled.current !== current.id && element.duration > 0
@@ -474,21 +477,25 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       setPlaying(false);
     };
 
-    element.addEventListener("timeupdate", onTime);
-    element.addEventListener("ended", onEnded);
-    element.addEventListener("play", onPlay);
-    element.addEventListener("pause", onPause);
-    element.addEventListener("durationchange", onDuration);
-    element.addEventListener("error", onError);
-    return () => {
-      element.removeEventListener("timeupdate", onTime);
-      element.removeEventListener("ended", onEnded);
-      element.removeEventListener("play", onPlay);
-      element.removeEventListener("pause", onPause);
-      element.removeEventListener("durationchange", onDuration);
-      element.removeEventListener("error", onError);
-    };
-  }, [activeIndex, current, next, repeat]);
+    const handlers: [string, () => void][] = [
+      ["timeupdate", ifPlaying(onTime)],
+      ["ended", ifPlaying(onEnded)],
+      ["play", ifPlaying(onPlay)],
+      ["pause", ifPlaying(onPause)],
+      ["durationchange", ifPlaying(onDuration)],
+      ["error", ifPlaying(onError)],
+    ];
+
+    handlers.forEach(([type, handler]) => element.addEventListener(type, handler));
+    return () => handlers.forEach(([type, handler]) => element.removeEventListener(type, handler));
+  }, [current, next, playingElement, repeat]);
+
+  useEffect(() => {
+    const elements = [first.current, second.current].filter((element): element is HTMLAudioElement => element !== null);
+    const cleanups = elements.map(listen);
+
+    return () => cleanups.forEach(cleanup => cleanup());
+  }, [listen]);
 
   useEffect(() => {
     let cancelled = false;

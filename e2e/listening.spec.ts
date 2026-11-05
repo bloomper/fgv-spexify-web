@@ -241,7 +241,7 @@ test.describe("Ratings and liked albums", () => {
     await expect(page.getByText("Inga album matchar.")).toBeVisible();
 
     await page.goto(`/albums/${uuidOf(1)}`);
-    await page.getByRole("button", { name: "Gilla albumet" }).click();
+    await page.getByRole("button", { name: "Gilla", exact: true }).click();
     await expect.poll(async () => (await mock.state()).starredAlbums).toEqual(["al-1"]);
     await page.goto("/albums?liked=1");
     await expect(page.getByRole("link", { name: /Nobel/ })).toBeVisible();
@@ -256,8 +256,8 @@ test.describe("Ratings and liked albums", () => {
   test("likes an album and finds it under Liked", async ({ page, loginAs, mock }) => {
     await loginAs("listener");
     await page.goto(`/albums/${uuidOf(1)}`);
-    await page.getByRole("button", { name: "Gilla albumet" }).click();
-    await expect(page.getByRole("button", { name: "Sluta gilla albumet" })).toBeVisible();
+    await page.getByRole("button", { name: "Gilla", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Gillat", exact: true })).toHaveAttribute("aria-pressed", "true");
     await expect.poll(async () => (await mock.state()).starredAlbums).toEqual(["al-1"]);
 
     await page.goto("/starred");

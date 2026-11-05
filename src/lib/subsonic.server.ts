@@ -58,6 +58,8 @@ export type SubsonicPlaylist = {
   public?: boolean;
   /** OpenSubsonic: true when the user may not change it, i.e. someone else's public playlist. */
   readonly?: boolean;
+  /** When it was last changed, as an ISO date and time. */
+  changed?: string;
 };
 
 export async function getStarred(): Promise<SubsonicSong[]> {

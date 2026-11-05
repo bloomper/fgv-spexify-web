@@ -95,6 +95,7 @@ let state;
 function resetState() {
   state = {
     nextId: 100,
+    collections: [],
     maintenanceJobs: [
       {
         job: "SPEX_REFRESH",
@@ -231,6 +232,12 @@ const withCounts = (persona, album) => {
   };
 };
 const isAdmin = persona => persona.roles.includes("ADMIN");
+const collectionOf = (persona, collection) => ({
+  ...collection,
+  albums: collection.albumIds.map(id => visibleAlbums(persona).find(album => album.id === id))
+    .filter(album => album && (isEditor(persona) || (album.published && !album.trashedAt)))
+    .map(album => withCounts(persona, album)),
+});
 
 function requireEditor(persona) {
   if (!isEditor(persona)) {
@@ -326,7 +333,45 @@ const resolvers = {
   Album: (persona, { id }) => {
     const album = visibleAlbums(persona).find(candidate => candidate.id === id);
 
-    return { album: album ? { ...withCounts(persona, album), tracks: tracksOf(persona, id) } : null };
+    return {
+      album: album ? {
+        ...withCounts(persona, album), tracks: tracksOf(persona, id),
+        collections: state.collections.filter(collection => collection.albumIds.includes(id))
+          .map(collection => ({ id: collection.id, title: collection.title })),
+      } : null,
+    };
+  },
+  Collections: persona => ({ collections: state.collections.map(collection => collectionOf(persona, collection)) }),
+  Collection: (persona, { id }) => {
+    const collection = state.collections.find(candidate => candidate.id === id);
+
+    return { collection: collection ? collectionOf(persona, collection) : null };
+  },
+  CollectionCreate: (persona, { input }) => {
+    requireEditor(persona);
+
+    const collection = {
+      id: uuidOf(state.nextId++), title: input.title, description: input.description ?? null, albumIds: input.albumIds,
+      createdAt: new Date().toISOString(), lastModifiedAt: null,
+    };
+
+    state.collections.push(collection);
+    audit(persona, "CREATE", "COLLECTION", collection.id, `Skapade samlingen ${collection.title}`);
+    return { collectionCreate: { id: collection.id } };
+  },
+  CollectionUpdate: (persona, { id, input }) => {
+    requireEditor(persona);
+
+    const collection = state.collections.find(candidate => candidate.id === id);
+
+    Object.assign(collection, { title: input.title, description: input.description ?? null, albumIds: input.albumIds,
+      lastModifiedAt: new Date().toISOString() });
+    return { collectionUpdate: { id } };
+  },
+  CollectionDelete: (persona, { id }) => {
+    requireAdmin(persona);
+    state.collections = state.collections.filter(candidate => candidate.id !== id);
+    return { collectionDelete: null };
   },
   Search: (persona, { q }) => ({
     search: {

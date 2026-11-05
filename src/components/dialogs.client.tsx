@@ -32,22 +32,37 @@ type PromptOptions = {
   maxLength?: number;
 };
 
+type ChooseOptions = {
+  title: string;
+  /** What can be chosen, in the order shown. */
+  items: { id: string; label: string }[];
+  /** Offered last, e.g. "New playlist"; choosing it resolves with "". */
+  createLabel?: string;
+};
+
 type Request =
   | { type: "confirm"; options: ConfirmOptions; resolve: (value: boolean) => void }
-  | { type: "prompt"; options: PromptOptions; resolve: (value: string | null) => void };
+  | { type: "prompt"; options: PromptOptions; resolve: (value: string | null) => void }
+  | { type: "choose"; options: ChooseOptions; resolve: (value: string | null) => void };
+
+/** More items than this get a search field. */
+const SEARCH_FROM = 8;
 
 type Dialogs = {
   /** Resolves with true when confirmed, false when cancelled. */
   confirm: (options: ConfirmOptions) => Promise<boolean>;
   /** Resolves with the trimmed text, or null when cancelled or left empty. */
   prompt: (options: PromptOptions) => Promise<string | null>;
+  /** Resolves with the chosen item's id, "" for the create choice, or null when cancelled. */
+  choose: (options: ChooseOptions) => Promise<string | null>;
 };
 
 const DialogsContext = createContext<Dialogs | null>(null);
 
 /**
- * In-app replacements for window.confirm and window.prompt, styled like the rest of the application. One dialog at a
- * time; asking again while one is open cancels the first.
+ * In-app replacements for window.confirm and window.prompt, styled like the rest of the application, and a list to
+ * choose from that can be searched when it is long. One dialog at a time; asking again while one is open cancels the
+ * first.
  */
 export function DialogsProvider({ children }: { children: React.ReactNode }) {
   const t = useTranslations("Common");
@@ -65,6 +80,8 @@ export function DialogsProvider({ children }: { children: React.ReactNode }) {
       pending.resolve(value === true);
     } else if (pending?.type === "prompt") {
       pending.resolve(typeof value === "string" && value.trim() ? value.trim() : null);
+    } else if (pending?.type === "choose") {
+      pending.resolve(typeof value === "string" ? value : null);
     }
   }, []);
 
@@ -79,13 +96,45 @@ export function DialogsProvider({ children }: { children: React.ReactNode }) {
   const dialogs = React.useMemo<Dialogs>(() => ({
     confirm: options => new Promise(resolve => ask({ type: "confirm", options, resolve })),
     prompt: options => new Promise(resolve => ask({ type: "prompt", options, resolve })),
+    choose: options => new Promise(resolve => ask({ type: "choose", options, resolve })),
   }), [ask]);
+  const query = text.trim().toLocaleLowerCase();
+  const choices = request?.type === "choose"
+    ? request.options.items.filter(item => !query || item.label.toLocaleLowerCase().includes(query))
+    : [];
 
   return (
     <DialogsContext.Provider value={dialogs}>
       {children}
       <Dialog open={open} onOpenChange={next => !next && settle(null)}>
-        {request && (
+        {request?.type === "choose" && (
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>{request.options.title}</DialogTitle>
+            </DialogHeader>
+            {request.options.items.length > SEARCH_FROM && (
+              <Input type="search" autoFocus value={text} aria-label={t("search")} placeholder={t("search")}
+                     onChange={event => setText(event.target.value)} />
+            )}
+            <ul className="-mx-2 max-h-80 overflow-y-auto">
+              {choices.map(item => (
+                <li key={item.id}>
+                  <button type="button" onClick={() => settle(item.id)}
+                          className="w-full truncate rounded-md px-2 py-2 text-left text-sm hover:bg-accent focus-visible:bg-accent focus-visible:outline-none">
+                    {item.label}
+                  </button>
+                </li>
+              ))}
+              {choices.length === 0 && <li className="px-2 py-2 text-sm text-muted-foreground">{t("noMatches")}</li>}
+            </ul>
+            {request.options.createLabel && (
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => settle("")}>{request.options.createLabel}</Button>
+              </DialogFooter>
+            )}
+          </DialogContent>
+        )}
+        {request && request.type !== "choose" && (
           <DialogContent showCloseButton={false} className="sm:max-w-md">
             <form className="grid gap-4" onSubmit={event => {
               event.preventDefault();

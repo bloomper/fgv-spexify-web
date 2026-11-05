@@ -25,13 +25,13 @@ export default async function HomePage() {
     return (
       <div className="space-y-8 p-4 sm:p-6">
         <section className="space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            {t("greeting", { name: me?.me.displayName ?? me?.me.username ?? "" })}
-          </h1>
-          <p className="max-w-4xl whitespace-pre-line text-pretty text-muted-foreground">{welcome || t("intro")}</p>
-          <div className="pt-1">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              {t("greeting", { name: me?.me.displayName ?? me?.me.username ?? "" })}
+            </h1>
             <RandomRadioButton />
           </div>
+          <p className="max-w-4xl whitespace-pre-line text-pretty text-muted-foreground">{welcome || t("intro")}</p>
         </section>
 
         {home && (home.categories.length > 0 || home.years.length > 0) && (

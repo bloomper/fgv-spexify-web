@@ -44,7 +44,8 @@
     "lastPage": "Sista sidan",
     "clearSearch": "Rensa sökningen",
     "datePlaceholder": "ÅÅÅÅ-MM-DD",
-    "pickDate": "Välj datum"
+    "pickDate": "Välj datum",
+    "noMatches": "Inget matchar"
   },
   "Header": {
     "toggleLanguage": "Byt språk",
@@ -246,6 +247,7 @@
     "apps": "Mina appar",
     "manage": "Redigera",
     "manageAlbums": "Album",
+    "manageCollections": "Samlingar",
     "trash": "Papperskorgen",
     "auditLog": "Ändringslogg",
     "admin": "Administration",
@@ -255,6 +257,7 @@
     "adminSettings": "Inställningar",
     "adminKinds": "Albumsorter",
     "credits": "Medverkande",
+    "collections": "Samlingar",
     "top": "Topplistan"
   },
   "Home": {
@@ -307,7 +310,6 @@
     "unpublished": "Opublicerad",
     "fileMissing": "Filen saknas",
     "tracks": "{count, plural, =1 {# låt} other {# låtar}}",
-    "inSpexregister": "Spexet i Spexregistret",
     "playAll": "Spela allt",
     "shuffle": "Blanda",
     "downloadAlbum": "Ladda ner album",
@@ -324,6 +326,8 @@
     "melody": "Melodi: {melody}",
     "addToQueue": "Lägg i kön",
     "addToPlaylist": "Lägg till i {name}",
+    "morePlaylists": "Fler spellistor…",
+    "chooseTitle": "Lägg till {title} i spellista",
     "newPlaylist": "Ny spellista…",
     "playlistName": "Den nya spellistans namn",
     "addedToPlaylist": "Tillagd i spellistan",
@@ -340,14 +344,14 @@
     "rateTrack": "Betyg",
     "rated": "Betyget är sparat",
     "rateFailed": "Betyget kunde inte sparas.",
-    "starAlbum": "Gilla albumet",
-    "unstarAlbum": "Sluta gilla albumet",
+    "starAlbum": "Gilla",
+    "unstarAlbum": "Gillat",
     "melodyLabel": "Melodi:",
     "startRadio": "Starta radio",
-    "albumRadio": "Radio",
+    "albumRadio": "Spela liknande",
+    "albumRadioHint": "Spelar låtar från samma spex och med samma medverkande, i ny ordning varje gång, och sedan blandat",
     "moveUp": "Flytta upp",
     "moveDown": "Flytta ner",
-    "inSpexregisterOf": "{title} i Spexregistret",
     "sameSpex": "Mer från samma spex",
     "allFromSpex": "Alla album från {title}"
   },
@@ -578,6 +582,7 @@
     "type": {
       "ALBUM": "Album",
       "TRACK": "Låt",
+      "COLLECTION": "Samling",
       "ALBUM_KIND": "Albumsort",
       "SETTINGS": "Inställningar",
       "USER": "Användare"
@@ -758,5 +763,36 @@
     "none": "Inget har fått betyg, gillats eller spelats här ännu.",
     "likes": "{count, plural, =1 {# gillar} other {# gillar}}",
     "plays": "{count, plural, =1 {# spelning} other {# spelningar}}"
+  },
+  "Collections": {
+    "title": "Samlingar",
+    "text": "Album samlade i en egen ordning, till exempel ett spex genom åren.",
+    "none": "Det finns inga samlingar ännu.",
+    "albums": "{count, plural, one {# album} other {# album}}",
+    "empty": "Samlingen har inga album ännu.",
+    "edit": "Redigera",
+    "manageTitle": "Samlingar",
+    "manageText": "En samling visar sina album i den ordning du väljer.",
+    "new": "Ny samling",
+    "titleLabel": "Titel",
+    "descriptionLabel": "Beskrivning",
+    "albumsLabel": "Album",
+    "changed": "Ändrad",
+    "noAlbums": "Inga album ännu.",
+    "unpublished": "opublicerat",
+    "moveUp": "Flytta upp {title}",
+    "moveDown": "Flytta ner {title}",
+    "remove": "Ta bort {title} från samlingen",
+    "addAlbum": "Lägg till album",
+    "chooseAlbum": "Välj ett album",
+    "add": "Lägg till",
+    "save": "Spara",
+    "create": "Skapa",
+    "saved": "Samlingen är sparad.",
+    "view": "Visa samlingen",
+    "delete": "Radera samlingen",
+    "confirmDelete": "Radera samlingen?",
+    "confirmDeleteText": "Albumen finns kvar.",
+    "inCollections": "Ingår i"
   }
 }
