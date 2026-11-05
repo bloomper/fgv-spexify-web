@@ -6,6 +6,7 @@ import {
   Drama,
   Heart,
   House,
+  Layers,
   Library,
   ListMusic,
   type LucideIcon,
@@ -71,6 +72,7 @@ export function AppSidebar({ roles, accountUrl, ...props }: AppSidebarProps) {
     const mainItems: NavItem[] = [
       { title: t("Nav.home"), url: "/", icon: House, isActive: pathname === "/" },
       { title: t("Nav.albums"), url: "/albums", icon: Library, isActive: pathname.startsWith("/albums") },
+      { title: t("Nav.collections"), url: "/collections", icon: Layers, isActive: pathname.startsWith("/collections") },
       { title: t("Nav.top"), url: "/top", icon: Trophy, isActive: pathname.startsWith("/top") },
       { title: t("Nav.starred"), url: "/starred", icon: Heart, isActive: pathname.startsWith("/starred") },
       { title: t("Nav.playlists"), url: "/playlists", icon: ListMusic, isActive: pathname.startsWith("/playlists") },
@@ -86,6 +88,7 @@ export function AppSidebar({ roles, accountUrl, ...props }: AppSidebarProps) {
         isActive: pathname.startsWith("/manage"),
         items: [
           { title: t("Nav.manageAlbums"), url: "/manage/albums" },
+          { title: t("Nav.manageCollections"), url: "/manage/collections" },
           { title: t("Nav.trash"), url: "/manage/trash" },
           { title: t("Nav.auditLog"), url: "/manage/audit" },
         ],

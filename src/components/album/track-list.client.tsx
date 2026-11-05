@@ -27,6 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { CoverImage } from "@/components/album/cover-image.client";
 import { playedSince, type PlayerTrack, usePlayer } from "@/components/player/player-provider.client";
 import { formatDuration } from "@/components/player/lyrics";
 import {
@@ -70,7 +71,15 @@ type Props = {
   starred: string[];
   playlists: { id: string; name: string }[];
   spexflixUrl: string | null;
+  /**
+   * Songs from many albums, e.g. liked songs, a playlist or a top list: each row shows its album's cover and title
+   * instead of the track number, which only means something on the album's own page.
+   */
   showAlbum?: boolean;
+  /** Numbers the rows 1, 2, 3… before the covers, for a top list. */
+  ranked?: boolean;
+  /** What a top list ranks by, by track id, shown beside each row, e.g. "12 gillar". */
+  stats?: Record<string, React.ReactNode>;
   /** On a playlist's page: offers removing a track from it, by its position, and moving it. */
   playlistId?: string;
 };
@@ -110,16 +119,28 @@ function TrackSubtitle({ track, showAlbum }: { track: TrackRow; showAlbum?: bool
   return parts.map((part, i) => <React.Fragment key={i}>{i > 0 && " · "}{part}</React.Fragment>);
 }
 
+/** How many playlists the track menu lists; the rest are chosen in a dialog that can be searched. */
+const MENU_PLAYLISTS = 5;
+
 /**
  * Tracks with play buttons, likes, ratings, downloads, playlists and links to Spexflix. Stars, playlists and play counts live in
  * Navidrome, so they work only for published tracks, which Navidrome knows. Hovering a row shows a play button in
  * place of its number.
  */
-export function TrackList({ tracks, starred: initialStarred, playlists, spexflixUrl, showAlbum, playlistId }: Props) {
+export function TrackList({
+                            tracks,
+                            starred: initialStarred,
+                            playlists,
+                            spexflixUrl,
+                            showAlbum,
+                            ranked,
+                            stats,
+                            playlistId,
+                          }: Props) {
   const t = useTranslations("Album");
   const player = usePlayer();
   const radio = useRadio();
-  const { prompt } = useDialogs();
+  const { prompt, choose } = useDialogs();
   const [starred, setStarred] = useServerState(new Set(initialStarred), ids => [...ids].sort().join());
   const [ratings, setRatings] = useServerState<Record<string, number>>(
     Object.fromEntries(tracks.map(track => [track.id, track.rating ?? 0])), JSON.stringify);
@@ -243,6 +264,18 @@ export function TrackList({ tracks, starred: initialStarred, playlists, spexflix
     });
   };
 
+  const chooseAndAdd = async (track: TrackRow) => {
+    const playlistId = await choose({
+      title: t("chooseTitle", { title: track.title }),
+      items: playlists.map(playlist => ({ id: playlist.id, label: playlist.name })),
+      createLabel: t("newPlaylist"),
+    });
+
+    if (playlistId !== null) {
+      await addTo(track, playlistId || null);
+    }
+  };
+
   return (
     <ol className="divide-y rounded-lg border">
       {tracks.map((track, i) => {
@@ -260,6 +293,24 @@ export function TrackList({ tracks, starred: initialStarred, playlists, spexflix
             )}
             <li className={cn("group/track flex items-center gap-2 px-2 py-2 hover:bg-muted/50 sm:gap-3 sm:px-3",
               isCurrent && "bg-accent hover:bg-accent")}>
+              {ranked && (
+                <span className="w-6 shrink-0 text-right text-sm font-semibold tabular-nums text-muted-foreground">
+                  {i + 1}
+                </span>
+              )}
+              {showAlbum ? (
+                <Button variant="ghost" size="icon" className="relative size-10 shrink-0 overflow-hidden p-0"
+                        disabled={track.fileMissing}
+                        aria-label={isCurrent && player.playing ? t("pause", { title: track.title }) : t("play", { title: track.title })}
+                        onClick={() => isCurrent ? player.toggle() : player.playQueue(playable, playIndex)}>
+                  <CoverImage albumId={track.albumId} title="" className="size-10 rounded" />
+                  <span className={cn("absolute inset-0 flex items-center justify-center rounded bg-black/50 text-white",
+                    isCurrent ? "flex" : "hidden group-hover/track:flex group-focus-within/track:flex")}
+                        data-testid="hover-play">
+                    {isCurrent && player.playing ? <Pause /> : <Play />}
+                  </span>
+                </Button>
+              ) : (
               <Button variant="ghost" size="icon" className="size-10 shrink-0" disabled={track.fileMissing}
                       aria-label={isCurrent && player.playing ? t("pause", { title: track.title }) : t("play", { title: track.title })}
                       onClick={() => isCurrent ? player.toggle() : player.playQueue(playable, playIndex)}>
@@ -277,6 +328,7 @@ export function TrackList({ tracks, starred: initialStarred, playlists, spexflix
                   </>
                 )}
               </Button>
+              )}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="truncate text-sm font-medium">{track.title}</span>
@@ -323,7 +375,11 @@ export function TrackList({ tracks, starred: initialStarred, playlists, spexflix
                                     <AverageRating average={track.averageRating} count={track.ratingCount} />
                                 </span>
               )}
-              {playCount !== undefined && (
+              {stats && (
+                <span className="w-24 shrink-0 text-right text-xs tabular-nums text-muted-foreground">{stats[track.id]}</span>
+              )}
+              {/* A top list says everyone's number; the user's own count beside it would read as a contradiction */}
+              {playCount !== undefined && !stats && (
                 <span className="hidden w-28 shrink-0 text-right text-xs tabular-nums text-muted-foreground lg:block"
                       title={played ? t("lastPlayed", { date: formatDate(played) ?? "" }) : undefined}>
                                     {playCount > 0 ? (
@@ -360,11 +416,16 @@ export function TrackList({ tracks, starred: initialStarred, playlists, spexflix
                                      label={t("rate", { title: track.title })} />
                       </div>
                       <DropdownMenuSeparator />
-                      {playlists.map(playlist => (
+                      {playlists.slice(0, MENU_PLAYLISTS).map(playlist => (
                         <DropdownMenuItem key={playlist.id} onClick={() => void addTo(track, playlist.id)}>
                           <ListPlus />{t("addToPlaylist", { name: playlist.name })}
                         </DropdownMenuItem>
                       ))}
+                      {playlists.length > MENU_PLAYLISTS && (
+                        <DropdownMenuItem onClick={() => void chooseAndAdd(track)}>
+                          <ListPlus />{t("morePlaylists")}
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem onClick={() => void addTo(track, null)}>
                         <ListPlus />{t("newPlaylist")}
                       </DropdownMenuItem>
@@ -430,7 +491,8 @@ export function PlayAllButtons({ tracks, radioAlbumId }: { tracks: TrackRow[]; r
         {t("shuffle")}
       </Button>
       {radioAlbumId && (
-        <Button variant="outline" onClick={() => radio.start({ albumId: radioAlbumId })} disabled={radio.pending}>
+        <Button variant="outline" onClick={() => radio.start({ albumId: radioAlbumId })} disabled={radio.pending}
+                title={t("albumRadioHint")}>
           <Radio />{t("albumRadio")}
         </Button>
       )}

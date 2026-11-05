@@ -29,6 +29,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
     }
 
     const t = await getTranslations("Album");
+    const tc = await getTranslations("Collections");
     const locale = await getLocale();
     const [album, listening, me] = await Promise.all([getAlbum(id), getListeningState(), getMe()]);
 
@@ -43,7 +44,6 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
     const others = related.filter(other => other.id !== album.id);
     const main = album.spex[0];
     const rows = toRows(album.tracks, albumListening?.plays);
-    const register = process.env.SPEXREGISTER_WEB_URL?.replace(/\/$/, "");
 
     return (
       <div className="space-y-6 p-4 sm:p-6">
@@ -62,6 +62,17 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
                 formatDuration(album.durationMs / 1000)].filter(Boolean).join(" · ")}
             </p>
             <AverageRating average={album.averageRating} count={album.ratingCount} stars className="text-sm" />
+            {album.collections.length > 0 && (
+              <p className="text-sm text-muted-foreground">
+                {tc("inCollections")}{" "}
+                {album.collections.map((collection, i) => (
+                  <span key={collection.id}>
+                    {i > 0 && ", "}
+                    <Link href={`/collections/${collection.id}`} className="text-primary hover:underline">{collection.title}</Link>
+                  </span>
+                ))}
+              </p>
+            )}
             {album.description && <p className="max-w-prose whitespace-pre-line text-sm">{album.description}</p>}
             {album.navidromeId && albumListening && (
               <AlbumListening navidromeId={album.navidromeId} starred={albumListening.starred}
@@ -77,12 +88,6 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
                       <Link href={`/albums?spex=${spex.familyId}`} className="text-primary hover:underline">
                         {t("allFromSpex", { title: spex.title ?? name })}
                       </Link>
-                      {register && (
-                        <a href={`${register}/spex?open=${spex.id}`} target="_blank" rel="noopener noreferrer"
-                           className="text-muted-foreground hover:underline">
-                          {album.spex.length > 1 || spex.revival ? t("inSpexregisterOf", { title: name }) : t("inSpexregister")}
-                        </a>
-                      )}
                     </li>
                   );
                 })}

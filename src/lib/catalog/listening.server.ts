@@ -24,10 +24,10 @@ export async function getListeningState(): Promise<{
   const [starred, playlists] = await Promise.all([
     getStarredAll().catch(() => ({ songs: [], albums: [] })),
     // Others' public playlists can be listened to but not added to
-    getPlaylists().then(list => list.filter(playlist => !playlist.readonly).map(playlist => ({
-      id: playlist.id,
-      name: playlist.name,
-    })))
+    // The ones changed most recently first: menus show only the first few
+    getPlaylists().then(list => list.filter(playlist => !playlist.readonly)
+      .sort((a, b) => (b.changed ?? "").localeCompare(a.changed ?? ""))
+      .map(playlist => ({ id: playlist.id, name: playlist.name })))
       .catch(() => []),
   ]);
 

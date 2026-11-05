@@ -56,7 +56,17 @@ lives in Navidrome per user (stars, playlists, play counts). Stack and setup: `R
 - **Keyboard shortcuts** (`src/components/player/shortcuts.client.tsx`) work anywhere except where the focused element
   uses the key; `?` lists them.
 - **Radio** (`useRadio`, `radioAction`) plays `radio(trackId | albumId)`: tracks that share the melody, original artist,
-  performers, authors or spex, or random tracks without a seed (the start page's button).
+  performers, authors or spex, or random tracks without a seed (the start page's button, top right). The album page
+  calls it "Spela liknande", since it plays other albums too.
+- **The two audio elements** are both listened to all the time and only the playing one counts (`listen` in
+  `PlayerProvider`): the next track starts in the other element before React renders again, so a listener attached
+  only to the active element misses its `play` event and its `durationchange`.
+- **Collections** (`/collections`, edited under `/manage/collections`, deleted by ADMIN) hold albums in an order of
+  their own, like Spexflix's collections of videos; the album page links to the ones it is in.
+- **Song lists from many albums** (`TrackList` with `showAlbum`: liked, playlists, search, credits, the top list) show
+  the album's cover instead of the track number, which only means something on the album page; `ranked` numbers the
+  rows and `stats` (by track id) shows what a top list ranks by. A track's "…" menu lists five playlists, most
+  recently changed first, and offers the rest through `useDialogs().choose`, which can be searched.
 - **Credits** (`/credits/[kind]/[name]`) list the tracks of a performer, melody, original artist (the parentheses after
   the melody), lyricist or arranger; `splitCredits` splits names the way the server does.
 - **Covers** come from `/api/cover/[id]` (the album's cover, else the spex poster, else 404 and `CoverImage`'s
@@ -80,7 +90,9 @@ lives in Navidrome per user (stars, playlists, play counts). Stack and setup: `R
   star and the average. A track row has the user's own stars (`RatingInput`) beside everyone's average; the "…" menu
   rates only on phones. Show ratings as stars, never as text. `/top` (Topplistan) lists `topTracks`/`topAlbums` by
   `RATED` (weighted average), `LIKED` or `PLAYED`, per category and decade; rows whose own rating is not known
-  (`rating: undefined`) show the average alone. `/albums` takes `category`, `decade` (e.g. 1970) or `year`, `liked=1`
+  (`rating: undefined`) show the average alone. What it ranks by is underlined tabs (`LinkTabs`), songs or albums a
+  switch (`LinkSegments`, `src/components/link-tabs.tsx`, the same file as Spexflix's), and categories and decades
+  chips. `/albums` takes `category`, `decade` (e.g. 1970) or `year`, `liked=1`
   and `sort` (`SortSelect`).
 - **The start page** has the same order as Spexflix's: greeting, browsing (categories, the top list, decades), what
   the user played, the top list, recently published, what they like, then their most played and highest rated
@@ -126,7 +138,7 @@ drops query strings.
 Custom events go through `track()` (`src/utils/umami.ts`; import it as `trackEvent` where `track` is a variable), a
 no-op when the tracker isn't loaded. Event data is enum values, counts and booleans only — never names, emails, ids or
 typed text. Events: `album-create` (`defaultKind`), `track-upload`, `album-publish` (`published`), `track-star` (`starred`), `track-rate` (`rating`), `album-star` (`starred`), `album-rate` (`rating`), `playlist-add`
-(`created`), `radio-start` (`seed`), `app-password-create`, `api-key-create`, `language-change` and `theme-change`, and through
+(`created`), `radio-start` (`seed`), `collection-create` (`albums`), `app-password-create`, `api-key-create`, `language-change` and `theme-change`, and through
 `data-umami-event` on the links `track-download` and `album-download`.
 
 ## Application switcher

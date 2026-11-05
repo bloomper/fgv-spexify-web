@@ -4,6 +4,7 @@ import * as React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import {
   ArrowDown,
   ArrowUp,
@@ -51,6 +52,13 @@ import { cn } from "@/utils/utils";
 export function PlayerBar() {
   const t = useTranslations("Player");
   const player = usePlayer();
+  // Off, all (the whole queue, e.g. the album) and one (the song) look much alike, so the new mode is said too
+  const cycleRepeat = () => {
+    const next = player.repeat === "off" ? "all" : player.repeat === "all" ? "one" : "off";
+
+    player.cycleRepeat();
+    toast(t(`repeat.${next}`), { id: "repeat", duration: 1500 });
+  };
   const [panel, setPanel] = useState<"queue" | "lyrics" | null>(null);
   const { current } = player;
   const lines = useMemo(() => current?.lyrics && current.lyricsSynced ? parseLrc(current.lyrics) : [], [current]);
@@ -127,8 +135,8 @@ export function PlayerBar() {
           <Button variant="ghost" size="icon" onClick={player.next} aria-label={t("next")}>
             <SkipForward />
           </Button>
-          <Button variant="ghost" size="icon" className="hidden sm:inline-flex" onClick={player.cycleRepeat}
-                  aria-label={t(`repeat.${player.repeat}`)}>
+          <Button variant="ghost" size="icon" className="hidden sm:inline-flex" onClick={cycleRepeat}
+                  aria-label={t(`repeat.${player.repeat}`)} title={t(`repeat.${player.repeat}`)}>
             {player.repeat === "one" ? <Repeat1 className="text-primary" /> :
               <Repeat className={cn(player.repeat === "all" && "text-primary")} />}
           </Button>
@@ -215,7 +223,7 @@ export function PlayerBar() {
                   <Shuffle className={cn(player.shuffle && "text-primary")} />
                   {t("shuffle")}
                 </Button>
-                <Button variant="outline" size="sm" onClick={player.cycleRepeat}>
+                <Button variant="outline" size="sm" onClick={cycleRepeat}>
                   {player.repeat === "one" ? <Repeat1 className="text-primary" /> :
                     <Repeat className={cn(player.repeat === "all" && "text-primary")} />}
                   {t(`repeat.${player.repeat}`)}

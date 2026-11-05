@@ -2,7 +2,7 @@ import "server-only";
 
 import { graphql } from "@/gql";
 import { runMutation, runQuery } from "@/lib/graphql.server";
-import type { AlbumFilter, AlbumInput, AlbumKindInput, CreditKind, TopBy, TrackInput } from "@/gql/graphql";
+import type { AlbumFilter, AlbumInput, AlbumKindInput, CollectionInput, CreditKind, TopBy, TrackInput } from "@/gql/graphql";
 
 export const KindFieldsFragment = graphql(`
     fragment KindFields on AlbumKind { id nameSv nameEn isDefault }
@@ -73,6 +73,7 @@ const AlbumQuery = graphql(`
             averageRating ratingCount likeCount totalPlays
             createdAt lastModifiedAt
             spex { id title year revival parentId familyId categoryId categoryName }
+            collections { id title }
             tracks {
                 id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
                 lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing averageRating ratingCount
@@ -98,6 +99,34 @@ const SearchQuery = graphql(`
         }
     }
 `);
+
+const CollectionsQuery = graphql(`
+    query Collections {
+        collections {
+            id title description createdAt lastModifiedAt
+            albums {
+                id title year kind { ...KindFields } hasCover published trackCount durationMs averageRating ratingCount
+                spex { id title year revival parentId familyId categoryId categoryName }
+            }
+        }
+    }
+`);
+
+const CollectionQuery = graphql(`
+    query Collection($id: ID!) {
+        collection(id: $id) {
+            id title description createdAt lastModifiedAt
+            albums {
+                id title year kind { ...KindFields } hasCover published trackCount durationMs averageRating ratingCount
+                spex { id title year revival parentId familyId categoryId categoryName }
+            }
+        }
+    }
+`);
+
+const CollectionCreateMutation = graphql(`mutation CollectionCreate($input: CollectionInput!) { collectionCreate(input: $input) { id } }`);
+const CollectionUpdateMutation = graphql(`mutation CollectionUpdate($id: ID!, $input: CollectionInput!) { collectionUpdate(id: $id, input: $input) { id } }`);
+const CollectionDeleteMutation = graphql(`mutation CollectionDelete($id: ID!) { collectionDelete(id: $id) }`);
 
 const AlbumKindsQuery = graphql(`
     query AlbumKinds {
@@ -246,6 +275,26 @@ export async function getAlbum(id: string) {
 
 export async function search(q: string) {
   return (await runQuery(SearchQuery, { q }))?.search;
+}
+
+export async function getCollections() {
+  return (await runQuery(CollectionsQuery, {}))?.collections ?? [];
+}
+
+export async function getCollection(id: string) {
+  return (await runQuery(CollectionQuery, { id }))?.collection ?? null;
+}
+
+export async function collectionCreate(input: CollectionInput) {
+  return (await runMutation(CollectionCreateMutation, { input }))?.collectionCreate;
+}
+
+export async function collectionUpdate(id: string, input: CollectionInput) {
+  return runMutation(CollectionUpdateMutation, { id, input });
+}
+
+export async function collectionDelete(id: string) {
+  return runMutation(CollectionDeleteMutation, { id });
 }
 
 export async function getAlbumKinds() {
