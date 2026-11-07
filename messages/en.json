@@ -49,7 +49,8 @@
   },
   "Header": {
     "toggleLanguage": "Change language",
-    "toggleTheme": "Change theme"
+    "toggleTheme": "Change theme",
+    "toggleSidebar": "Show or hide the menu"
   },
   "AppSwitcher": {
     "heading": "Switch application",
@@ -394,6 +395,7 @@
   },
   "Search": {
     "title": "Search",
+    "query": "Search terms",
     "placeholder": "Search song, spex, melody…",
     "resultsFor": "Results for “{q}”",
     "hint": "Search albums, track titles, performers, melodies and lyrics. At least two characters.",
