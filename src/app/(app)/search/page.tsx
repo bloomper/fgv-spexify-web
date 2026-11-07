@@ -1,4 +1,6 @@
 import { getTranslations } from "next-intl/server";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { AlbumGrid } from "@/components/album/album-grid";
 import { TrackList } from "@/components/album/track-list.client";
 import { toRows } from "@/components/album/to-rows";
@@ -18,6 +20,11 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     return (
       <div className="space-y-6 p-4 sm:p-6">
         <h1 className="text-2xl font-semibold tracking-tight">{q ? t("resultsFor", { q }) : t("title")}</h1>
+        <form method="get" action="/search" role="search" className="flex max-w-xl gap-2">
+          <Input key={q} name="q" type="search" defaultValue={q} maxLength={200} placeholder={t("placeholder")}
+                 aria-label={t("query")} />
+          <Button type="submit">{t("title")}</Button>
+        </form>
         {!result && <p className="text-muted-foreground">{t("hint")}</p>}
         {result && result.albums.length === 0 && result.tracks.length === 0 && (
           <p className="text-muted-foreground">{t("none")}</p>

@@ -50,6 +50,9 @@ async function forward(request: NextRequest, { params }: Params): Promise<Respon
     }
   }
   out.set("Access-Control-Expose-Headers", TUS_RESPONSE_HEADERS.join(", "));
+  // The answer has no type of its own (an error is the server's text); never let a browser render it as a page
+  out.set("Content-Security-Policy", "sandbox; default-src 'none'");
+  out.set("X-Content-Type-Options", "nosniff");
   return new Response(request.method === "HEAD" ? null : upstream.body, { status: upstream.status, headers: out });
 }
 

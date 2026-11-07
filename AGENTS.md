@@ -19,7 +19,7 @@ lives in Navidrome per user (stars, playlists, play counts). Stack and setup: `R
 
 - `npm run dev` (port 3002) / `build` / `start`
 - `npm run lint`, `npm run typecheck` (covers `src/**` only)
-- `npm run test` (Vitest), `npm run test:e2e` (Playwright, `e2e/mock-backend.mjs` stands in for the server and Keycloak)
+- `npm run test` (Vitest), `npm run test:e2e` (Playwright on ports 3102/4102, `e2e/mock-backend.mjs` stands in for the server and Keycloak)
 - `npm run gql-codegen` — regenerate `src/gql/` from a sibling `fgv-spexify-server` checkout. Commit the result.
 
 **Don't run `npm run format`**: `.prettierrc` uses 2 spaces and the code base 4.
