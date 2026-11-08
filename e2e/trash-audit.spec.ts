@@ -78,8 +78,8 @@ test.describe("The change log", () => {
 
     await page.goto("/manage/audit");
     await expect(page.getByText("2 ändringar")).toBeVisible();
-    await page.getByLabel("Händelse").selectOption("UNPUBLISH");
-    await page.getByRole("button", { name: "Filtrera" }).click();
+    await page.getByRole("combobox", { name: "Händelse" }).click();
+    await page.getByRole("option", { name: "Avpublicerad" }).click();
     await expect(page).toHaveURL(/action=UNPUBLISH/);
     await expect(page.getByText("1 ändring", { exact: true })).toBeVisible();
     await expect(page.getByRole("link", {
@@ -88,12 +88,13 @@ test.describe("The change log", () => {
     })).toHaveAttribute("href", `/manage/albums/${uuidOf(1)}`);
     await expect(page.getByText("Publicerade albumet Opublicerat album")).toHaveCount(0);
 
-    await page.getByRole("link", { name: "Rensa filtret" }).click();
+    await page.getByRole("button", { name: "Rensa filtret" }).click();
     await expect(page).toHaveURL(/\/manage\/audit$/);
     await expect(page.getByText("2 ändringar")).toBeVisible();
-    await page.getByLabel("Sök i beskrivningen").fill("opublicerat");
-    await page.getByRole("button", { name: "Filtrera" }).click();
+    await page.getByRole("searchbox", { name: "Sök i beskrivningen…" }).fill("opublicerat");
+    await expect(page).toHaveURL(/q=opublicerat/);
     await expect(page.getByText("1 ändring", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Visa detaljer" }).click();
     await page.getByRole("link", { name: /^Historik för/ }).click();
     await expect(page.getByText("Visar ändringarna av en post.")).toBeVisible();
 
