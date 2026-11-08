@@ -144,7 +144,7 @@ typed text. Events: `album-create` (`defaultKind`), `track-upload`, `album-publi
 ## Application switcher
 
 The title in the header (`src/components/app-switcher.client.tsx`) opens a menu of the FGV applications: Spexregister,
-Nyuppsättning, Spexflix, Spexify, Spexgram and Spexarkivet. `getApplications()` (`src/utils/applications.server.ts`) lists the current one and
+Nyuppsättning, Spexflix, Spexify, Spexgram and Spexarkiv. `getApplications()` (`src/utils/applications.server.ts`) lists the current one and
 each other one whose `USER` role is in the access token and whose address is set (`SPEXREGISTER_WEB_URL`,
 `FGV_REVIVAL_WEB_URL`, `SPEXFLIX_WEB_URL`, `SPEXIFY_WEB_URL`, `SPEXGRAM_WEB_URL`,
 `ARCHIVE_WEB_URL`). The role is there because fgv-keycloak maps every web

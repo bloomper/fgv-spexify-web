@@ -68,7 +68,7 @@ The look (logo, favicon and colours) is FGV's, shared with Spexregister and Nyup
    | `SPEXREGISTER_WEB_URL`           | Spexregister, for links to a spex; also the application switcher          |
    | `FGV_REVIVAL_WEB_URL`            | Nyuppsättning, for the application switcher in the header                 |
    | `SPEXGRAM_WEB_URL`               | Spexgram, for the application switcher                                    |
-   | `ARCHIVE_WEB_URL`                | Spexarkivet, for the application switcher                                 |
+   | `ARCHIVE_WEB_URL`                | Spexarkiv, for the application switcher                                 |
 
 3. **Generate GraphQL types:**
    If you change GraphQL queries or the schema, regenerate types from a sibling `fgv-spexify-server` checkout:
