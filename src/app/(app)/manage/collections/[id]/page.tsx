@@ -30,7 +30,7 @@ export default async function EditCollectionPage({ params }: { params: Promise<{
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">{collection.title}</h1>
           <Link href={`/collections/${collection.id}`}
-                className="text-sm text-primary hover:underline">{t("view")}</Link>
+                className="text-sm text-primary hover:text-primary/80">{t("view")}</Link>
         </div>
         <CollectionEditor collection={{
           id: collection.id, title: collection.title, description: collection.description,

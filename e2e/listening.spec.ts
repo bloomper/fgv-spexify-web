@@ -2,6 +2,26 @@ import { uuidOf } from "./constants";
 import { expect, test } from "./fixtures";
 
 test.describe("Listening", () => {
+  test("an empty search explains itself, a too short word is pointed out at the field, and searching keeps the page", async ({ page, loginAs }) => {
+    await loginAs("listener");
+    await page.goto("/search");
+    await expect(page.getByText("Vad letar du efter?")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Eller bläddra bland alla album" })).toHaveAttribute("href", "/albums");
+
+    await page.goto("/search?q=a");
+    await expect(page.getByRole("heading", { level: 1, name: "Sök" })).toBeVisible();
+    await expect(page.getByLabel("Sökord")).toHaveAttribute("aria-invalid", "true");
+    await expect(page.getByText("Skriv minst två tecken.")).toBeVisible();
+    await expect(page.getByText("Vad letar du efter?")).toHaveCount(0);
+
+    // The search navigates client side: the document stays
+    await page.evaluate(() => { (window as unknown as { marker: number }).marker = 42; });
+    await page.getByLabel("Sökord").fill("duett");
+    await page.getByRole("button", { name: "Sök", exact: true }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Sökresultat för ”duett”" })).toBeVisible();
+    expect(await page.evaluate(() => (window as unknown as { marker?: number }).marker)).toBe(42);
+  });
+
   test("plays an album and shows what plays in the player", async ({ page, loginAs }) => {
     await loginAs("listener");
     await page.goto(`/albums/${uuidOf(1)}`);

@@ -30,7 +30,7 @@ export default async function EditAlbumPage({ params }: { params: Promise<{ id: 
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h1 className="text-2xl font-semibold tracking-tight">{album.title}</h1>
           <Link href={`/albums/${album.id}`}
-                className="text-sm text-primary hover:underline">{t("viewAsListener")}</Link>
+                className="text-sm text-primary hover:text-primary/80">{t("viewAsListener")}</Link>
         </div>
         <AlbumEditor album={album} kinds={kinds} />
         <RecordHistory entityId={album.id} path="/manage/audit" linkOf={auditLink} />

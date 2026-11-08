@@ -93,7 +93,7 @@ function CreditLinks({ value, kind }: { value: string; kind: "PERFORMER" | "MELO
   return names.map((name, i) => (
     <React.Fragment key={name}>
       {i > 0 && ", "}
-      <Link href={creditHref(kind, name)} className="hover:text-foreground hover:underline">{name}</Link>
+      <Link href={creditHref(kind, name)} className="hover:text-foreground">{name}</Link>
     </React.Fragment>
   ));
 }
@@ -107,7 +107,7 @@ function TrackSubtitle({ track, showAlbum }: { track: TrackRow; showAlbum?: bool
 
   if (showAlbum) {
     parts.push(<Link key="album" href={`/albums/${track.albumId}`}
-                     className="hover:text-foreground hover:underline">{track.albumTitle}</Link>);
+                     className="hover:text-foreground">{track.albumTitle}</Link>);
   }
   if (track.performers) {
     parts.push(<CreditLinks key="performers" value={track.performers} kind="PERFORMER" />);
@@ -354,7 +354,7 @@ export function TrackList({
                       <a key={`${link.videoId}-${link.startSeconds}`}
                          href={`${spexflixUrl}/videos/${link.videoId}?t=${link.startSeconds}`}
                          target="_blank" rel="noopener noreferrer"
-                         className="inline-flex items-center gap-1 text-xs text-primary underline-offset-2 hover:underline">
+                         className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80">
                         <Film className="size-3.5" />{t("watchInSpexflix", { video: link.videoTitle })}
                       </a>
                     ))}

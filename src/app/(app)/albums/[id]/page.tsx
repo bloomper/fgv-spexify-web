@@ -68,7 +68,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
                 {album.collections.map((collection, i) => (
                   <span key={collection.id}>
                     {i > 0 && ", "}
-                    <Link href={`/collections/${collection.id}`} className="text-primary hover:underline">{collection.title}</Link>
+                    <Link href={`/collections/${collection.id}`} className="text-primary hover:text-primary/80">{collection.title}</Link>
                   </span>
                 ))}
               </p>
@@ -85,7 +85,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
 
                   return (
                     <li key={spex.id} className="flex flex-wrap gap-x-2">
-                      <Link href={`/albums?spex=${spex.familyId}`} className="text-primary hover:underline">
+                      <Link href={`/albums?spex=${spex.familyId}`} className="text-primary hover:text-primary/80">
                         {t("allFromSpex", { title: spex.title ?? name })}
                       </Link>
                     </li>

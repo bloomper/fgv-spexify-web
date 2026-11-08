@@ -59,7 +59,7 @@ test.describe("The header on a phone", () => {
     await expect(name).toBeVisible();
     expect(await name.evaluate(element => element.scrollWidth <= element.clientWidth), "the name is not cut off").toBe(true);
     await expect(header.getByRole("searchbox")).toBeHidden();
-    await expect(header.getByRole("button", { name: "Visa eller dölj menyn" })).toBeVisible();
+    await expect(header.getByRole("button", { name: "Visa menyn" })).toBeVisible();
 
     // The sidebar button, the name, search, language and theme: all on screen, none on top of another
     const boxes: { x: number; width: number }[] = [];

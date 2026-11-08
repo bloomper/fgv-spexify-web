@@ -37,7 +37,7 @@ export default async function ManageAlbumsPage() {
                 <TableRow key={album.id}>
                   <TableCell className="whitespace-normal">
                     <Link href={`/manage/albums/${album.id}`}
-                          className="font-medium hover:underline">{album.title}</Link>
+                          className="font-medium hover:text-primary">{album.title}</Link>
                     {!album.kind.isDefault &&
                       <span className="ml-2 text-xs text-muted-foreground">{kindName(album.kind, locale)}</span>}
                   </TableCell>

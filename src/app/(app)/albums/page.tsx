@@ -86,7 +86,7 @@ export default async function AlbumsPage({ searchParams }: { searchParams: Promi
         {spexId && (
           <p className="flex flex-wrap items-baseline gap-x-3 text-sm">
             <span>{t("spexFilter", { title: spexTitle ?? "?" })}</span>
-            <Link href={link({})} className="text-primary hover:underline">{t("clearSpex")}</Link>
+            <Link href={link({})} className="text-primary hover:text-primary/80">{t("clearSpex")}</Link>
           </p>
         )}
         <nav aria-label={t("categories")} className="flex flex-wrap gap-2">

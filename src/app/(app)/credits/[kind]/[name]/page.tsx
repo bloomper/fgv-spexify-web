@@ -33,7 +33,7 @@ export default async function CreditPage({ params }: { params: Promise<{ kind: s
       <div className="space-y-6 p-4 sm:p-6">
         <div className="space-y-1">
           <Link href={`/credits/${segment}`}
-                className="text-sm text-primary hover:underline">{t(`kind.${segment}`)}</Link>
+                className="text-sm text-primary hover:text-primary/80">{t(`kind.${segment}`)}</Link>
           <h1 className="text-2xl font-semibold tracking-tight">{rows.length > 0 ? creditName(rows, name) : name}</h1>
         </div>
         {rows.length === 0 ? <p className="text-muted-foreground">{t("noTracks")}</p> : (

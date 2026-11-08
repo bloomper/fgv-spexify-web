@@ -354,7 +354,7 @@ export function AlbumEditor({ album, kinds }: { album: EditorAlbum; kinds: KindO
           <Upload className="size-6 text-muted-foreground" />
           <p className="text-sm">{t("dropFiles")}</p>
           <p className="text-xs text-muted-foreground">{t("formats")}</p>
-          <label className="cursor-pointer text-sm text-primary underline-offset-2 hover:underline">
+          <label className="cursor-pointer text-sm text-primary hover:text-primary/80">
             {t("chooseFiles")}
             <input type="file" multiple accept={ACCEPT} className="sr-only"
                    onChange={event => {

@@ -50,7 +50,11 @@
   "Header": {
     "toggleLanguage": "Byt språk",
     "toggleTheme": "Byt tema",
-    "toggleSidebar": "Visa eller dölj menyn"
+    "showMenu": "Visa menyn"
+  },
+  "Sidebar": {
+    "hideMenu": "Dölj menyn",
+    "showMenu": "Visa menyn"
   },
   "AppSwitcher": {
     "heading": "Byt applikation",
@@ -400,7 +404,10 @@
     "query": "Sökord",
     "placeholder": "Sök låt, spex, melodi…",
     "resultsFor": "Sökresultat för ”{q}”",
-    "hint": "Sök på album, låttitlar, medverkande, melodier och text. Minst två tecken.",
+    "emptyTitle": "Vad letar du efter?",
+    "hint": "Sök på album, låttitlar, medverkande, melodier och text.",
+    "browse": "Eller bläddra bland alla album",
+    "tooShort": "Skriv minst två tecken.",
     "none": "Inget hittades.",
     "albums": "Album",
     "tracks": "Låtar"

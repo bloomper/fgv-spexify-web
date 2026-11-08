@@ -35,7 +35,7 @@ export default async function ManageCollectionsPage() {
                   <TableRow key={collection.id}>
                     <TableCell className="whitespace-normal">
                       <Link href={`/manage/collections/${collection.id}`}
-                            className="font-medium hover:underline">{collection.title}</Link>
+                            className="font-medium hover:text-primary">{collection.title}</Link>
                     </TableCell>
                     <TableCell className="tabular-nums">{collection.albums.length}</TableCell>
                     <TableCell

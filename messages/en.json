@@ -50,7 +50,11 @@
   "Header": {
     "toggleLanguage": "Change language",
     "toggleTheme": "Change theme",
-    "toggleSidebar": "Show or hide the menu"
+    "showMenu": "Show menu"
+  },
+  "Sidebar": {
+    "hideMenu": "Hide menu",
+    "showMenu": "Show menu"
   },
   "AppSwitcher": {
     "heading": "Switch application",
@@ -400,7 +404,10 @@
     "query": "Search terms",
     "placeholder": "Search song, spex, melody…",
     "resultsFor": "Results for “{q}”",
-    "hint": "Search albums, track titles, performers, melodies and lyrics. At least two characters.",
+    "emptyTitle": "What are you looking for?",
+    "hint": "Search albums, track titles, performers, melodies and lyrics.",
+    "browse": "Or browse all albums",
+    "tooShort": "Type at least two characters.",
     "none": "Nothing found.",
     "albums": "Albums",
     "tracks": "Tracks"
