@@ -57,7 +57,9 @@
     "spexregister": "Spexregister",
     "revival": "Nyuppsättning",
     "spexflix": "Spexflix",
-    "spexify": "Spexify"
+    "spexify": "Spexify",
+    "spexgram": "Spexgram",
+    "archive": "Spexarkivet"
   },
   "NoAccess": {
     "title": "You do not have access",
