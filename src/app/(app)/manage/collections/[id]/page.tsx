@@ -26,9 +26,9 @@ export default async function EditCollectionPage({ params }: { params: Promise<{
       notFound();
     }
     return (
-      <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{collection.title}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{collection.title}</h1>
           <Link href={`/collections/${collection.id}`}
                 className="text-sm text-primary hover:text-primary/80">{t("view")}</Link>
         </div>

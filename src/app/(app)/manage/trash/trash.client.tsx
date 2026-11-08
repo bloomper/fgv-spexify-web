@@ -14,6 +14,7 @@ import {
   trashTrackAction,
 } from "@/app/(app)/manage/actions.server";
 import { useDialogs } from "@/components/dialogs.client";
+import { DataEmpty } from "@/components/data-empty";
 
 type Item = { id: string; title: string; trashedAt?: string | null; detail?: string; albumId?: string };
 
@@ -67,7 +68,7 @@ export function TrashList({ albums, tracks, admin }: { albums: Item[]; tracks: I
 
   return (
     <div className="space-y-6">
-      {albums.length === 0 && tracks.length === 0 && <p className="text-muted-foreground">{t("empty")}</p>}
+      {albums.length === 0 && tracks.length === 0 && <DataEmpty title={t("empty")} description={null} />}
       {admin && (albums.length > 0 || tracks.length > 0) && (
         <Button variant="destructive" disabled={pending} onClick={async () => {
           if (await confirm({ title: t("confirmEmpty"), confirmLabel: t("emptyTrash"), destructive: true })) {

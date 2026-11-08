@@ -6,6 +6,7 @@ import { CREDIT_KINDS, creditHref } from "@/lib/credits";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
 import { CreditTabs } from "../credit-tabs";
+import { DataEmpty } from "@/components/data-empty";
 
 export default async function CreditKindPage({ params }: { params: Promise<{ kind: string }> }) {
   return withPolicyPage(Policies.app.requireAccess, async () => {
@@ -20,11 +21,11 @@ export default async function CreditKindPage({ params }: { params: Promise<{ kin
     const credits = await getCredits(kind);
 
     return (
-      <div className="space-y-6 p-4 sm:p-6">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
+        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
         <p className="max-w-prose text-sm text-muted-foreground">{t(`text.${segment}`)}</p>
         <CreditTabs current={segment} />
-        {credits.length === 0 ? <p className="text-muted-foreground">{t("none")}</p> : (
+        {credits.length === 0 ? <DataEmpty title={t("none")} description={null} /> : (
           <ul className="grid gap-x-6 sm:grid-cols-2 lg:grid-cols-3">
             {credits.map(credit => (
               <li key={credit.name}>

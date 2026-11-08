@@ -40,6 +40,7 @@ import {
 } from "@/app/(app)/manage/actions.server";
 import { track as trackEvent } from "@/utils/umami";
 import { useDialogs } from "@/components/dialogs.client";
+import { DataEmpty } from "@/components/data-empty";
 
 export type EditorTrack = {
   id: string;
@@ -388,7 +389,7 @@ export function AlbumEditor({ album, kinds }: { album: EditorAlbum; kinds: KindO
             ))}
           </ul>
         )}
-        {album.tracks.length === 0 ? <p className="text-muted-foreground">{t("noTracks")}</p> : (
+        {album.tracks.length === 0 ? <DataEmpty title={t("noTracks")} description={null} /> : (
           <ol className="divide-y rounded-lg border">
             {album.tracks.map((track, index) => (
               <li key={track.id} className="flex flex-wrap items-center gap-2 px-3 py-2">

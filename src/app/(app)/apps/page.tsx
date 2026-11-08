@@ -14,9 +14,9 @@ export default async function AppsPage() {
     const serverUrl = (process.env.SUBSONIC_URL || process.env.BETTER_AUTH_URL || "").replace(/\/$/, "");
 
     return (
-      <div className="max-w-3xl space-y-6 p-4 sm:p-6">
+      <div className="max-w-3xl flex flex-1 flex-col gap-6 p-4 md:p-8">
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p
             className="text-muted-foreground">{t("intro", { months: data?.settings.appPasswordExpiryMonths ?? 12 })}</p>
         </div>

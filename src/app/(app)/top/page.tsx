@@ -12,6 +12,7 @@ import { decadesOf, parseDecade } from "@/utils/decades";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
 import { cn } from "@/utils/utils";
+import { DataEmpty } from "@/components/data-empty";
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const BY: TopBy[] = ["RATED", "LIKED", "PLAYED"];
@@ -70,10 +71,10 @@ export default async function TopPage({ searchParams }: { searchParams: Promise<
       .map(item => [item.id, value(item) ?? <AverageRating average={item.averageRating} count={item.ratingCount} stars />]));
 
     return (
-      <div className="space-y-5 p-4 sm:p-6">
+      <div className="flex flex-1 flex-col gap-5 p-4 md:p-8">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
             <p className="max-w-3xl text-pretty text-sm text-muted-foreground">{t(`text.${by}`)}</p>
           </div>
           <LinkSegments label={t("what")} items={[
@@ -104,14 +105,14 @@ export default async function TopPage({ searchParams }: { searchParams: Promise<
           data && data.topAlbums.length > 0
             ? <AlbumGrid albums={data.topAlbums} ranked
                          label={album => value(data.topAlbums.find(item => item.id === album.id)!)} />
-            : <p className="text-muted-foreground">{t("none")}</p>
+            : <DataEmpty title={t("none")} description={null} />
         ) : rows.length > 0 ? (
           <div className="space-y-3">
             <PlayAllButtons tracks={rows} />
             <TrackList tracks={rows} starred={listening.starred} playlists={listening.playlists} spexflixUrl={null}
                        showAlbum ranked stats={stats} />
           </div>
-        ) : <p className="text-muted-foreground">{t("none")}</p>}
+        ) : <DataEmpty title={t("none")} description={null} />}
       </div>
     );
   });

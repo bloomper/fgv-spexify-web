@@ -10,6 +10,7 @@ import { decadesOf } from "@/utils/decades";
 import { formatDate } from "@/utils/format";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
+import { DataEmpty } from "@/components/data-empty";
 
 const SHELF = 6;
 
@@ -23,10 +24,10 @@ export default async function HomePage() {
     const chip = "rounded-full border px-3 py-1 text-sm hover:bg-accent";
 
     return (
-      <div className="space-y-8 p-4 sm:p-6">
+      <div className="flex flex-1 flex-col gap-8 p-4 md:p-8">
         <section className="space-y-2">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("greeting", { name: me?.me.displayName ?? me?.me.username ?? "" })}
             </h1>
             <RandomRadioButton />
@@ -75,7 +76,7 @@ export default async function HomePage() {
         <HomeSection id="recent" title={t("recent")} more={{ href: "/albums?sort=PUBLISHED", label: t("allAlbums") }}>
           {home && home.recentAlbums.length > 0
             ? <AlbumGrid albums={home.recentAlbums.slice(0, SHELF * 2)} />
-            : <p className="text-muted-foreground">{t("empty")}</p>}
+            : <DataEmpty title={t("empty")} description={null} />}
         </HomeSection>
 
         {liked.length > 0 && (

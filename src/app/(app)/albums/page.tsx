@@ -10,6 +10,7 @@ import { decadesOf, parseDecade } from "@/utils/decades";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
 import { cn } from "@/utils/utils";
+import { DataEmpty } from "@/components/data-empty";
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SORTS: AlbumSort[] = ["YEAR_DESC", "YEAR_ASC", "TITLE", "PUBLISHED", "RATING", "LIKES", "PLAYS"];
@@ -69,9 +70,9 @@ export default async function AlbumsPage({ searchParams }: { searchParams: Promi
     const years = data?.years ?? [];
 
     return (
-      <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <div className="flex flex-wrap items-center gap-3">
             <Link href={link({ liked: !onlyLiked })} className={cn(chip(onlyLiked), "inline-flex items-center gap-1.5")}
                   aria-pressed={onlyLiked}>
@@ -123,7 +124,7 @@ export default async function AlbumsPage({ searchParams }: { searchParams: Promi
         </nav>
         {data && data.albums.length > 0
           ? <AlbumGrid albums={data.albums} />
-          : <p className="text-muted-foreground">{t("none")}</p>}
+          : <DataEmpty title={t("none")} description={null} />}
       </div>
     );
   });

@@ -9,6 +9,7 @@ import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
 import { Badge } from "@/components/ui/badge";
 import { PlaylistActions } from "./playlist-actions.client";
+import { DataEmpty } from "@/components/data-empty";
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
 
@@ -37,10 +38,10 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
     const editable = !playlist.readonly;
 
     return (
-      <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">{playlist.name}</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{playlist.name}</h1>
             {playlist.public && <Badge variant="outline">{t("public")}</Badge>}
           </div>
           {playlist.readonly && playlist.owner &&
@@ -57,7 +58,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
           <TrackList tracks={rows} starred={listening.starred} playlists={listening.playlists}
                      spexflixUrl={null} showAlbum
                      playlistId={editable && rows.length === playlist.entry.length ? id : undefined} />
-        ) : <p className="text-muted-foreground">{t("empty")}</p>}
+        ) : <DataEmpty title={t("empty")} description={null} />}
       </div>
     );
   });

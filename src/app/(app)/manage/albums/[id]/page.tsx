@@ -26,9 +26,9 @@ export default async function EditAlbumPage({ params }: { params: Promise<{ id: 
     }
 
     return (
-      <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight">{album.title}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{album.title}</h1>
           <Link href={`/albums/${album.id}`}
                 className="text-sm text-primary hover:text-primary/80">{t("viewAsListener")}</Link>
         </div>

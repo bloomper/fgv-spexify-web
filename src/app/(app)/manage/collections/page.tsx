@@ -7,6 +7,7 @@ import { getCollections } from "@/lib/catalog/catalog.server";
 import { formatInstant } from "@/utils/format";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
+import { DataEmpty } from "@/components/data-empty";
 
 export default async function ManageCollectionsPage() {
   return withPolicyPage(Policies.editor.requireEditor, async () => {
@@ -14,13 +15,13 @@ export default async function ManageCollectionsPage() {
     const collections = await getCollections();
 
     return (
-      <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight">{t("manageTitle")}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("manageTitle")}</h1>
           <Button nativeButton={false} render={<Link href="/manage/collections/new" />}><Plus />{t("new")}</Button>
         </div>
         <p className="max-w-prose text-sm text-muted-foreground">{t("manageText")}</p>
-        {collections.length === 0 ? <p className="text-muted-foreground">{t("none")}</p> : (
+        {collections.length === 0 ? <DataEmpty title={t("none")} description={null} /> : (
           <div className="rounded-lg border">
             <Table>
               <TableHeader>

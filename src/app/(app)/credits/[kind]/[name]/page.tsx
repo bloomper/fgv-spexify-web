@@ -8,6 +8,7 @@ import { getListeningState } from "@/lib/catalog/listening.server";
 import { CREDIT_KINDS } from "@/lib/credits";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
+import { DataEmpty } from "@/components/data-empty";
 
 export default async function CreditPage({ params }: { params: Promise<{ kind: string; name: string }> }) {
   return withPolicyPage(Policies.app.requireAccess, async () => {
@@ -30,13 +31,13 @@ export default async function CreditPage({ params }: { params: Promise<{ kind: s
     const rows = toRows(tracks);
 
     return (
-      <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
         <div className="space-y-1">
           <Link href={`/credits/${segment}`}
                 className="text-sm text-primary hover:text-primary/80">{t(`kind.${segment}`)}</Link>
-          <h1 className="text-2xl font-semibold tracking-tight">{rows.length > 0 ? creditName(rows, name) : name}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{rows.length > 0 ? creditName(rows, name) : name}</h1>
         </div>
-        {rows.length === 0 ? <p className="text-muted-foreground">{t("noTracks")}</p> : (
+        {rows.length === 0 ? <DataEmpty title={t("noTracks")} description={null} /> : (
           <>
             <PlayAllButtons tracks={rows} />
             <TrackList tracks={rows} starred={listening.starred} playlists={listening.playlists} spexflixUrl={null}

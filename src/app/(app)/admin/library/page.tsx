@@ -12,8 +12,8 @@ export default async function LibraryPage() {
     const status = await getLibraryStatus();
 
     return (
-      <div className="max-w-2xl space-y-6 p-4 sm:p-6">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+      <div className="max-w-2xl flex flex-1 flex-col gap-6 p-4 md:p-8">
+        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
         <p className="text-sm text-muted-foreground">{t("text")}</p>
         {status && (
           <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 rounded-lg border p-4 text-sm">

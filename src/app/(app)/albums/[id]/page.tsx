@@ -17,6 +17,7 @@ import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
 import { isEditor } from "@/utils/auth";
 import { kindName } from "@/utils/format";
+import { DataEmpty } from "@/components/data-empty";
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -46,7 +47,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
     const rows = toRows(album.tracks, albumListening?.plays);
 
     return (
-      <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
         <div className="flex flex-col gap-6 sm:flex-row">
           <CoverImage albumId={album.id} title={album.title}
                       className="w-48 shrink-0 self-center rounded-lg shadow sm:self-start" />
@@ -56,7 +57,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
               {main?.revival && <Badge variant="secondary">{t("revival")}</Badge>}
               {!album.published && <Badge variant="outline">{t("unpublished")}</Badge>}
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{album.title}</h1>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{album.title}</h1>
             <p className="text-sm text-muted-foreground">
               {[album.year, main?.categoryName, t("tracks", { count: album.trackCount }),
                 formatDuration(album.durationMs / 1000)].filter(Boolean).join(" · ")}
@@ -111,7 +112,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
         {rows.length > 0
           ? <TrackList tracks={rows} starred={listening.starred} playlists={listening.playlists}
                        spexflixUrl={me?.me.spexflixUser ? spexflixUrl() : null} />
-          : <p className="text-muted-foreground">{t("noTracks")}</p>}
+          : <DataEmpty title={t("noTracks")} description={null} />}
         {others.length > 0 && (
           <section aria-labelledby="same-spex" className="space-y-3">
             <h2 id="same-spex" className="text-lg font-semibold">{t("sameSpex")}</h2>

@@ -10,8 +10,8 @@ export default async function NewCollectionPage() {
     const data = await getAlbums({ includeUnpublished: true });
 
     return (
-      <div className="space-y-6 p-4 sm:p-6">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("new")}</h1>
+      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
+        <h1 className="text-2xl font-bold tracking-tight">{t("new")}</h1>
         <CollectionEditor albums={data?.albums ?? []} />
       </div>
     );

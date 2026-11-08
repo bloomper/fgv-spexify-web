@@ -16,9 +16,9 @@ export default async function ManageAlbumsPage() {
     const data = await getAlbums({ includeUnpublished: true });
 
     return (
-      <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight">{t("albums")}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("albums")}</h1>
           <Button nativeButton={false} render={<Link href="/manage/albums/new" />}><Plus />{t("newAlbum")}</Button>
         </div>
         <div className="rounded-lg border">
