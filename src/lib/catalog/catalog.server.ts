@@ -77,6 +77,7 @@ const AlbumQuery = graphql(`
             tracks {
                 id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
                 lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing averageRating ratingCount
+                numberId numberTitle spexipediaUrl
                 replayGain { trackGain trackPeak albumGain albumPeak }
                 videoLinks { videoId videoTitle chapterTitle startSeconds }
             }
@@ -147,6 +148,16 @@ const SpexSearchQuery = graphql(`
     query SpexSearch($q: String!) {
         spexSearch(q: $q) { id title year revival parentId categoryName }
     }
+`);
+
+const SpexNumbersQuery = graphql(`
+    query SpexNumbers($spexId: ID!) {
+        spexNumbers(spexId: $spexId) { id spexId act position title }
+    }
+`);
+
+const TrackSetNumberMutation = graphql(`
+    mutation TrackSetNumber($id: ID!, $numberId: ID) { trackSetNumber(id: $id, numberId: $numberId) { id } }
 `);
 
 const TracksByNavidromeIdsQuery = graphql(`
@@ -345,6 +356,22 @@ export const trackCreate = (albumId: string, uploadId: string) => runMutation(Tr
   uploadId,
 });
 export const trackUpdate = (id: string, input: TrackInput) => runMutation(TrackUpdateMutation, { id, input });
+export const trackSetNumber = (id: string, numberId: string | null) => runMutation(TrackSetNumberMutation, { id, numberId });
+
+/**
+ * The numbers in Spexipedia of the spex, for linking tracks; empty when Spexipedia cannot be reached.
+ */
+export async function getSpexNumbers(spexIds: string[]) {
+  const lists = await Promise.all(spexIds.map(async spexId => {
+    try {
+      return (await runQuery(SpexNumbersQuery, { spexId }))?.spexNumbers ?? [];
+    } catch {
+      return [];
+    }
+  }));
+
+  return lists.flat();
+}
 export const trackReplaceAudio = (id: string, uploadId: string) => runMutation(TrackReplaceAudioMutation, {
   id,
   uploadId,

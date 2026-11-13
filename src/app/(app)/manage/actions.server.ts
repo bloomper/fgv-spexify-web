@@ -20,6 +20,7 @@ import {
   trackRestore,
   tracksReorder,
   trackTrash,
+  trackSetNumber,
   trackUpdate,
 } from "@/lib/catalog/catalog.server";
 import { trashEmpty } from "@/lib/admin/admin.server";
@@ -147,6 +148,18 @@ export async function updateTrackAction(albumId: string, id: string, input: Trac
   requireId(id);
   return editor(async () => {
     await trackUpdate(id, input);
+    changed(albumId);
+    return null;
+  });
+}
+
+export async function setTrackNumberAction(albumId: string, id: string, numberId: string | null): Promise<ActionResult<null>> {
+  requireId(id);
+  if (numberId !== null) {
+    requireId(numberId);
+  }
+  return editor(async () => {
+    await trackSetNumber(id, numberId);
     changed(albumId);
     return null;
   });

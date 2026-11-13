@@ -15,7 +15,7 @@ import { type KindName, kindName } from "@/utils/format";
 export type KindOption = KindName & { id: string };
 
 /**
- * An album's fields. Its spex are searched in Spexregister, or it is marked as not about any; the title and year
+ * An album's fields. Its spex are searched in Spexipedia, or it is marked as not about any; the title and year
  * default to the main spex's.
  */
 export function AlbumForm({ kinds, initial, submitLabel, onSubmit }: {

@@ -64,6 +64,7 @@
     "spexflix": "Spexflix",
     "spexify": "Spexify",
     "spexgram": "Spexgram",
+    "spexipedia": "Spexipedia",
     "archive": "Spexarkiv"
   },
   "NoAccess": {
@@ -96,7 +97,7 @@
     "FORBIDDEN": "Du har inte behörighet att göra det.",
     "NOT_FOUND": "Albumet finns inte.",
     "BAD_REQUEST": "Uppgifterna är inte giltiga.",
-    "SPEXREGISTER_UNAVAILABLE": "Spexregistret är tillfälligt otillgängligt. Försök igen om en stund.",
+    "SPEXIPEDIA_UNAVAILABLE": "Spexipedia är tillfälligt otillgängligt. Försök igen om en stund.",
     "UNAUTHORIZED": "Du är inte inloggad.",
     "INTERNAL_ERROR": "Något gick fel. Försök igen.",
     "MAIL_UNAVAILABLE": "E-post kan inte skickas just nu. Försök igen senare.",
@@ -342,6 +343,7 @@
     "removeFromPlaylist": "Ta bort ur spellistan",
     "goToAlbum": "Gå till albumet",
     "watchInSpexflix": "Se i Spexflix: {video}",
+    "inSpexipedia": "I Spexipedia",
     "newPlaylistTitle": "Ny spellista",
     "createPlaylist": "Skapa",
     "plays": "{count, plural, =1 {Spelad # gång} other {Spelad # gånger}}",
@@ -530,7 +532,12 @@
     "lyricsAuthor": "Text",
     "arranger": "Arrangemang",
     "lyrics": "Sångtext",
-    "lyricsSynced": "Texten är synkroniserad (LRC med tidsangivelser)"
+    "lyricsSynced": "Texten är synkroniserad (LRC med tidsangivelser)",
+    "spexipediaNumber": "Nummer i Spexipedia",
+    "noSpexipediaNumber": "Inget nummer",
+    "otherSpexipediaNumber": "Ett nummer som inte hör till albumets spex",
+    "numberOption": "Akt {act}, nr {position}: {title}",
+    "spexipediaNumberHelp": "Vilken sång i spexet spåret är en inspelning av. Spåret visas då på spexets sida i Spexipedia."
   },
   "Trash": {
     "title": "Papperskorgen",
@@ -636,7 +643,7 @@
     "jobs": {
       "SPEX_REFRESH": {
         "title": "Uppdatering av spex",
-        "description": "Kopierar spexens aktuella titlar, år och kategorier från Spexregistret till albumen."
+        "description": "Kopierar spexens aktuella titlar, år och kategorier från Spexipedia till albumen; ändringar kommer också från dess ändringsflöde inom några minuter."
       },
       "UPLOAD_CLEANUP": {
         "title": "Städning av uppladdningar",

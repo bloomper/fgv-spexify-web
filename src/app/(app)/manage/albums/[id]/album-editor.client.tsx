@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -31,6 +32,7 @@ import {
   publishAlbumAction,
   publishTrackAction,
   removeCoverAction,
+  setTrackNumberAction,
   reorderAction,
   replaceAudioAction,
   trashAlbumAction,
@@ -59,7 +61,11 @@ export type EditorTrack = {
   published: boolean;
   listed: boolean;
   fileMissing: boolean;
+  numberId?: string | null;
 };
+
+/** A number of the album's spex in Spexipedia, which a track may be a recording of. */
+export type SpexNumber = { id: string; act: number; position: number; title: string };
 
 export type EditorAlbum = {
   id: string;
@@ -105,9 +111,15 @@ function useAction() {
   return { pending, run };
 }
 
-function TrackDialog({ albumId, track, onClose }: { albumId: string; track: EditorTrack; onClose: () => void }) {
+function TrackDialog({ albumId, track, numbers, onClose }: {
+  albumId: string;
+  track: EditorTrack;
+  numbers: SpexNumber[];
+  onClose: () => void
+}) {
   const t = useTranslations("Manage");
   const { pending, run } = useAction();
+  const [numberId, setNumberId] = useState(track.numberId ?? "");
   const [input, setInput] = useState<TrackInput>({
     discNumber: track.discNumber,
     trackNumber: track.trackNumber,
@@ -140,9 +152,17 @@ function TrackDialog({ albumId, track, onClose }: { albumId: string; track: Edit
               trackNumber: Number(input.trackNumber),
             });
 
-            if (result.ok) {
-              onClose();
+            if (!result.ok) {
+              return result;
             }
+            if (numberId !== (track.numberId ?? "")) {
+              const linked = await setTrackNumberAction(albumId, track.id, numberId || null);
+
+              if (!linked.ok) {
+                return linked;
+              }
+            }
+            onClose();
             return result;
           }, t("saved"));
         }}>
@@ -157,6 +177,24 @@ function TrackDialog({ albumId, track, onClose }: { albumId: string; track: Edit
                                                                                                maxLength={255} {...field("title")} />
             </div>
           </div>
+          {(numbers.length > 0 || track.numberId) && (
+            <div className="space-y-1">
+              <Label htmlFor="spexipedia-number">{t("spexipediaNumber")}</Label>
+              <NativeSelect id="spexipedia-number" className="w-full" value={numberId}
+                            onChange={event => setNumberId(event.target.value)}>
+                <NativeSelectOption value="">{t("noSpexipediaNumber")}</NativeSelectOption>
+                {track.numberId && !numbers.some(number => number.id === track.numberId) && (
+                  <NativeSelectOption value={track.numberId}>{t("otherSpexipediaNumber")}</NativeSelectOption>
+                )}
+                {numbers.map(number => (
+                  <NativeSelectOption key={number.id} value={number.id}>
+                    {t("numberOption", { act: number.act, position: number.position, title: number.title })}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+              <p className="text-xs text-muted-foreground">{t("spexipediaNumberHelp")}</p>
+            </div>
+          )}
           <div className="space-y-1"><Label htmlFor="performers">{t("performers")}</Label><Input id="performers"
                                                                                                  maxLength={1000} {...field("performers")} />
           </div>
@@ -192,7 +230,7 @@ function TrackDialog({ albumId, track, onClose }: { albumId: string; track: Edit
  * Editing an album: its fields, cover, publishing, and its tracks, which are uploaded here, edited, reordered,
  * published one by one and moved to the trash.
  */
-export function AlbumEditor({ album, kinds }: { album: EditorAlbum; kinds: KindOption[] }) {
+export function AlbumEditor({ album, kinds, numbers = [] }: { album: EditorAlbum; kinds: KindOption[]; numbers?: SpexNumber[] }) {
   const t = useTranslations("Manage");
   const { confirm } = useDialogs();
   const router = useRouter();
@@ -459,7 +497,7 @@ export function AlbumEditor({ album, kinds }: { album: EditorAlbum; kinds: KindO
         }}><Trash2 />{t("toTrash")}</Button>
       </section>
 
-      {editing && <TrackDialog albumId={album.id} track={editing} onClose={() => setEditing(null)} />}
+      {editing && <TrackDialog albumId={album.id} track={editing} numbers={numbers} onClose={() => setEditing(null)} />}
     </div>
   );
 }
