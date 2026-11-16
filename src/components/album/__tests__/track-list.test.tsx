@@ -145,6 +145,13 @@ describe("TrackList", () => {
     expect(within(document.body).queryAllByText(/goToAlbum/)).toHaveLength(0);
   });
 
+  it("links a track that records a number to the number in Spexipedia, for everyone", () => {
+    show([row("1", { spexipediaUrl: "https://spexipedia.test/spex/s1#number-n1" }), row("2")]);
+
+    expect(screen.getAllByRole("link", { name: /inSpexipedia/ })).toHaveLength(1);
+    expect(screen.getByRole("link", { name: /inSpexipedia/ })).toHaveAttribute("href", "https://spexipedia.test/spex/s1#number-n1");
+  });
+
   it("shows a play button in place of the number when a row is hovered", () => {
     show([row("1"), row("2", { fileMissing: true })]);
 

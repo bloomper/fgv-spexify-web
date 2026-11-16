@@ -5,19 +5,7 @@ import { useTransition } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import {
-  ArrowDown,
-  ArrowUp,
-  Download,
-  Film,
-  Heart,
-  ListPlus,
-  MoreHorizontal,
-  Pause,
-  Play,
-  Radio,
-  X,
-} from "lucide-react";
+import { ArrowDown, ArrowUp, BookOpenText, Download, Film, Heart, ListPlus, MoreHorizontal, Pause, Play, Radio, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -55,6 +43,8 @@ export type TrackRow = PlayerTrack & {
   listed: boolean;
   fileMissing: boolean;
   videoLinks?: { videoId: string; videoTitle: string; chapterTitle: string; startSeconds: number }[];
+  /** The number the track records, on its spex's page in Spexipedia, which is public. */
+  spexipediaUrl?: string | null;
   /** How often the user played it, from Navidrome; undefined when not known. */
   playCount?: number;
   /** When the user last played it. */
@@ -346,6 +336,14 @@ export function TrackList({
                   <div className="flex items-center gap-2 sm:hidden">
                     <RatingStars value={ratingOf(track)} />
                     <AverageRating average={track.averageRating} count={track.ratingCount} />
+                  </div>
+                )}
+                {track.spexipediaUrl && (
+                  <div className="mt-1">
+                    <a href={track.spexipediaUrl} target="_blank" rel="noopener noreferrer"
+                       className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80">
+                      <BookOpenText className="size-3.5" />{t("inSpexipedia")}
+                    </a>
                   </div>
                 )}
                 {spexflixUrl && track.videoLinks && track.videoLinks.length > 0 && (

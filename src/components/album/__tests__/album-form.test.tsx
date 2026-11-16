@@ -59,7 +59,7 @@ describe("AlbumForm", () => {
     }));
   });
 
-  it("searches Spexregister after two letters and picks a spex", async () => {
+  it("searches Spexipedia after two letters and picks a spex", async () => {
     const onSubmit = vi.fn().mockResolvedValue(true);
 
     render(<AlbumForm kinds={KINDS} submitLabel="Spara" onSubmit={onSubmit} />);
@@ -88,12 +88,12 @@ describe("AlbumForm", () => {
   });
 
   it("tells when the search fails", async () => {
-    searchSpexAction.mockResolvedValue({ ok: false, code: "UNAVAILABLE", message: "Spexregister svarar inte" });
+    searchSpexAction.mockResolvedValue({ ok: false, code: "UNAVAILABLE", message: "Spexipedia svarar inte" });
 
     render(<AlbumForm kinds={KINDS} submitLabel="Spara" onSubmit={vi.fn()} />);
     await userEvent.type(screen.getByLabelText("search"), "Ali");
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Spexregister svarar inte"));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Spexipedia svarar inte"));
   });
 
   it("starts from an album's values, adds more spex and makes another the main one", async () => {
