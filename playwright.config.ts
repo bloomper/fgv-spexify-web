@@ -16,7 +16,7 @@ const appEnv: Record<string, string> = {
     // Set here too, or a developer's .env.local (which points them at the local stack) would win over the mock
     SUBSONIC_URL: "",
     SPEXREGISTER_WEB_URL: "",
-    FGV_REVIVAL_WEB_URL: "",
+    REVIVAL_WEB_URL: "",
     SPEXFLIX_WEB_URL: "",
     SPEXIFY_WEB_URL: "",
     SPEXGRAM_WEB_URL: "",
