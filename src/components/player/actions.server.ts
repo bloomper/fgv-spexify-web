@@ -1,7 +1,7 @@
 "use server";
 
 import { getPlayQueue, savePlayQueue, scrobble } from "@/lib/subsonic.server";
-import { getRadio, getTracksByNavidromeIds } from "@/lib/catalog/catalog.server";
+import { getAlbum, getRadio, getTracksByNavidromeIds } from "@/lib/catalog/catalog.server";
 import type { PlayerTrack } from "@/components/player/player-provider.client";
 import { withPolicyAction } from "@/utils/route.server";
 import { Policies } from "@/utils/policy.server";
@@ -23,6 +23,8 @@ export async function scrobbleAction(navidromeId: string, submission: boolean): 
 type TrackLike = {
   id: string; title: string; albumId: string; albumTitle: string; performers?: string | null; durationMs: number;
   navidromeId?: string | null; lyrics?: string | null; lyricsSynced: boolean; replayGain?: PlayerTrack["replayGain"];
+  melody?: string | null; lyricsAuthor?: string | null; arranger?: string | null; spexipediaUrl?: string | null;
+  numberTitle?: string | null; numberKind?: PlayerTrack["numberKind"];
 };
 
 function toPlayerTrack(track: TrackLike): PlayerTrack {
@@ -30,7 +32,25 @@ function toPlayerTrack(track: TrackLike): PlayerTrack {
     id: track.id, title: track.title, albumId: track.albumId, albumTitle: track.albumTitle,
     performers: track.performers, durationMs: track.durationMs, navidromeId: track.navidromeId,
     lyrics: track.lyrics, lyricsSynced: track.lyricsSynced, replayGain: track.replayGain,
+    melody: track.melody, lyricsAuthor: track.lyricsAuthor, arranger: track.arranger,
+    spexipediaUrl: track.spexipediaUrl, numberTitle: track.numberTitle, numberKind: track.numberKind,
   };
+}
+
+/**
+ * The album's tracks that can be played, in order, for the play buttons on album covers. Null when the server could
+ * not be reached.
+ */
+export async function albumTracksAction(albumId: string): Promise<PlayerTrack[] | null> {
+  return withPolicyAction(Policies.app.requireAccess, async () => {
+    try {
+      const album = await getAlbum(albumId);
+
+      return (album?.tracks ?? []).filter(track => track.listed && !track.fileMissing).map(toPlayerTrack);
+    } catch {
+      return null;
+    }
+  });
 }
 
 /**

@@ -15,7 +15,18 @@ export type PlayerTrack = {
   lyrics?: string | null;
   lyricsSynced?: boolean;
   replayGain?: ReplayGain | null;
+  /** For the panel about the number in the full-screen player, where known. */
+  melody?: string | null;
+  lyricsAuthor?: string | null;
+  arranger?: string | null;
+  /** The number on its spex's page in Spexipedia. */
+  spexipediaUrl?: string | null;
+  numberTitle?: string | null;
+  numberKind?: NumberKind | null;
 };
+
+/** A number kind from Spexipedia, e.g. an overture. */
+export type NumberKind = { id: string; nameSv: string; nameEn: string };
 
 /** ReplayGain 2.0 values from the server: gains in dB, peaks as linear amplitudes. */
 export type ReplayGain = { trackGain: number; trackPeak: number; albumGain?: number | null; albumPeak?: number | null };
@@ -40,6 +51,8 @@ type PlayerState = {
   repeat: Repeat;
   playQueue: (tracks: PlayerTrack[], start?: number) => void;
   enqueue: (tracks: PlayerTrack[]) => void;
+  /** Puts the tracks right after the current one. */
+  playNext: (tracks: PlayerTrack[]) => void;
   toggle: () => void;
   next: () => void;
   previous: () => void;
@@ -241,6 +254,19 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       return [...existing, ...tracks];
     });
   }, [load]);
+
+  const playNext = useCallback((tracks: PlayerTrack[]) => {
+    if (tracks.length === 0) {
+      return;
+    }
+    setQueue(existing => {
+      if (existing.length === 0) {
+        load(tracks[0], true);
+        return [...tracks];
+      }
+      return [...existing.slice(0, index + 1), ...tracks, ...existing.slice(index + 1)];
+    });
+  }, [index, load]);
 
   const jump = useCallback((target: number) => {
     if (target < 0 || target >= queue.length) {
@@ -585,6 +611,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     repeat,
     playQueue,
     enqueue,
+    playNext,
     toggle,
     next,
     previous,
@@ -602,7 +629,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     move,
     clear,
     plays,
-  }), [queue, index, current, playing, failed, time, duration, shuffle, repeat, playQueue, enqueue, toggle, next, previous,
+  }), [queue, index, current, playing, failed, time, duration, shuffle, repeat, playQueue, enqueue, playNext, toggle, next, previous,
     seek, jump, setShuffle, cycleRepeat, settings, setVolume, toggleMute, setReplayGain, remove, move, clear, plays]);
 
   return (

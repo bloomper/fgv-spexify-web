@@ -27,6 +27,23 @@ const HomeQuery = graphql(`
         }
         categories { id name albumCount }
         years
+        albums {
+            id title year kind { ...KindFields } hasCover trackCount durationMs averageRating ratingCount
+            spex { id title year revival parentId familyId categoryId categoryName }
+        }
+        albumKinds { ...KindFields albumCount }
+        thisDayAlbums {
+            id title year kind { ...KindFields } hasCover trackCount durationMs averageRating ratingCount
+            spex { id title year revival parentId familyId categoryId categoryName }
+        }
+        numberKinds {
+            id nameSv nameEn trackCount
+            tracks(limit: 16) {
+                id albumId albumTitle title performers melody lyricsAuthor arranger durationMs navidromeId lyrics
+                lyricsSynced fileMissing spexipediaUrl numberTitle
+                replayGain { trackGain trackPeak albumGain albumPeak }
+            }
+        }
     }
 `);
 
@@ -54,6 +71,7 @@ const AlbumsQuery = graphql(`
         }
         categories { id name albumCount }
         years
+        albumKinds { ...KindFields albumCount }
     }
 `);
 
@@ -77,7 +95,7 @@ const AlbumQuery = graphql(`
             tracks {
                 id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
                 lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing averageRating ratingCount
-                numberId numberTitle spexipediaUrl
+                numberId numberTitle spexipediaUrl numberKind { id nameSv nameEn }
                 replayGain { trackGain trackPeak albumGain albumPeak }
                 videoLinks { videoId videoTitle chapterTitle startSeconds }
             }
@@ -244,7 +262,8 @@ const CreditTracksQuery = graphql(`
 const RadioQuery = graphql(`
     query Radio($trackId: ID, $albumId: ID, $limit: Int) {
         radio(trackId: $trackId, albumId: $albumId, limit: $limit) {
-            id albumId albumTitle title performers durationMs navidromeId lyrics lyricsSynced fileMissing
+            id albumId albumTitle title performers melody lyricsAuthor arranger durationMs navidromeId lyrics lyricsSynced
+            fileMissing spexipediaUrl numberTitle
             replayGain { trackGain trackPeak albumGain albumPeak }
         }
     }
