@@ -267,7 +267,9 @@
     "adminKinds": "Albumsorter",
     "credits": "Medverkande",
     "collections": "Samlingar",
-    "top": "Topplistan"
+    "top": "Topplistan",
+    "recent": "Senast spelat",
+    "tabs": "Bibliotek"
   },
   "Home": {
     "title": "Spexify",
@@ -290,7 +292,16 @@
     "topRated": "Topplistan: högst betyg",
     "wholeTopList": "Hela topplistan",
     "liked": "Gillat av dig",
-    "allLiked": "Allt du gillat"
+    "allLiked": "Allt du gillat",
+    "scrollBack": "Bläddra bakåt i {shelf}",
+    "scrollOn": "Bläddra framåt i {shelf}",
+    "showAll": "Visa alla",
+    "thisDay": "Den här dagen",
+    "premiered": "Premiär {year}",
+    "radio": "Radio",
+    "randomRadio": "Slumpradio",
+    "randomRadioHint": "Låtar från alla spex",
+    "radioFrom": "Radio: {title}"
   },
   "Albums": {
     "title": "Album",
@@ -312,7 +323,9 @@
       "RATING": "Högst betyg",
       "LIKES": "Mest gillat",
       "PLAYS": "Mest spelat"
-    }
+    },
+    "kinds": "Sorter",
+    "allKinds": "Alla sorter"
   },
   "Album": {
     "revival": "Nyuppsättning",
@@ -363,7 +376,12 @@
     "moveUp": "Flytta upp",
     "moveDown": "Flytta ner",
     "sameSpex": "Mer från samma spex",
-    "allFromSpex": "Alla album från {title}"
+    "allFromSpex": "Alla album från {title}",
+    "playAlbum": "Spela {title}",
+    "playFailed": "Albumet kunde inte spelas. Försök igen.",
+    "playNext": "Spela härnäst",
+    "goToMelody": "Gå till melodin",
+    "goToCredit": "Gå till {name}"
   },
   "Player": {
     "label": "Spelare",
@@ -400,7 +418,26 @@
     "removeFromQueue": "Ta bort {title} ur kön",
     "radioFailed": "Radion kunde inte startas. Försök igen.",
     "radioEmpty": "Det finns inga låtar att spela.",
-    "randomRadio": "Slumpradio"
+    "randomRadio": "Slumpradio",
+    "nowPlaying": "Spelas nu",
+    "openNowPlaying": "Visa spelaren i helskärm",
+    "closeNowPlaying": "Stäng helskärmen",
+    "tabs": {
+      "playing": "Spelas",
+      "lyrics": "Text",
+      "queue": "Kö",
+      "about": "Om numret"
+    },
+    "about": {
+      "number": "Nummer",
+      "kind": "Sort",
+      "performers": "Sjungs av",
+      "melody": "Melodi",
+      "lyricsAuthor": "Text",
+      "arranger": "Arrangemang",
+      "album": "Album",
+      "inSpexipedia": "I Spexipedia"
+    }
   },
   "Search": {
     "title": "Sök",
@@ -815,5 +852,10 @@
     "confirmDelete": "Radera samlingen?",
     "confirmDeleteText": "Albumen finns kvar.",
     "inCollections": "Ingår i"
+  },
+  "Recent": {
+    "title": "Senast spelat",
+    "lastPlayed": "Spelat {date}",
+    "empty": "Du har inte spelat något ännu."
   }
 }

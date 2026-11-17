@@ -267,7 +267,9 @@
     "adminKinds": "Album kinds",
     "credits": "Credits",
     "collections": "Collections",
-    "top": "Top list"
+    "top": "Top list",
+    "recent": "Recently played",
+    "tabs": "Library"
   },
   "Home": {
     "title": "Spexify",
@@ -290,7 +292,16 @@
     "topRated": "Top list: highest rated",
     "wholeTopList": "The whole top list",
     "liked": "Liked by you",
-    "allLiked": "Everything you like"
+    "allLiked": "Everything you like",
+    "scrollBack": "Scroll back in {shelf}",
+    "scrollOn": "Scroll on in {shelf}",
+    "showAll": "Show all",
+    "thisDay": "This day",
+    "premiered": "Premiered {year}",
+    "radio": "Radio",
+    "randomRadio": "Random radio",
+    "randomRadioHint": "Songs from every spex",
+    "radioFrom": "Radio: {title}"
   },
   "Albums": {
     "title": "Albums",
@@ -312,7 +323,9 @@
       "RATING": "Highest rated",
       "LIKES": "Most liked",
       "PLAYS": "Most played"
-    }
+    },
+    "kinds": "Kinds",
+    "allKinds": "All kinds"
   },
   "Album": {
     "revival": "Revival",
@@ -363,7 +376,12 @@
     "moveUp": "Move up",
     "moveDown": "Move down",
     "sameSpex": "More from the same spex",
-    "allFromSpex": "All albums of {title}"
+    "allFromSpex": "All albums of {title}",
+    "playAlbum": "Play {title}",
+    "playFailed": "The album could not be played. Try again.",
+    "playNext": "Play next",
+    "goToMelody": "Go to the melody",
+    "goToCredit": "Go to {name}"
   },
   "Player": {
     "label": "Player",
@@ -400,7 +418,26 @@
     "removeFromQueue": "Remove {title} from the queue",
     "radioFailed": "The radio could not be started. Try again.",
     "radioEmpty": "There are no tracks to play.",
-    "randomRadio": "Random radio"
+    "randomRadio": "Random radio",
+    "nowPlaying": "Now playing",
+    "openNowPlaying": "Show the player in full screen",
+    "closeNowPlaying": "Close full screen",
+    "tabs": {
+      "playing": "Playing",
+      "lyrics": "Lyrics",
+      "queue": "Queue",
+      "about": "About"
+    },
+    "about": {
+      "number": "Number",
+      "kind": "Kind",
+      "performers": "Sung by",
+      "melody": "Melody",
+      "lyricsAuthor": "Lyrics",
+      "arranger": "Arrangement",
+      "album": "Album",
+      "inSpexipedia": "In Spexipedia"
+    }
   },
   "Search": {
     "title": "Search",
@@ -815,5 +852,10 @@
     "confirmDelete": "Delete the collection?",
     "confirmDeleteText": "The albums stay.",
     "inCollections": "In"
+  },
+  "Recent": {
+    "title": "Recently played",
+    "lastPlayed": "Played {date}",
+    "empty": "You have not played anything yet."
   }
 }

@@ -3,9 +3,27 @@
 import * as React from "react";
 import { useTransition } from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, BookOpenText, Download, Film, Heart, ListPlus, MoreHorizontal, Pause, Play, Radio, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  BookOpenText,
+  Download,
+  Film,
+  Heart,
+  ListEnd,
+  ListPlus,
+  ListStart,
+  MicVocal,
+  MoreHorizontal,
+  Music,
+  Pause,
+  Play,
+  Radio,
+  Shuffle,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -33,6 +51,7 @@ import { formatDate } from "@/utils/format";
 import { useDialogs } from "@/components/dialogs.client";
 import { track as trackEvent } from "@/utils/umami";
 import { useServerState } from "@/hooks/use-server-state.client";
+import { NumberKindIcon } from "@/components/album/number-kind-icon";
 
 export type TrackRow = PlayerTrack & {
   discNumber: number;
@@ -128,6 +147,7 @@ export function TrackList({
                             playlistId,
                           }: Props) {
   const t = useTranslations("Album");
+  const locale = useLocale();
   const player = usePlayer();
   const radio = useRadio();
   const { prompt, choose } = useDialogs();
@@ -321,6 +341,7 @@ export function TrackList({
               )}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
+                  {track.numberKind && <NumberKindIcon kind={track.numberKind} locale={locale} />}
                   <span className="truncate text-sm font-medium">{track.title}</span>
                   {!track.listed && <Badge variant="outline">{t("unpublished")}</Badge>}
                   {track.fileMissing && <Badge variant="destructive">{t("fileMissing")}</Badge>}
@@ -397,8 +418,11 @@ export function TrackList({
                   <MoreHorizontal />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => player.playNext([track])} disabled={track.fileMissing}>
+                    <ListStart />{t("playNext")}
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => player.enqueue([track])} disabled={track.fileMissing}>
-                    <ListPlus />{t("addToQueue")}
+                    <ListEnd />{t("addToQueue")}
                   </DropdownMenuItem>
                   {track.listed && !track.fileMissing && (
                     <DropdownMenuItem onClick={() => radio.start({ trackId: track.id })} disabled={radio.pending}>
@@ -461,6 +485,29 @@ export function TrackList({
                       {t("goToAlbum")}
                     </DropdownMenuItem>
                   )}
+                  {(track.melody || track.performers) && <DropdownMenuSeparator />}
+                  {track.melody && (
+                    <DropdownMenuItem render={<Link href={creditHref("MELODY", track.melody.trim())} />}>
+                      <Music />{t("goToMelody")}
+                    </DropdownMenuItem>
+                  )}
+                  {track.performers && splitCredits(track.performers).slice(0, 3).map(name => (
+                    <DropdownMenuItem key={name} render={<Link href={creditHref("PERFORMER", name)} />}>
+                      <MicVocal />{t("goToCredit", { name })}
+                    </DropdownMenuItem>
+                  ))}
+                  {track.spexipediaUrl && (
+                    <DropdownMenuItem render={<a href={track.spexipediaUrl} target="_blank" rel="noopener noreferrer" />}>
+                      <BookOpenText />{t("inSpexipedia")}
+                    </DropdownMenuItem>
+                  )}
+                  {spexflixUrl && track.videoLinks?.map(link => (
+                    <DropdownMenuItem key={`${link.videoId}-${link.startSeconds}`}
+                                      render={<a href={`${spexflixUrl}/videos/${link.videoId}?t=${link.startSeconds}`}
+                                                 target="_blank" rel="noopener noreferrer" />}>
+                      <Film />{t("watchInSpexflix", { video: link.videoTitle })}
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </li>
@@ -479,17 +526,17 @@ export function PlayAllButtons({ tracks, radioAlbumId }: { tracks: TrackRow[]; r
 
   return (
     <div className="flex flex-wrap gap-2">
-      <Button onClick={() => player.playQueue(playable, 0)} disabled={playable.length === 0}>
-        <Play />{t("playAll")}
+      <Button size="lg" className="rounded-full px-6" onClick={() => player.playQueue(playable, 0)} disabled={playable.length === 0}>
+        <Play className="fill-current" />{t("playAll")}
       </Button>
-      <Button variant="outline" onClick={() => {
+      <Button size="lg" variant="outline" className="rounded-full" onClick={() => {
         player.setShuffle(true);
         player.playQueue(playable, Math.floor(Math.random() * playable.length));
       }} disabled={playable.length === 0}>
-        {t("shuffle")}
+        <Shuffle />{t("shuffle")}
       </Button>
       {radioAlbumId && (
-        <Button variant="outline" onClick={() => radio.start({ albumId: radioAlbumId })} disabled={radio.pending}
+        <Button size="lg" variant="outline" className="rounded-full" onClick={() => radio.start({ albumId: radioAlbumId })} disabled={radio.pending}
                 title={t("albumRadioHint")}>
           <Radio />{t("albumRadio")}
         </Button>

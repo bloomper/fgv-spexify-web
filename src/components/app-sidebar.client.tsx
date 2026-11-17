@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import {
   Drama,
   Heart,
+  History,
   House,
   Layers,
   Library,
@@ -76,6 +77,7 @@ export function AppSidebar({ roles, accountUrl, ...props }: AppSidebarProps) {
       { title: t("Nav.top"), url: "/top", icon: Trophy, isActive: pathname.startsWith("/top") },
       { title: t("Nav.collections"), url: "/collections", icon: Layers, isActive: pathname.startsWith("/collections") },
       { title: t("Nav.starred"), url: "/starred", icon: Heart, isActive: pathname.startsWith("/starred") },
+      { title: t("Nav.recent"), url: "/recent", icon: History, isActive: pathname.startsWith("/recent") },
       { title: t("Nav.playlists"), url: "/playlists", icon: ListMusic, isActive: pathname.startsWith("/playlists") },
       { title: t("Nav.credits"), url: "/credits", icon: Users, isActive: pathname.startsWith("/credits") },
       { title: t("Nav.apps"), url: "/apps", icon: Smartphone, isActive: pathname.startsWith("/apps") },
