@@ -27,7 +27,8 @@ test.describe("The application shell", () => {
     await loginAs("listener");
 
     await expect(page.getByRole("heading", { level: 1, name: "Hej Lisa Lyssnare!" })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Nobel/ })).toBeVisible();
+    // The album is on more shelves than this one (its decade, its kind)
+    await expect(page.getByRole("list", { name: "Senast publicerat", exact: true }).getByRole("link", { name: /Nobel/ })).toBeVisible();
     await expect(page.getByText("Opublicerat album")).toHaveCount(0);
   });
 });
