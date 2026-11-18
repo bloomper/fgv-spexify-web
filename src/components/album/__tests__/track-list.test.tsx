@@ -6,7 +6,7 @@ import { TrackList, type TrackRow } from "@/components/album/track-list.client";
 import { DialogsProvider } from "@/components/dialogs.client";
 
 const player = vi.hoisted(() => ({
-  current: null as null | { id: string }, playing: false, playQueue: vi.fn(), toggle: vi.fn(), enqueue: vi.fn(),
+  current: null as null | { id: string }, playing: false, playQueue: vi.fn(), toggle: vi.fn(), enqueue: vi.fn(), playNext: vi.fn(),
   plays: {} as Record<string, { count: number; at: string }>,
 }));
 const radio = vi.hoisted(() => ({ start: vi.fn(), pending: false }));
@@ -110,6 +110,24 @@ describe("TrackList", () => {
     expect(prompt).not.toHaveBeenCalled();
     await waitFor(() => expect(actions.addToPlaylistAction).toHaveBeenCalledWith(null, "Duetter", ["nd-1"]));
     expect(toast.success).toHaveBeenCalledWith("addedToPlaylist");
+  });
+
+  it("plays a track next or last, shows its number kind and links its credits from its menu", async () => {
+    show([row("1", {
+      performers: "Anna, Bo", melody: "Yesterday (The Beatles)", spexipediaUrl: "https://spexipedia.test/n",
+      numberKind: { id: "k1", nameSv: "Final", nameEn: "Finale" },
+    })]);
+
+    expect(screen.getByRole("img", { name: "Final" })).toHaveTextContent("F");
+    await userEvent.click(screen.getByRole("button", { name: /more/ }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "playNext" }));
+    expect(player.playNext).toHaveBeenCalledWith([expect.objectContaining({ id: "1" })]);
+
+    await userEvent.click(screen.getByRole("button", { name: /more/ }));
+    expect((await screen.findByText("goToMelody")).closest("a")).toHaveAttribute("href", expect.stringContaining("/credits/"));
+    expect(screen.getAllByText(/goToCredit/)).toHaveLength(2);
+    await userEvent.click(screen.getByRole("menuitem", { name: "addToQueue" }));
+    expect(player.enqueue).toHaveBeenCalled();
   });
 
   it("on a playlist removes a track by its position", async () => {

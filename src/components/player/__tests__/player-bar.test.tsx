@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { PlayerBar } from "@/components/player/player-bar.client";
 import type { PlayerTrack } from "@/components/player/player-provider.client";
@@ -14,6 +14,7 @@ const track = (id: string, extra: Partial<PlayerTrack> = {}): PlayerTrack =>
 const player = vi.hoisted(() => ({ state: {} as Record<string, unknown> }));
 
 vi.mock("@/components/player/player-provider.client", () => ({ usePlayer: () => player.state }));
+vi.mock("@/components/player/actions.server", () => ({ albumTracksAction: vi.fn(), radioAction: vi.fn() }));
 
 function playing(overrides: Record<string, unknown> = {}) {
   const queue = [track("1", { performers: "Kören" }), track("2")];
@@ -75,7 +76,8 @@ describe("PlayerBar", () => {
     expect(within(bar()).getByText("Kören · Nobel")).toBeInTheDocument();
     expect(within(bar()).getByRole("link")).toHaveAttribute("href", "/albums/7");
     // Until the audio knows its duration, the track's own is used
-    expect(within(bar()).getByText("0:30 / 2:05")).toBeInTheDocument();
+    expect(within(bar()).getByText("0:30")).toBeInTheDocument();
+    expect(within(bar()).getByText("2:05")).toBeInTheDocument();
     expect(screen.getByRole("slider", { name: "seek" })).toHaveAttribute("max", "125");
 
     fireEvent.click(screen.getByRole("button", { name: "play" }));
@@ -100,7 +102,7 @@ describe("PlayerBar", () => {
     expect(screen.getByRole("button", { name: "pause" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "shuffle" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: "repeat.one" })).toBeInTheDocument();
-    expect(within(bar()).getByText("0:00 / 1:30")).toBeInTheDocument();
+    expect(within(bar()).getByText("1:30")).toBeInTheDocument();
     expect(within(bar()).getByText("Nobel")).toBeInTheDocument();
 
     playing({ repeat: "all" });
@@ -119,7 +121,7 @@ describe("PlayerBar", () => {
     expect(state.toggle).toHaveBeenCalled();
   });
 
-  it("lists the queue, jumps in it, and offers shuffle and repeat there", () => {
+  it("lists the queue, jumps in it, moves and removes tracks", () => {
     const state = playing({ shuffle: true, repeat: "all" });
 
     render(<PlayerBar />);
@@ -141,10 +143,6 @@ describe("PlayerBar", () => {
     fireEvent.click(within(items[1]).getByRole("button", { name: /removeFromQueue/ }));
     expect(state.remove).toHaveBeenCalledWith(1);
 
-    fireEvent.click(within(panel).getByRole("button", { name: /shuffle/ }));
-    expect(state.setShuffle).toHaveBeenCalledWith(false);
-    fireEvent.click(within(panel).getByRole("button", { name: /repeat.all/ }));
-    expect(state.cycleRepeat).toHaveBeenCalled();
   });
 
   it("follows synced lyrics and seeks to a line", () => {
@@ -193,5 +191,103 @@ describe("PlayerBar", () => {
     expect(state.setVolume).toHaveBeenCalledWith(0.3);
     fireEvent.click(screen.getByRole("button", { name: "mute" }));
     expect(state.toggleMute).toHaveBeenCalled();
+  });
+
+  it("opens the full-screen player with its controls, the lyrics, the queue and the number", () => {
+    const lyrics = "[00:01.00]Första raden\n[00:09.00]Tredje raden";
+    const state = playing({
+      time: 2,
+      current: track("1", {
+        lyrics, lyricsSynced: true, performers: "Kören", melody: "Yesterday (The Beatles)", lyricsAuthor: "Lisa",
+        arranger: "Arne", numberTitle: "Ouvertyr", numberKind: { id: "k1", nameSv: "Ouvertyr", nameEn: "Overture" },
+        spexipediaUrl: "https://spexipedia.test/spex/1#number-1",
+      }),
+    });
+
+    render(<PlayerBar />);
+    fireEvent.click(screen.getByRole("button", { name: "openNowPlaying" }));
+
+    const full = screen.getByRole("dialog", { name: "nowPlaying" });
+
+    fireEvent.click(within(full).getByRole("button", { name: "play" }));
+    fireEvent.click(within(full).getByRole("button", { name: "next" }));
+    fireEvent.click(within(full).getByRole("button", { name: "previous" }));
+    fireEvent.click(within(full).getByRole("button", { name: "shuffle" }));
+    fireEvent.click(within(full).getByRole("button", { name: "repeat.off" }));
+    fireEvent.change(within(full).getByRole("slider", { name: "seek" }), { target: { value: "30" } });
+    expect(state.toggle).toHaveBeenCalled();
+    expect(state.next).toHaveBeenCalled();
+    expect(state.previous).toHaveBeenCalled();
+    expect(state.setShuffle).toHaveBeenCalledWith(true);
+    expect(state.cycleRepeat).toHaveBeenCalled();
+    expect(state.seek).toHaveBeenCalledWith(30);
+    expect(within(full).getByRole("img", { name: "Ouvertyr" })).toBeInTheDocument();
+
+    // The lyrics follow the playing line, and a line seeks
+    expect(within(full).getByText("Första raden").closest("li")).toHaveAttribute("aria-current", "true");
+    fireEvent.click(within(full).getByText("Tredje raden"));
+    expect(state.seek).toHaveBeenCalledWith(9);
+
+    fireEvent.click(within(full).getByRole("tab", { name: "tabs.queue" }));
+    expect(within(full).getAllByRole("button", { name: /removeFromQueue/ })).toHaveLength(2);
+
+    fireEvent.click(within(full).getByRole("tab", { name: "tabs.about" }));
+    expect(within(full).getByRole("link", { name: "Yesterday (The Beatles)" })).toHaveAttribute("href", expect.stringContaining("/credits/"));
+    expect(within(full).getByRole("link", { name: "Kören" })).toBeInTheDocument();
+    expect(within(full).getByText("about.inSpexipedia").closest("a")).toHaveAttribute("href", "https://spexipedia.test/spex/1#number-1");
+
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("dialog", { name: "nowPlaying" })).not.toBeInTheDocument();
+  });
+
+  it("clears the queue from the full-screen player and closes it", () => {
+    const state = playing();
+
+    render(<PlayerBar />);
+    fireEvent.click(screen.getByRole("button", { name: "openNowPlaying" }));
+
+    const full = screen.getByRole("dialog", { name: "nowPlaying" });
+
+    // Without lyrics the panel beside the cover is the queue
+    expect(within(full).queryByRole("tab", { name: "tabs.lyrics" })).not.toBeInTheDocument();
+    fireEvent.click(within(full).getByRole("button", { name: /clearQueue/ }));
+    expect(state.clear).toHaveBeenCalled();
+    expect(screen.queryByRole("dialog", { name: "nowPlaying" })).not.toBeInTheDocument();
+  });
+
+  describe("on a phone", () => {
+    beforeEach(() => {
+      window.innerWidth = 390;
+    });
+
+    afterEach(() => {
+      window.innerWidth = 1024;
+    });
+
+    it("is a mini player that plays, skips and opens the full-screen player", () => {
+      const state = playing({ time: 25 });
+
+      render(<PlayerBar />);
+      expect(within(bar()).getByText("Kören")).toBeInTheDocument();
+      expect(screen.queryByRole("slider", { name: "volume" })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "play" }));
+      fireEvent.click(screen.getByRole("button", { name: "next" }));
+      expect(state.toggle).toHaveBeenCalled();
+      expect(state.next).toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole("button", { name: "openNowPlaying" }));
+      const full = screen.getByRole("dialog", { name: "nowPlaying" });
+
+      fireEvent.click(within(full).getByRole("button", { name: "closeNowPlaying" }));
+      expect(screen.queryByRole("dialog", { name: "nowPlaying" })).not.toBeInTheDocument();
+    });
+
+    it("says in the mini player when a track cannot be played", () => {
+      playing({ failed: true });
+
+      render(<PlayerBar />);
+      expect(screen.getByRole("alert")).toHaveTextContent("error");
+      expect(screen.getByRole("button", { name: "retry" })).toBeInTheDocument();
+    });
   });
 });

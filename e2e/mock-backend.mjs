@@ -313,6 +313,10 @@ const resolvers = {
     recentAlbums: state.albums.filter(album => album.published && !album.trashedAt).map(album => withCounts(persona, album)),
     categories: [{ id: uuidOf(1), name: "Chalmersspexet", albumCount: 1 }],
     years: [1975],
+    albums: state.albums.filter(album => album.published && !album.trashedAt).map(album => withCounts(persona, album)),
+    albumKinds: sortedKinds().map(kind => ({ ...kindOf(kind.id), albumCount: state.albums.filter(album => album.kindId === kind.id).length })),
+    thisDayAlbums: [],
+    numberKinds: [],
   }),
   Albums: (persona, { filter }) => ({
     albums: visibleAlbums(persona).filter(album => album.published || filter?.includeUnpublished)
@@ -321,9 +325,11 @@ const resolvers = {
       .filter(album => !filter?.fromYear || (album.year ?? 0) >= filter.fromYear)
       .filter(album => !filter?.toYear || (album.year ?? 0) <= filter.toYear)
       .sort((a, b) => filter?.sort === "TITLE" ? a.title.localeCompare(b.title, "sv") : filter?.sort === "YEAR_ASC" ? (a.year ?? 0) - (b.year ?? 0) : 0)
+      .filter(album => !filter?.kindId || album.kindId === filter.kindId)
       .map(album => withCounts(persona, album)),
     categories: [{ id: uuidOf(1), name: "Chalmersspexet", albumCount: 1 }],
     years: [1975],
+    albumKinds: sortedKinds().map(kind => ({ ...kindOf(kind.id), albumCount: state.albums.filter(album => album.kindId === kind.id).length })),
   }),
   SpexAlbums: (persona, { filter }) => ({
     albums: visibleAlbums(persona).filter(album => album.published)

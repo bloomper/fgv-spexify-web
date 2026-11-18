@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Heart } from "lucide-react";
 import { AlbumGrid } from "@/components/album/album-grid";
 import { SortSelect } from "@/components/sort-select.client";
@@ -10,17 +10,20 @@ import { decadesOf, parseDecade } from "@/utils/decades";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
 import { cn } from "@/utils/utils";
+import { kindName } from "@/utils/format";
 import { DataEmpty } from "@/components/data-empty";
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SORTS: AlbumSort[] = ["YEAR_DESC", "YEAR_ASC", "TITLE", "PUBLISHED", "RATING", "LIKES", "PLAYS"];
 
-type Params = { category?: string; year?: string; decade?: string; spex?: string; sort?: string; liked?: string };
+type Params = { category?: string; year?: string; decade?: string; spex?: string; sort?: string; liked?: string; kind?: string };
 
 export default async function AlbumsPage({ searchParams }: { searchParams: Promise<Params> }) {
   return withPolicyPage(Policies.app.requireAccess, async () => {
     const t = await getTranslations("Albums");
-    const { category, year, decade, spex, sort, liked } = await searchParams;
+    const { category, year, decade, spex, sort, liked, kind } = await searchParams;
+    const locale = await getLocale();
+    const kindId = kind && ID.test(kind) ? kind : null;
     const categoryId = category && ID.test(category) ? category : null;
     const yearNumber = year && /^\d{4}$/.test(year) ? Number(year) : null;
     const decadeNumber = yearNumber ? Math.floor(yearNumber / 10) * 10 : parseDecade(decade);
@@ -33,6 +36,7 @@ export default async function AlbumsPage({ searchParams }: { searchParams: Promi
       spexId,
       sort: sortBy,
       liked: onlyLiked || null,
+      kindId,
       fromYear: !yearNumber && decadeNumber ? decadeNumber : null,
       toYear: !yearNumber && decadeNumber ? decadeNumber + 9 : null,
     });
@@ -45,6 +49,7 @@ export default async function AlbumsPage({ searchParams }: { searchParams: Promi
       decade: decadeNumber,
       sort: sortBy === "YEAR_DESC" ? null : sortBy,
       liked: onlyLiked,
+      kind: kindId,
     };
     const link = (changes: Partial<typeof current>) => {
       const params = { ...current, ...changes };
@@ -58,6 +63,9 @@ export default async function AlbumsPage({ searchParams }: { searchParams: Promi
       } else if (params.decade) {
         query.set("decade", String(params.decade));
       }
+      if (params.kind) {
+        query.set("kind", params.kind);
+      }
       if (params.liked) {
         query.set("liked", "1");
       }
@@ -68,6 +76,8 @@ export default async function AlbumsPage({ searchParams }: { searchParams: Promi
     };
     const chip = (active: boolean) => cn("rounded-full border px-3 py-1 text-sm", active ? "bg-primary text-primary-foreground" : "hover:bg-accent");
     const years = data?.years ?? [];
+    // Kinds are configured by admins; those without albums are not offered
+    const kinds = (data?.albumKinds ?? []).filter(item => item.albumCount > 0);
 
     return (
       <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
@@ -99,6 +109,17 @@ export default async function AlbumsPage({ searchParams }: { searchParams: Promi
             </Link>
           ))}
         </nav>
+        {kinds.length > 1 && (
+          <nav aria-label={t("kinds")} className="flex flex-wrap gap-2">
+            <Link href={link({ kind: null })} className={chip(!kindId)}>{t("allKinds")}</Link>
+            {kinds.map(item => (
+              <Link key={item.id} href={link({ kind: item.id })}
+                    className={chip(kindId === item.id)} aria-current={kindId === item.id ? "page" : undefined}>
+                {kindName(item, locale)}
+              </Link>
+            ))}
+          </nav>
+        )}
         <nav aria-label={t("years")} className="space-y-2">
           <div className="flex flex-wrap gap-1.5">
             <Link href={link({ year: null, decade: null })} className={chip(!decadeNumber)}>{t("allYears")}</Link>

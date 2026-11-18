@@ -12,7 +12,7 @@ import { LogoText } from "@/components/logo-text";
 import { ModeToggle } from "@/components/mode-toggle.client";
 import { LanguageToggle } from "@/components/language-toggle.client";
 import { PlayerProvider } from "@/components/player/player-provider.client";
-import { PlayerBar } from "@/components/player/player-bar.client";
+import { BottomDock } from "@/components/bottom-dock.client";
 import { PlayerShortcuts } from "@/components/player/shortcuts.client";
 import { DialogsProvider } from "@/components/dialogs.client";
 import { requireUser } from "@/utils/auth.server";
@@ -100,7 +100,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               </SidebarInset>
             </div>
           </SidebarProvider>
-          <PlayerBar />
+          <BottomDock />
           <PlayerShortcuts />
         </DialogsProvider>
       </PlayerProvider>

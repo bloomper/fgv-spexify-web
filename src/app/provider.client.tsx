@@ -60,7 +60,7 @@ export default function Provider({
   return (
     <NextIntlClientProvider locale={locale} messages={messages} timeZone="Europe/Stockholm">
       <LocaleContext.Provider value={{ locale, changeLocale }}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <ConsentManager>
             {children}
             <Toaster />

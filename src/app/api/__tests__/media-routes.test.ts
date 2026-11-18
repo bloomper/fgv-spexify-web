@@ -4,6 +4,7 @@ import { GET as audio } from "@/app/api/audio/[id]/route";
 import { GET as trackDownload } from "@/app/api/download/track/[id]/route";
 import { GET as albumDownload } from "@/app/api/download/album/[id]/route";
 import { GET as cover } from "@/app/api/cover/[id]/route";
+import { GET as poster } from "@/app/api/poster/[id]/route";
 import { POST as coverUpload } from "@/app/api/cover-upload/[id]/route";
 
 const apiFetch = vi.hoisted(() => vi.fn());
@@ -55,7 +56,14 @@ describe("the media routes", () => {
     expect(response.status).toBe(200);
   });
 
-  it.each([audio, trackDownload, albumDownload, cover])("refuses an id that is not a number", async route => {
+  it("streams a spex poster from the server, sandboxed", async () => {
+    const response = await poster(get(), params("01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e"));
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/albums/01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e/poster", expect.anything());
+    expect(response.headers.get("content-security-policy")).toContain("sandbox");
+  });
+
+  it.each([audio, trackDownload, albumDownload, cover, poster])("refuses an id that is not a number", async route => {
     const response = await route(get(), params("../01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e"));
 
     expect(response.status).toBe(400);

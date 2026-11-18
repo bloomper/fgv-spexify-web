@@ -94,9 +94,19 @@ lives in Navidrome per user (stars, playlists, play counts). Stack and setup: `R
   switch (`LinkSegments`, `src/components/link-tabs.tsx`, the same file as Spexflix's), and categories and decades
   chips. `/albums` takes `category`, `decade` (e.g. 1970) or `year`, `liked=1`
   and `sort` (`SortSelect`).
-- **The start page** has the same order as Spexflix's: greeting, browsing (categories, the top list, decades), what
-  the user played, the top list, recently published, what they like, then their most played and highest rated
-  (`HomeSection`). Texts that can be long wrap with `text-pretty` up to `max-w-4xl`, not `max-w-prose`.
+- **The start page** is shelves that scroll sideways (`Shelf`, `ShelfItem` in `src/components/shelf.tsx`, `AlbumCard`
+  with a play button on the cover): greeting and categories, then recently played (all of it on `/recent`), most
+  played, recently published, *this day* (`thisDayAlbums`: albums of spex that premiered on today's date), one shelf
+  per decade and per album kind that is not the default (from `albums` and `albumKinds`, grouped by `byDecade` and
+  `byKind`), one per number kind (`numberKinds` with their tracks, `TrackShelfItems`), radio (`RadioShelfItems`:
+  random, then from albums the user played), liked, highest rated and the top list. Kinds are data from the API,
+  never lists in the web: a new kind gives a new shelf. Texts that can be long wrap with `text-pretty` up to
+  `max-w-4xl`, not `max-w-prose`.
+- **The album page** has a header with the cover over the spex poster, blurred (`AlbumBackdrop`, `/api/poster/[id]`,
+  the cover when there is no poster), the kind, title, year, category, length and round play, shuffle and radio
+  buttons. A track shows its number kind (`NumberKindIcon`: the kind's initial in a colour from its id, since
+  Spexipedia's kinds have no icons); its menu plays it next (`player.playNext`) or last and goes to its melody,
+  performers, Spexipedia and Spexflix.
 - **The play queue** is shared with the user's apps through `savePlayQueue`/`getPlayQueue`: `PlayerProvider` saves it
   when it changes, on pause and every 30 s while playing, and an empty player takes it up again, paused, on the first
   page load. It saves nothing before the saved queue was read.
@@ -106,8 +116,12 @@ lives in Navidrome per user (stars, playlists, play counts). Stack and setup: `R
   revivals, and `spexSearch` returns revivals right after their original, which the picker indents.
 - **Album kinds** are configured by admins (`/admin/kinds`) and come from `albumKinds`; show them with
   `kindName(kind, locale)`. The first kind is the default and is not shown as a badge (`kind.isDefault`).
-- **The player bar** sets `--player-height` on `<html>` while it shows; the page and the sidebar (with the account
-  menu and logout at its bottom) end above it.
+- **The bottom of the page** is `BottomDock` (`src/components/bottom-dock.client.tsx`): the player and, on phones,
+  `MobileTabBar` (home, search, albums, liked, playlists; the rest is in the header's menu). It sets `--player-height`
+  on `<html>` to its height; the page and the sidebar (with the account menu and logout at its bottom) end above it.
+  The player (`PlayerBar`) is a bar with the controls in the middle on larger screens and a mini player on phones
+  (`useIsMobile`); both open `NowPlaying`, the full-screen player with the cover, synchronised lyrics that follow the
+  line and seek when tapped (`LyricsView`), the queue (`QueueList`) and a panel about the number.
 - **Dialogs**: never `window.confirm`, `window.prompt` or `window.alert`. Ask with `useDialogs()` (`confirm` and
   `prompt`, from `DialogsProvider` in `src/components/dialogs.client.tsx`, which the `(app)` layout mounts). The e2e
   fixture `noNativeDialogs` fails any test that opens a native dialog; answer the app's own with `answerDialog`.
@@ -121,7 +135,7 @@ lives in Navidrome per user (stars, playlists, play counts). Stack and setup: `R
 
 ## Look
 
-The look is FGV's, the same as Spexregister's and Nyuppsättning's: `Logo`, `LogoText` and `LogoHome` in
+The look is FGV's, the same as Spexregister's and Nyuppsättning's, dark by default: `Logo`, `LogoText` and `LogoHome` in
 `src/components/`, `src/app/favicon.ico`, and the colours in `src/app/globals.css`. Don't give the application a logo
 or colours of its own. `src/app/icon.svg` (the FGV logo) is only for the installable app's manifest.
 

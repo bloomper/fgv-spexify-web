@@ -156,6 +156,19 @@ describe("PlayerProvider", () => {
     expect(result.current.current?.id).toBe("10");
   });
 
+  it("plays tracks next, right after the current one, and starts playing when the queue was empty", () => {
+    const { result } = render();
+
+    act(() => result.current.playNext([]));
+    expect(result.current.current).toBeNull();
+    act(() => result.current.playNext([track("9")]));
+    expect(result.current.current?.id).toBe("9");
+    act(() => result.current.enqueue([track("10")]));
+    act(() => result.current.playNext([track("11"), track("12")]));
+    expect(result.current.queue.map(t => t.id)).toEqual(["9", "11", "12", "10"]);
+    expect(result.current.current?.id).toBe("9");
+  });
+
   it("keeps the playing track first when shuffling", () => {
     const { result } = render();
 
