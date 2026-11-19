@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { getAlbum, getAlbumKinds, getSpexNumbers } from "@/lib/catalog/catalog.server";
+import { getAlbum, getAlbumKinds, getAlbumMedia, getSpexNumbers } from "@/lib/catalog/catalog.server";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
 import { AlbumEditor } from "./album-editor.client";
@@ -19,7 +19,7 @@ export default async function EditAlbumPage({ params }: { params: Promise<{ id: 
     }
 
     const t = await getTranslations("Manage");
-    const [album, kinds] = await Promise.all([getAlbum(id), getAlbumKinds()]);
+    const [album, kinds, media] = await Promise.all([getAlbum(id), getAlbumKinds(), getAlbumMedia()]);
 
     if (!album || album.trashedAt) {
       notFound();
@@ -34,7 +34,7 @@ export default async function EditAlbumPage({ params }: { params: Promise<{ id: 
           <Link href={`/albums/${album.id}`}
                 className="text-sm text-primary hover:text-primary/80">{t("viewAsListener")}</Link>
         </div>
-        <AlbumEditor album={album} kinds={kinds} numbers={numbers} />
+        <AlbumEditor album={album} kinds={kinds} media={media} numbers={numbers} />
         <RecordHistory entityId={album.id} path="/manage/audit" linkOf={auditLink} />
       </div>
     );

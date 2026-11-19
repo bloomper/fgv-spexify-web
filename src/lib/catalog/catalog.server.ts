@@ -2,7 +2,7 @@ import "server-only";
 
 import { graphql } from "@/gql";
 import { runMutation, runQuery } from "@/lib/graphql.server";
-import type { AlbumFilter, AlbumInput, AlbumKindInput, CollectionInput, CreditKind, TopBy, TrackInput } from "@/gql/graphql";
+import type { AlbumFilter, AlbumInput, AlbumKindInput, AlbumMediumInput, CollectionInput, CreditKind, TopBy, TrackInput } from "@/gql/graphql";
 
 export const KindFieldsFragment = graphql(`
     fragment KindFields on AlbumKind { id nameSv nameEn isDefault }
@@ -89,13 +89,15 @@ const AlbumQuery = graphql(`
         album(id: $id) {
             id title year kind { ...KindFields } description hasCover published publishedAt trashedAt navidromeId trackCount durationMs
             averageRating ratingCount likeCount totalPlays
+            catalogueNumber medium { id nameSv nameEn } released recorded conductor hasBackCover
             createdAt lastModifiedAt
             spex { id title year revival parentId familyId categoryId categoryName }
             collections { id title }
             tracks {
-                id albumId albumTitle discNumber trackNumber title performers melody lyricsAuthor arranger lyrics
+                id albumId albumTitle discNumber trackNumber side title performers melody lyricsAuthor arranger lyrics
                 lyricsSynced format fileSize durationMs bitrate published listed trashedAt navidromeId fileMissing averageRating ratingCount
                 numberId numberTitle spexipediaUrl numberKind { id nameSv nameEn }
+                hasAudio creditsFromNumber credits { kindId kindNameSv kindNameEn name }
                 replayGain { trackGain trackPeak albumGain albumPeak }
                 videoLinks { videoId videoTitle chapterTitle startSeconds }
                 sheetMusic { archiveUrl }
@@ -148,6 +150,29 @@ const CollectionCreateMutation = graphql(`mutation CollectionCreate($input: Coll
 const CollectionUpdateMutation = graphql(`mutation CollectionUpdate($id: ID!, $input: CollectionInput!) { collectionUpdate(id: $id, input: $input) { id } }`);
 const CollectionDeleteMutation = graphql(`mutation CollectionDelete($id: ID!) { collectionDelete(id: $id) }`);
 
+const AlbumMediaQuery = graphql(`
+    query AlbumMedia {
+        albumMedia { id nameSv nameEn position albumCount }
+    }
+`);
+const AlbumMediumCreateMutation = graphql(`
+    mutation AlbumMediumCreate($input: AlbumMediumInput!) { albumMediumCreate(input: $input) { id } }
+`);
+const AlbumMediumUpdateMutation = graphql(`
+    mutation AlbumMediumUpdate($id: ID!, $input: AlbumMediumInput!) { albumMediumUpdate(id: $id, input: $input) { id } }
+`);
+const AlbumMediaReorderMutation = graphql(`
+    mutation AlbumMediaReorder($ids: [ID!]!) { albumMediaReorder(ids: $ids) { id } }
+`);
+const AlbumMediumDeleteMutation = graphql(`
+    mutation AlbumMediumDelete($id: ID!) { albumMediumDelete(id: $id) }
+`);
+const TrackAddMutation = graphql(`
+    mutation TrackAdd($albumId: ID!, $input: TrackInput!) { trackAdd(albumId: $albumId, input: $input) { id } }
+`);
+const AlbumBackCoverRemoveMutation = graphql(`
+    mutation AlbumBackCoverRemove($id: ID!) { albumBackCoverRemove(id: $id) { id } }
+`);
 const AlbumKindsQuery = graphql(`
     query AlbumKinds {
         albumKinds { ...KindFields position albumCount }
@@ -327,6 +352,17 @@ export async function collectionUpdate(id: string, input: CollectionInput) {
 export async function collectionDelete(id: string) {
   return runMutation(CollectionDeleteMutation, { id });
 }
+
+export async function getAlbumMedia() {
+  return (await runQuery(AlbumMediaQuery, {}))?.albumMedia ?? [];
+}
+
+export const albumMediumCreate = (input: AlbumMediumInput) => runMutation(AlbumMediumCreateMutation, { input });
+export const albumMediumUpdate = (id: string, input: AlbumMediumInput) => runMutation(AlbumMediumUpdateMutation, { id, input });
+export const albumMediaReorder = (ids: string[]) => runMutation(AlbumMediaReorderMutation, { ids });
+export const albumMediumDelete = (id: string) => runMutation(AlbumMediumDeleteMutation, { id });
+export const trackAdd = (albumId: string, input: TrackInput) => runMutation(TrackAddMutation, { albumId, input });
+export const albumBackCoverRemove = (id: string) => runMutation(AlbumBackCoverRemoveMutation, { id });
 
 export async function getAlbumKinds() {
   return (await runQuery(AlbumKindsQuery, {}))?.albumKinds ?? [];

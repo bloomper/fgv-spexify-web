@@ -9,8 +9,17 @@ import {
   userUnlock,
 } from "@/lib/admin/admin.server";
 import { type ActionResult, toActionResult } from "@/lib/graphql.server";
-import type { AlbumKindInput, MaintenanceJob, SettingsInput } from "@/gql/graphql";
-import { albumKindCreate, albumKindDelete, albumKindsReorder, albumKindUpdate } from "@/lib/catalog/catalog.server";
+import type { AlbumKindInput, AlbumMediumInput, MaintenanceJob, SettingsInput } from "@/gql/graphql";
+import {
+  albumKindCreate,
+  albumKindDelete,
+  albumKindsReorder,
+  albumKindUpdate,
+  albumMediaReorder,
+  albumMediumCreate,
+  albumMediumDelete,
+  albumMediumUpdate,
+} from "@/lib/catalog/catalog.server";
 import { withPolicyAction } from "@/utils/route.server";
 import { Policies } from "@/utils/policy.server";
 
@@ -64,6 +73,7 @@ const kinds = <T, >(work: () => Promise<T>) => admin(async () => {
   const result = await work();
 
   revalidatePath("/admin/kinds");
+  revalidatePath("/admin/media");
   revalidatePath("/", "layout");
   return result;
 });
@@ -95,6 +105,34 @@ export async function reorderKindsAction(ids: string[]): Promise<ActionResult<nu
 export async function deleteKindAction(id: string): Promise<ActionResult<null>> {
   return kinds(async () => {
     await albumKindDelete(id);
+    return null;
+  });
+}
+
+export async function createMediumAction(input: AlbumMediumInput): Promise<ActionResult<null>> {
+  return kinds(async () => {
+    await albumMediumCreate(input);
+    return null;
+  });
+}
+
+export async function updateMediumAction(id: string, input: AlbumMediumInput): Promise<ActionResult<null>> {
+  return kinds(async () => {
+    await albumMediumUpdate(id, input);
+    return null;
+  });
+}
+
+export async function reorderMediaAction(ids: string[]): Promise<ActionResult<null>> {
+  return kinds(async () => {
+    await albumMediaReorder(ids);
+    return null;
+  });
+}
+
+export async function deleteMediumAction(id: string): Promise<ActionResult<null>> {
+  return kinds(async () => {
+    await albumMediumDelete(id);
     return null;
   });
 }

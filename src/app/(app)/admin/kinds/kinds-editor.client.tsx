@@ -17,6 +17,24 @@ import { createKindAction, deleteKindAction, reorderKindsAction, updateKindActio
 export type EditableKind = { id: string; nameSv: string; nameEn: string; isDefault: boolean; albumCount: number };
 
 type Names = { nameSv: string; nameEn: string };
+type Result = Promise<{ ok: boolean; message?: string }>;
+
+/** What the editor changes: the album kinds (the default), or the album media. */
+export type KindActions = {
+  create: (input: Names) => Result;
+  update: (id: string, input: Names) => Result;
+  reorder: (ids: string[]) => Result;
+  remove: (id: string) => Result;
+  /** Whether the last one may go too: an album needs a kind, but may have no medium. */
+  allowNone?: boolean;
+};
+
+const KIND_ACTIONS: KindActions = {
+  create: createKindAction,
+  update: updateKindAction,
+  reorder: reorderKindsAction,
+  remove: deleteKindAction,
+};
 
 function NameFields({ idPrefix, names, onChange }: {
   idPrefix: string;
@@ -42,10 +60,10 @@ function NameFields({ idPrefix, names, onChange }: {
 }
 
 /**
- * The album kinds in order, each renamed in place, moved up or down, or deleted when no album has it, and a form for
- * a new kind, which is added last.
+ * The album kinds (or media) in order, each renamed in place, moved up or down, or deleted when no album has it, and a
+ * form for a new one, which is added last.
  */
-export function KindsEditor({ kinds }: { kinds: EditableKind[] }) {
+export function KindsEditor({ kinds, actions = KIND_ACTIONS }: { kinds: EditableKind[]; actions?: KindActions }) {
   const t = useTranslations("AdminKinds");
   const locale = useLocale();
   const router = useRouter();
@@ -73,7 +91,7 @@ export function KindsEditor({ kinds }: { kinds: EditableKind[] }) {
     const ids = kinds.map(kind => kind.id);
 
     [ids[index], ids[index + by]] = [ids[index + by], ids[index]];
-    run(() => reorderKindsAction(ids), t("saved"));
+    run(() => actions.reorder(ids), t("saved"));
   };
 
   return (
@@ -87,7 +105,7 @@ export function KindsEditor({ kinds }: { kinds: EditableKind[] }) {
               {editing === kind.id ? (
                 <form className="flex flex-col gap-3 sm:flex-row sm:items-end" onSubmit={event => {
                   event.preventDefault();
-                  run(() => updateKindAction(kind.id, { nameSv: draft.nameSv.trim(), nameEn: draft.nameEn.trim() }),
+                  run(() => actions.update(kind.id, { nameSv: draft.nameSv.trim(), nameEn: draft.nameEn.trim() }),
                     t("saved"), () => setEditing(null));
                 }}>
                   <NameFields idPrefix={`kind-${kind.id}`} names={draft} onChange={setDraft} />
@@ -121,7 +139,7 @@ export function KindsEditor({ kinds }: { kinds: EditableKind[] }) {
                           }}>
                     <Pencil />
                   </Button>
-                  <Button variant="ghost" size="icon" disabled={pending || kind.albumCount > 0 || kinds.length === 1}
+                  <Button variant="ghost" size="icon" disabled={pending || kind.albumCount > 0 || (kinds.length === 1 && !actions.allowNone)}
                           aria-label={t("deleteKind", { name })} title={kind.albumCount > 0 ? t("inUse") : undefined}
                           onClick={async () => {
                             if (await confirm({
@@ -129,7 +147,7 @@ export function KindsEditor({ kinds }: { kinds: EditableKind[] }) {
                               confirmLabel: t("delete"),
                               destructive: true,
                             })) {
-                              run(() => deleteKindAction(kind.id), t("deleted"));
+                              run(() => actions.remove(kind.id), t("deleted"));
                             }
                           }}>
                     <Trash2 />
@@ -142,7 +160,7 @@ export function KindsEditor({ kinds }: { kinds: EditableKind[] }) {
       </ol>
       <form className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-end" onSubmit={event => {
         event.preventDefault();
-        run(() => createKindAction({ nameSv: added.nameSv.trim(), nameEn: added.nameEn.trim() }), t("added"),
+        run(() => actions.create({ nameSv: added.nameSv.trim(), nameEn: added.nameEn.trim() }), t("added"),
           () => setAdded({ nameSv: "", nameEn: "" }));
       }}>
         <NameFields idPrefix="new-kind" names={added} onChange={setAdded} />

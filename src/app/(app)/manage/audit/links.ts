@@ -12,6 +12,8 @@ export function auditLink(entityType: string, entityId: string): string | null {
       return `/manage/collections/${entityId}`;
     case "ALBUM_KIND":
       return "/admin/kinds";
+    case "ALBUM_MEDIUM":
+      return "/admin/media";
     case "SETTINGS":
       return "/admin/settings";
     case "USER":

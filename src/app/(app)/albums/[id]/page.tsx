@@ -65,6 +65,13 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
                 {[album.year, main?.categoryName, t("tracks", { count: album.trackCount }),
                   formatDuration(album.durationMs / 1000)].filter(Boolean).join(" · ")}
               </p>
+              {(album.catalogueNumber || album.medium || album.released || album.conductor) && (
+                <p className="text-sm text-muted-foreground">
+                  {[album.catalogueNumber, album.medium && kindName(album.medium, locale),
+                    album.released && t("released", { date: album.released }),
+                    album.conductor && t("conductor", { name: album.conductor })].filter(Boolean).join(" · ")}
+                </p>
+              )}
               <AverageRating average={album.averageRating} count={album.ratingCount} stars className="text-sm" />
             </div>
           </div>

@@ -56,6 +56,7 @@ describe("AlbumForm", () => {
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({
       spexIds: [], title: "Blandade visor", year: null, kindId: "k-compilation", description: null,
+      catalogueNumber: null, mediumId: null, released: null, recorded: null, conductor: null,
     }));
   });
 
@@ -84,6 +85,7 @@ describe("AlbumForm", () => {
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({
       spexIds: ["7"], title: null, year: 1993, kindId: "k-show", description: "Inspelad live",
+      catalogueNumber: null, mediumId: null, released: null, recorded: null, conductor: null,
     }));
   });
 
