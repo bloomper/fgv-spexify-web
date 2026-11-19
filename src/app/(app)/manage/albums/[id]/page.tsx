@@ -34,7 +34,8 @@ export default async function EditAlbumPage({ params }: { params: Promise<{ id: 
           <Link href={`/albums/${album.id}`}
                 className="text-sm text-primary hover:text-primary/80">{t("viewAsListener")}</Link>
         </div>
-        <AlbumEditor album={album} kinds={kinds} media={media} numbers={numbers} />
+        <AlbumEditor album={album} kinds={kinds} media={media} numbers={numbers}
+                     spexipediaUrl={process.env.SPEXIPEDIA_WEB_URL?.trim().replace(/\/+$/, "") || null} />
         <RecordHistory entityId={album.id} path="/manage/audit" linkOf={auditLink} />
       </div>
     );

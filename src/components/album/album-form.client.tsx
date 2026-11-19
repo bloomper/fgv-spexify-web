@@ -19,7 +19,9 @@ export type KindOption = KindName & { id: string };
  * default to the main spex's. The albums are FGV's discography: a released record also has its catalogue number,
  * medium, dates and conductor.
  */
-export function AlbumForm({ kinds, media = [], initial, submitLabel, onSubmit }: {
+export function AlbumForm({ kinds, media = [], initial, submitLabel, onSubmit, spexipediaUrl }: {
+  /** Spexipedia's web, for editing the picked spex there. */
+  spexipediaUrl?: string | null;
   /** The album kinds in order; the first is the default. */
   kinds: KindOption[];
   /** The album media (LP, EP, CD …) in order; an album that was never released has none. */
@@ -75,7 +77,7 @@ export function AlbumForm({ kinds, media = [], initial, submitLabel, onSubmit }:
 
   return (
     <form onSubmit={submit} className="max-w-2xl space-y-4">
-      <SpexPicker value={spex} onChange={setSpex} none={none} onNoneChange={setNone} />
+      <SpexPicker value={spex} onChange={setSpex} none={none} onNoneChange={setNone} spexipediaUrl={spexipediaUrl} />
       <div className="grid gap-4 sm:grid-cols-[1fr_8rem_12rem]">
         <div className="space-y-1.5">
           <Label htmlFor="title">{t("title")}</Label>

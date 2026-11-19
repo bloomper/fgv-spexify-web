@@ -283,8 +283,9 @@ function TrackDialog({ albumId, track, numbers, onClose, adding = false }: {
  * Editing an album: its fields, cover, publishing, and its tracks, which are uploaded here, edited, reordered,
  * published one by one and moved to the trash.
  */
-export function AlbumEditor({ album, kinds, media = [], numbers = [] }: {
+export function AlbumEditor({ album, kinds, media = [], numbers = [], spexipediaUrl }: {
   album: EditorAlbum;
+  spexipediaUrl?: string | null;
   kinds: KindOption[];
   media?: KindOption[];
   numbers?: SpexNumber[]
@@ -425,7 +426,7 @@ export function AlbumEditor({ album, kinds, media = [], numbers = [] }: {
                             <span className="block text-xs text-muted-foreground">{t("publishText")}</span>
                         </span>
           </label>
-          <AlbumForm kinds={kinds} media={media} submitLabel={t("save")}
+          <AlbumForm kinds={kinds} media={media} spexipediaUrl={spexipediaUrl} submitLabel={t("save")}
                      initial={{
                        spex: album.spex,
                        title: album.title,
