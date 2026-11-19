@@ -71,6 +71,8 @@ type PlayerState = {
   move: (from: number, to: number) => void;
   clear: () => void;
   plays: SessionPlays;
+  /** Where the current track is, in seconds, read from the audio at once: for the score's cursor, which moves every frame. */
+  position: () => number;
 };
 
 const PlayerContext = createContext<PlayerState | null>(null);
@@ -599,6 +601,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     navigator.mediaSession.setActionHandler("seekto", details => details.seekTime !== undefined && seek(details.seekTime));
   }, [current, next, previous, seek, toggle]);
 
+  const position = useCallback(() => playingElement()?.currentTime ?? 0, [playingElement]);
+
   const value = useMemo<PlayerState>(() => ({
     queue,
     index,
@@ -629,8 +633,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     move,
     clear,
     plays,
+    position,
   }), [queue, index, current, playing, failed, time, duration, shuffle, repeat, playQueue, enqueue, playNext, toggle, next, previous,
-    seek, jump, setShuffle, cycleRepeat, settings, setVolume, toggleMute, setReplayGain, remove, move, clear, plays]);
+    seek, jump, setShuffle, cycleRepeat, settings, setVolume, toggleMute, setReplayGain, remove, move, clear, plays, position]);
 
   return (
     <PlayerContext.Provider value={value}>

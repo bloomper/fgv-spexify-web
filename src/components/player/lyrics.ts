@@ -39,6 +39,19 @@ export function currentLine(lines: LyricLine[], time: number): number {
   return index;
 }
 
+const LABEL = /^\s*([\p{L}][\p{L} ./&+,;()-]{0,23}?)\s*:\s+(?=\S)/u;
+
+/**
+ * A line without its singer label, and the singer: the name the label stands for when it is known, else nothing, so
+ * that a line which merely has a colon early on keeps its text.
+ */
+export function singerOf(line: string, names: ReadonlyMap<string, string>): { singer: string | null; text: string } {
+  const match = LABEL.exec(line);
+  const name = match ? names.get(match[1].trim()) : undefined;
+
+  return name && match ? { singer: name, text: line.slice(match[0].length) } : { singer: null, text: line };
+}
+
 export function formatDuration(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) {
     return "0:00";

@@ -20,6 +20,7 @@ type TrackLike = {
   fileMissing: boolean;
   videoLinks?: { videoId: string; videoTitle: string; chapterTitle: string; startSeconds: number }[];
   spexipediaUrl?: string | null;
+  sheetMusic?: { archiveUrl?: string | null } | null;
   numberTitle?: string | null;
   numberKind?: TrackRow["numberKind"];
   replayGain?: TrackRow["replayGain"];
@@ -51,6 +52,7 @@ export function toRows(tracks: TrackLike[], plays: Plays = {}): TrackRow[] {
     fileMissing: track.fileMissing,
     videoLinks: track.videoLinks,
     spexipediaUrl: track.spexipediaUrl,
+    sheetMusicUrl: track.sheetMusic?.archiveUrl,
     numberTitle: track.numberTitle,
     numberKind: track.numberKind,
     playCount: track.navidromeId ? plays[track.navidromeId]?.playCount : undefined,

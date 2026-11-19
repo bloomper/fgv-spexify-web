@@ -10,6 +10,7 @@ import {
   ArrowUp,
   BookOpenText,
   Download,
+  FileMusic,
   Film,
   Heart,
   ListEnd,
@@ -64,6 +65,8 @@ export type TrackRow = PlayerTrack & {
   videoLinks?: { videoId: string; videoTitle: string; chapterTitle: string; startSeconds: number }[];
   /** The number the track records, on its spex's page in Spexipedia, which is public. */
   spexipediaUrl?: string | null;
+  /** The arrangement of the number in Spexarkivet, for users with access to it. */
+  sheetMusicUrl?: string | null;
   /** How often the user played it, from Navidrome; undefined when not known. */
   playCount?: number;
   /** When the user last played it. */
@@ -367,6 +370,14 @@ export function TrackList({
                     </a>
                   </div>
                 )}
+                {track.sheetMusicUrl && (
+                  <div className="mt-1">
+                    <a href={track.sheetMusicUrl} target="_blank" rel="noopener noreferrer"
+                       className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80">
+                      <FileMusic className="size-3.5" />{t("sheetMusicInArchive")}
+                    </a>
+                  </div>
+                )}
                 {spexflixUrl && track.videoLinks && track.videoLinks.length > 0 && (
                   <div className="mt-1 flex flex-wrap gap-2">
                     {track.videoLinks.map(link => (
@@ -499,6 +510,11 @@ export function TrackList({
                   {track.spexipediaUrl && (
                     <DropdownMenuItem render={<a href={track.spexipediaUrl} target="_blank" rel="noopener noreferrer" />}>
                       <BookOpenText />{t("inSpexipedia")}
+                    </DropdownMenuItem>
+                  )}
+                  {track.sheetMusicUrl && (
+                    <DropdownMenuItem render={<a href={track.sheetMusicUrl} target="_blank" rel="noopener noreferrer" />}>
+                      <FileMusic />{t("sheetMusicInArchive")}
                     </DropdownMenuItem>
                   )}
                   {spexflixUrl && track.videoLinks?.map(link => (

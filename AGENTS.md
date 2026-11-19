@@ -132,6 +132,18 @@ lives in Navidrome per user (stars, playlists, play counts). Stack and setup: `R
 - **Editors** work under `/manage` (albums, the trash, the change log), **admins** under `/admin` (the music server,
   users, settings). New albums start unpublished; publishing an album or a track puts it into Navidrome.
 - **Links to Spexflix** (`Track.videoLinks`) are shown only when `me.spexflixUser` and `SPEXFLIX_WEB_URL` are set.
+- **Sheet music** comes from Spexarkivet through the server (`Track.sheetMusic`, files at `/api/sheet-music/[trackId]/[fileId]`,
+  which streams them from the server, as they are small and pdf.js and the score reader fetch them same-origin). Now
+  playing's *Notes* tab (`src/components/sheet/`) loads it lazily per track with `useTrackStudio` (sheet music, score
+  sync maps, singers). PDFs are drawn by pdf.js (`PdfReader`), MusicXML by OpenSheetMusicDisplay (`ScoreView`), both
+  loaded on demand. The cursor follows the recording through a sync map (`Track.scoreSyncs`, points of seconds,
+  measure and beat; `src/lib/score/timeline.ts` maps recording time to score time) or the notes played by
+  `ScoreSynth` (Web Audio oscillators, no sound font). `player.position()` reads the audio element every frame.
+  Editors with access to Spexarkivet tap the measures in or ask for an automatic alignment there.
+- **Lyrics** are timed on `/manage/tracks/[id]/lyrics` (linked from the album editor's track menu): tap once per line
+  while the page's own `<audio>` plays, nudge, see the waveform (`Track.waveform`), save as LRC; every saved version is
+  kept (`Track.lyricsRevisions`) and can be restored. `LyricsView` shows singer labels (`Ph:`) as the characters' names
+  from `Track.singers` (`singerOf`); lines whose label the server did not resolve keep their text.
 
 ## Look
 
