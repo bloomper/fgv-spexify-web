@@ -24,6 +24,7 @@ import {
   trackUpdate,
 } from "@/lib/catalog/catalog.server";
 import { trashEmpty } from "@/lib/admin/admin.server";
+import { trackLyricsRestore, trackLyricsUpdate } from "@/lib/catalog/sheet-music.server";
 import { type ActionResult, toActionResult } from "@/lib/graphql.server";
 import type { AlbumInput, CollectionInput, TrackInput } from "@/gql/graphql";
 import { withPolicyAction } from "@/utils/route.server";
@@ -47,6 +48,8 @@ function changed(albumId?: string) {
     revalidatePath(`/albums/${albumId}`);
   }
 }
+
+type LyricsState = Awaited<ReturnType<typeof trackLyricsUpdate>>;
 
 const editor = <T, >(work: () => Promise<T>) => withPolicyAction(Policies.editor.requireEditor, () => toActionResult(work));
 const admin = <T, >(work: () => Promise<T>) => withPolicyAction(Policies.admin.requireAdmin, () => toActionResult(work));
@@ -241,5 +244,28 @@ export async function deleteCollectionAction(id: string): Promise<ActionResult<n
     await collectionDelete(id);
     collectionsChanged(id);
     return null;
+  });
+}
+
+export async function saveLyricsAction(albumId: string, trackId: string, lyrics: string | null, synced: boolean,
+                                       baseRevisionId: string | null): Promise<ActionResult<LyricsState | undefined>> {
+  requireId(albumId);
+  requireId(trackId);
+  return editor(async () => {
+    const saved = await trackLyricsUpdate(trackId, lyrics, synced, baseRevisionId);
+
+    changed(albumId);
+    return saved;
+  });
+}
+
+export async function restoreLyricsAction(albumId: string, trackId: string, revisionId: string): Promise<ActionResult<LyricsState | undefined>> {
+  requireId(albumId);
+  requireId(trackId);
+  return editor(async () => {
+    const restored = await trackLyricsRestore(trackId, revisionId.slice(0, 20));
+
+    changed(albumId);
+    return restored;
   });
 }

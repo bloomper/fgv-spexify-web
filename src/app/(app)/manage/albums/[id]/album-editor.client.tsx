@@ -5,7 +5,8 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, ImageUp, MoreHorizontal, Pencil, RefreshCw, Trash2, Upload } from "lucide-react";
+import Link from "next/link";
+import { ArrowDown, ArrowUp, ImageUp, MoreHorizontal, Pencil, RefreshCw, TextQuote, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -460,6 +461,9 @@ export function AlbumEditor({ album, kinds, numbers = [] }: { album: EditorAlbum
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => setEditing(track)}><Pencil />{t("edit")}</DropdownMenuItem>
+                    <DropdownMenuItem render={<Link href={`/manage/tracks/${track.id}/lyrics`} />}>
+                      <TextQuote />{t("editLyrics")}
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => {
                       replaceFor.current = track.id;
                       replaceInput.current?.click();
