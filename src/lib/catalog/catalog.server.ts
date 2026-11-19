@@ -10,7 +10,7 @@ export const KindFieldsFragment = graphql(`
 
 const MeQuery = graphql(`
     query Me {
-        me { username displayName roles spexflixUser }
+        me { username displayName roles spexflixUser archiveUser }
         settings { welcomeSv welcomeEn appPasswordExpiryMonths lockoutAttempts lockoutMinutes }
     }
 `);
@@ -98,6 +98,7 @@ const AlbumQuery = graphql(`
                 numberId numberTitle spexipediaUrl numberKind { id nameSv nameEn }
                 replayGain { trackGain trackPeak albumGain albumPeak }
                 videoLinks { videoId videoTitle chapterTitle startSeconds }
+                sheetMusic { archiveUrl }
             }
         }
     }
