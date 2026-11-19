@@ -13,16 +13,19 @@ import { formatDuration } from "@/components/player/lyrics";
 import { LyricsView } from "@/components/player/lyrics-view.client";
 import { type PlayerTrack, usePlayer } from "@/components/player/player-provider.client";
 import { QueueList } from "@/components/player/queue-list.client";
+import { SheetMusicPanel } from "@/components/sheet/sheet-music-panel.client";
+import { useTrackStudio } from "@/components/sheet/use-track-studio.client";
 import { useCycleRepeat } from "@/components/player/repeat.client";
 import { creditHref, splitCredits } from "@/lib/credits";
 import { kindName } from "@/utils/format";
 import { cn } from "@/utils/utils";
 
-type Tab = "playing" | "lyrics" | "queue" | "about";
+type Tab = "playing" | "lyrics" | "notes" | "queue" | "about";
 
 /**
  * The player in full screen: the cover large with the controls, and beside it (below it on a phone, as tabs) the
- * lyrics, which follow the playing line and seek when a line is tapped, the queue, and what is known about the number.
+ * lyrics, which follow the playing line and seek when a line is tapped, the sheet music from Spexarkivet, the queue,
+ * and what is known about the number.
  */
 export function NowPlaying({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useTranslations("Player");
@@ -31,6 +34,8 @@ export function NowPlaying({ open, onClose }: { open: boolean; onClose: () => vo
   const cycleRepeat = useCycleRepeat();
   const [tab, setTab] = useState<Tab>("playing");
   const { current } = player;
+  const { studio, reload } = useTrackStudio(open ? current?.id : null);
+  const sheetMusic = studio?.id === current?.id ? studio?.sheetMusic : null;
 
   useEffect(() => {
     if (!open) {
@@ -53,7 +58,7 @@ export function NowPlaying({ open, onClose }: { open: boolean; onClose: () => vo
 
   // On a large screen the cover is always there, so the panel beside it shows the lyrics or the queue
   const panel: Exclude<Tab, "playing"> = tab === "playing" ? (current.lyrics ? "lyrics" : "queue") : tab;
-  const tabs: Tab[] = ["playing", ...(current.lyrics ? ["lyrics" as const] : []), "queue", "about"];
+  const tabs: Tab[] = ["playing", ...(current.lyrics ? ["lyrics" as const] : []), ...(sheetMusic ? ["notes" as const] : []), "queue", "about"];
   const duration = player.duration || current.durationMs / 1000;
 
   return createPortal(
@@ -134,7 +139,10 @@ export function NowPlaying({ open, onClose }: { open: boolean; onClose: () => vo
           </div>
         </div>
         <div role="tabpanel" className={cn("min-h-0 overflow-y-auto overscroll-contain md:block md:py-4", tab === "playing" ? "hidden" : "block")}>
-          {panel === "lyrics" && current.lyrics && <LyricsView track={current} follow large />}
+          {panel === "lyrics" && current.lyrics && <LyricsView track={current} singers={studio?.singers} follow large />}
+          {panel === "notes" && studio && sheetMusic && (
+            <SheetMusicPanel key={current.id} trackId={current.id} studio={{ ...studio, sheetMusic }} onChanged={reload} />
+          )}
           {panel === "queue" && (
             <>
               <div className="mb-3 flex justify-end">
