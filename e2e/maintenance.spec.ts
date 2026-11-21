@@ -27,4 +27,13 @@ test.describe("Maintenance", () => {
     await expect(cleanup.getByText("Körs", { exact: true })).toBeVisible();
     await expect(cleanup.getByRole("button", { name: "Kör nu" })).toBeDisabled();
   });
+
+  test("shows the changes from Spexipedia that were skipped", async ({ page }) => {
+    await page.goto("/admin/maintenance");
+
+    const sync = page.getByRole("region", { name: "Ändringar från Spexipedia" });
+
+    await expect(sync.getByText("1 ändring har hoppats över")).toBeVisible();
+    await expect(sync.getByText("The category is not here yet")).toBeVisible();
+  });
 });
