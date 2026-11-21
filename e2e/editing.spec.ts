@@ -96,7 +96,7 @@ test.describe("Editing an album", () => {
   test("uploads a cover, which replaces the spex poster", async ({ page, mock }) => {
     await page.goto(`/manage/albums/${uuidOf(1)}`);
     await expect(page.getByText("Utan omslag visas spexets affisch.")).toBeVisible();
-    await chooseFile(page, "input[type=file][accept^='image']", "omslag.png", "image/png",
+    await chooseFile(page, "input[type=file][name=cover]", "omslag.png", "image/png",
       Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64"));
 
     await expect(page.getByRole("button", { name: "Byt omslag" })).toBeVisible();

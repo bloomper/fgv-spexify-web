@@ -108,6 +108,7 @@ export function AppSidebar({ roles, accountUrl, ...props }: AppSidebarProps) {
           { title: t("Nav.adminLibrary"), url: "/admin/library" },
           { title: t("Nav.adminUsers"), url: "/admin/users" },
           { title: t("Nav.adminKinds"), url: "/admin/kinds" },
+          { title: t("Nav.adminMedia"), url: "/admin/media" },
           { title: t("Nav.adminMaintenance"), url: "/admin/maintenance" },
           { title: t("Nav.adminSettings"), url: "/admin/settings" },
         ],

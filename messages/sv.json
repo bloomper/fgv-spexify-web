@@ -269,7 +269,8 @@
     "collections": "Samlingar",
     "top": "Topplistan",
     "recent": "Senast spelat",
-    "tabs": "Bibliotek"
+    "tabs": "Bibliotek",
+    "adminMedia": "Format"
   },
   "Home": {
     "title": "Spexify",
@@ -382,7 +383,9 @@
     "playNext": "Spela härnäst",
     "goToMelody": "Gå till melodin",
     "goToCredit": "Gå till {name}",
-    "sheetMusicInArchive": "Noter i Spexarkivet"
+    "sheetMusicInArchive": "Noter i Spexarkivet",
+    "released": "utgiven {date}",
+    "conductor": "dirigent {name}"
   },
   "Player": {
     "label": "Spelare",
@@ -577,7 +580,27 @@
     "otherSpexipediaNumber": "Ett nummer som inte hör till albumets spex",
     "numberOption": "Akt {act}, nr {position}: {title}",
     "spexipediaNumberHelp": "Vilken sång i spexet spåret är en inspelning av. Spåret visas då på spexets sida i Spexipedia.",
-    "editLyrics": "Text och tajmning"
+    "editLyrics": "Text och tajmning",
+    "discography": "Diskografi",
+    "discographyHelp": "För en utgiven skiva: katalognummer, format, datum och dirigent. En skiva kan läggas in innan den är digitaliserad.",
+    "catalogueNumber": "Katalognummer",
+    "medium": "Format",
+    "noMedium": "Ingen utgåva",
+    "released": "Utgiven",
+    "recorded": "Inspelad",
+    "conductor": "Dirigent",
+    "addTrack": "Lägg till låt",
+    "addTrackWithoutAudio": "Låt utan ljud",
+    "side": "Sida",
+    "sideLabel": "sida {side}",
+    "creditsFromNumber": "Melodi och upphovspersoner kommer från numret i Spexipedia",
+    "noCreditsFromNumber": "Numret har inga upphovspersoner, eller Spexipedia svarar inte.",
+    "editInSpexipedia": "Ändra i Spexipedia",
+    "noAudio": "Inget ljud",
+    "uploadAudio": "Ladda upp ljud",
+    "uploadBackCover": "Ladda upp baksida",
+    "replaceBackCover": "Byt baksida",
+    "removeBackCover": "Ta bort baksidan"
   },
   "Trash": {
     "title": "Papperskorgen",
@@ -799,7 +822,8 @@
     "searching": "Söker…",
     "results": "Sökträffar",
     "alreadyPicked": "vald",
-    "revival": "Nyuppsättning"
+    "revival": "Nyuppsättning",
+    "editInSpexipedia": "Ändra i Spexipedia"
   },
   "Top": {
     "title": "Topplistan",
@@ -961,5 +985,9 @@
     "stampFrom": "Härifrån",
     "removeLine": "Ta bort rad {line}",
     "waveform": "Vågform"
+  },
+  "AdminMedia": {
+    "title": "Format",
+    "text": "Formaten skivorna i diskografin kom ut på, t.ex. LP, EP, CD och digitalt. Ett album som aldrig gavs ut har inget format."
   }
 }

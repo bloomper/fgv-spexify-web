@@ -3,10 +3,10 @@
 import * as React from "react";
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import Link from "next/link";
-import { ArrowDown, ArrowUp, ImageUp, MoreHorizontal, Pencil, RefreshCw, TextQuote, Trash2, Upload } from "lucide-react";
+import { ArrowDown, ArrowUp, ExternalLink, ImageUp, MoreHorizontal, Pencil, Plus, RefreshCw, TextQuote, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -29,7 +29,9 @@ import { formatDuration } from "@/components/player/lyrics";
 import { uploadFile } from "@/components/upload/tus.client";
 import type { TrackInput } from "@/gql/graphql";
 import {
+  addTrackAction,
   createTrackAction,
+  removeBackCoverAction,
   publishAlbumAction,
   publishTrackAction,
   removeCoverAction,
@@ -56,7 +58,14 @@ export type EditorTrack = {
   arranger?: string | null;
   lyrics?: string | null;
   lyricsSynced: boolean;
-  format: string;
+  side?: string | null;
+  /** Null for a track without audio, an entry of the discography only. */
+  format?: string | null;
+  hasAudio: boolean;
+  /** Whether the melody and credits are the number's in Spexipedia, and edited there. */
+  creditsFromNumber: boolean;
+  credits: { kindId: string; kindNameSv: string; kindNameEn: string; name: string }[];
+  spexipediaUrl?: string | null;
   fileSize: number;
   durationMs: number;
   published: boolean;
@@ -75,6 +84,12 @@ export type EditorAlbum = {
   kind: { id: string };
   description?: string | null;
   hasCover: boolean;
+  hasBackCover: boolean;
+  catalogueNumber?: string | null;
+  medium?: { id: string } | null;
+  released?: string | null;
+  recorded?: string | null;
+  conductor?: string | null;
   published: boolean;
   spex: PickedSpex[];
   tracks: EditorTrack[];
@@ -112,13 +127,17 @@ function useAction() {
   return { pending, run };
 }
 
-function TrackDialog({ albumId, track, numbers, onClose }: {
+function TrackDialog({ albumId, track, numbers, onClose, adding = false }: {
   albumId: string;
   track: EditorTrack;
   numbers: SpexNumber[];
-  onClose: () => void
+  onClose: () => void;
+  /** A new track without audio, for the discography. */
+  adding?: boolean;
 }) {
   const t = useTranslations("Manage");
+  const locale = useLocale();
+  const fromNumber = !adding && track.creditsFromNumber;
   const { pending, run } = useAction();
   const [numberId, setNumberId] = useState(track.numberId ?? "");
   const [input, setInput] = useState<TrackInput>({
@@ -131,6 +150,7 @@ function TrackDialog({ albumId, track, numbers, onClose }: {
     arranger: track.arranger ?? "",
     lyrics: track.lyrics ?? "",
     lyricsSynced: track.lyricsSynced,
+    side: track.side ?? "",
   });
   const field = (key: keyof TrackInput) => ({
     value: String(input[key] ?? ""),
@@ -143,15 +163,22 @@ function TrackDialog({ albumId, track, numbers, onClose }: {
   return (
     <Dialog open onOpenChange={open => !open && onClose()}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader><DialogTitle>{t("editTrack")}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{adding ? t("addTrack") : t("editTrack")}</DialogTitle></DialogHeader>
         <form id="track-form" className="space-y-3" onSubmit={event => {
           event.preventDefault();
           run(async () => {
-            const result = await updateTrackAction(albumId, track.id, {
-              ...input,
-              discNumber: Number(input.discNumber),
-              trackNumber: Number(input.trackNumber),
-            });
+            const values = { ...input, discNumber: Number(input.discNumber), trackNumber: Number(input.trackNumber) };
+
+            if (adding) {
+              const added = await addTrackAction(albumId, values);
+
+              if (added.ok) {
+                onClose();
+              }
+              return added;
+            }
+
+            const result = await updateTrackAction(albumId, track.id, values);
 
             if (!result.ok) {
               return result;
@@ -167,7 +194,10 @@ function TrackDialog({ albumId, track, numbers, onClose }: {
             return result;
           }, t("saved"));
         }}>
-          <div className="grid grid-cols-[5rem_5rem_1fr] gap-3">
+          <div className="grid grid-cols-[4rem_5rem_5rem_1fr] gap-3">
+            <div className="space-y-1"><Label htmlFor="side">{t("side")}</Label><Input id="side" maxLength={10}
+                                                                                     placeholder="A" {...field("side")} />
+            </div>
             <div className="space-y-1"><Label htmlFor="disc">{t("disc")}</Label><Input id="disc" type="number"
                                                                                        min={1} {...field("discNumber")} />
             </div>
@@ -178,7 +208,7 @@ function TrackDialog({ albumId, track, numbers, onClose }: {
                                                                                                maxLength={255} {...field("title")} />
             </div>
           </div>
-          {(numbers.length > 0 || track.numberId) && (
+          {!adding && (numbers.length > 0 || track.numberId) && (
             <div className="space-y-1">
               <Label htmlFor="spexipedia-number">{t("spexipediaNumber")}</Label>
               <NativeSelect id="spexipedia-number" className="w-full" value={numberId}
@@ -199,16 +229,38 @@ function TrackDialog({ albumId, track, numbers, onClose }: {
           <div className="space-y-1"><Label htmlFor="performers">{t("performers")}</Label><Input id="performers"
                                                                                                  maxLength={1000} {...field("performers")} />
           </div>
-          <div className="space-y-1"><Label htmlFor="melody">{t("melody")}</Label><Input id="melody" maxLength={500}
-                                                                                         placeholder={t("melodyPlaceholder")} {...field("melody")} />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1"><Label htmlFor="lyrics-author">{t("lyricsAuthor")}</Label><Input
-              id="lyrics-author" maxLength={255} {...field("lyricsAuthor")} /></div>
-            <div className="space-y-1"><Label htmlFor="arranger">{t("arranger")}</Label><Input id="arranger"
-                                                                                               maxLength={255} {...field("arranger")} />
+          {fromNumber ? (
+            // The number's melody and credits are Spexipedia's (fgv-infra-deploy docs/data-ownership.md)
+            <div className="space-y-1 rounded-md border bg-muted/40 p-3 text-sm">
+              <p className="font-medium">{t("creditsFromNumber")}</p>
+              {track.melody && <p><span className="text-muted-foreground">{t("melody")}:</span> {track.melody}</p>}
+              {track.credits.map((credit, i) => (
+                <p key={`${credit.kindId}-${i}`}>
+                  <span className="text-muted-foreground">{locale === "en" ? credit.kindNameEn : credit.kindNameSv}:</span> {credit.name}
+                </p>
+              ))}
+              {!track.melody && track.credits.length === 0 && <p className="text-muted-foreground">{t("noCreditsFromNumber")}</p>}
+              {track.spexipediaUrl && (
+                <a href={track.spexipediaUrl} target="_blank" rel="noreferrer"
+                   className="inline-flex items-center gap-1 text-primary hover:text-primary/80">
+                  {t("editInSpexipedia")}<ExternalLink className="size-3" />
+                </a>
+              )}
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="space-y-1"><Label htmlFor="melody">{t("melody")}</Label><Input id="melody" maxLength={500}
+                                                                                             placeholder={t("melodyPlaceholder")} {...field("melody")} />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1"><Label htmlFor="lyrics-author">{t("lyricsAuthor")}</Label><Input
+                  id="lyrics-author" maxLength={255} {...field("lyricsAuthor")} /></div>
+                <div className="space-y-1"><Label htmlFor="arranger">{t("arranger")}</Label><Input id="arranger"
+                                                                                                   maxLength={255} {...field("arranger")} />
+                </div>
+              </div>
+            </>
+          )}
           <div className="space-y-1"><Label htmlFor="lyrics">{t("lyrics")}</Label><Textarea id="lyrics" rows={8}
                                                                                             className="font-mono text-sm" {...field("lyrics")} />
           </div>
@@ -231,13 +283,21 @@ function TrackDialog({ albumId, track, numbers, onClose }: {
  * Editing an album: its fields, cover, publishing, and its tracks, which are uploaded here, edited, reordered,
  * published one by one and moved to the trash.
  */
-export function AlbumEditor({ album, kinds, numbers = [] }: { album: EditorAlbum; kinds: KindOption[]; numbers?: SpexNumber[] }) {
+export function AlbumEditor({ album, kinds, media = [], numbers = [], spexipediaUrl }: {
+  album: EditorAlbum;
+  spexipediaUrl?: string | null;
+  kinds: KindOption[];
+  media?: KindOption[];
+  numbers?: SpexNumber[]
+}) {
   const t = useTranslations("Manage");
   const { confirm } = useDialogs();
   const router = useRouter();
   const { pending, run } = useAction();
   const [uploads, setUploads] = useState<UploadState[]>([]);
   const [editing, setEditing] = useState<EditorTrack | null>(null);
+  const [adding, setAdding] = useState<EditorTrack | null>(null);
+  const backCoverInput = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const replaceFor = useRef<string | null>(null);
   const replaceInput = useRef<HTMLInputElement>(null);
@@ -310,12 +370,12 @@ export function AlbumEditor({ album, kinds, numbers = [] }: { album: EditorAlbum
     run(() => reorderAction(album.id, ids));
   };
 
-  const uploadCover = (file: File) => run(async () => {
+  const uploadCover = (file: File, back = false) => run(async () => {
     const form = new FormData();
 
     form.append("file", file);
 
-    const response = await fetch(`/api/cover-upload/${album.id}`, { method: "POST", body: form });
+    const response = await fetch(`/api/cover-upload/${album.id}${back ? "?side=back" : ""}`, { method: "POST", body: form });
     const body = await response.json().catch(() => ({})) as { message?: string };
 
     return response.ok ? { ok: true } : { ok: false, message: body.message ?? t("failed") };
@@ -327,7 +387,7 @@ export function AlbumEditor({ album, kinds, numbers = [] }: { album: EditorAlbum
         <div className="w-48 shrink-0 space-y-2">
           <CoverImage key={String(album.hasCover)} albumId={album.id} title={album.title}
                       className="w-48 rounded-lg shadow" />
-          <input ref={coverInput} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+          <input ref={coverInput} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" name="cover" aria-label={t("uploadCover")}
                  onChange={event => event.target.files?.[0] && uploadCover(event.target.files[0])} />
           <div className="flex flex-col gap-2">
             <Button variant="outline" size="sm" disabled={pending} onClick={() => coverInput.current?.click()}>
@@ -340,6 +400,17 @@ export function AlbumEditor({ album, kinds, numbers = [] }: { album: EditorAlbum
               </Button>
             )}
             {!album.hasCover && <p className="text-xs text-muted-foreground">{t("posterFallback")}</p>}
+            <input ref={backCoverInput} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" name="back-cover" aria-label={t("uploadBackCover")}
+                   onChange={event => event.target.files?.[0] && uploadCover(event.target.files[0], true)} />
+            <Button variant="outline" size="sm" disabled={pending} onClick={() => backCoverInput.current?.click()}>
+              <ImageUp />{album.hasBackCover ? t("replaceBackCover") : t("uploadBackCover")}
+            </Button>
+            {album.hasBackCover && (
+              <Button variant="ghost" size="sm" disabled={pending}
+                      onClick={() => run(() => removeBackCoverAction(album.id))}>
+                {t("removeBackCover")}
+              </Button>
+            )}
           </div>
         </div>
         <div className="flex-1 space-y-6">
@@ -355,13 +426,18 @@ export function AlbumEditor({ album, kinds, numbers = [] }: { album: EditorAlbum
                             <span className="block text-xs text-muted-foreground">{t("publishText")}</span>
                         </span>
           </label>
-          <AlbumForm kinds={kinds} submitLabel={t("save")}
+          <AlbumForm kinds={kinds} media={media} spexipediaUrl={spexipediaUrl} submitLabel={t("save")}
                      initial={{
                        spex: album.spex,
                        title: album.title,
                        year: album.year,
                        kindId: album.kind.id,
                        description: album.description,
+                       catalogueNumber: album.catalogueNumber,
+                       mediumId: album.medium?.id ?? null,
+                       released: album.released,
+                       recorded: album.recorded,
+                       conductor: album.conductor,
                      }}
                      onSubmit={async input => {
                        const result = await updateAlbumAction(album.id, input);
@@ -378,7 +454,13 @@ export function AlbumEditor({ album, kinds, numbers = [] }: { album: EditorAlbum
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">{t("tracks")}</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold">{t("tracks")}</h2>
+          <Button variant="outline" size="sm" disabled={pending} onClick={() => setAdding({
+            id: "", discNumber: 1, trackNumber: album.tracks.length + 1, title: "", lyricsSynced: false, fileSize: 0, durationMs: 0,
+            published: true, listed: false, fileMissing: false, hasAudio: false, creditsFromNumber: false, credits: [],
+          })}><Plus />{t("addTrackWithoutAudio")}</Button>
+        </div>
         <div
           className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 text-center ${dragging ? "border-primary bg-accent" : ""}`}
           onDragOver={event => {
@@ -439,11 +521,13 @@ export function AlbumEditor({ album, kinds, numbers = [] }: { album: EditorAlbum
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">{track.title}</span>
                     {track.fileMissing && <Badge variant="destructive">{t("fileMissing")}</Badge>}
+                    {!track.hasAudio && <Badge variant="secondary">{t("noAudio")}</Badge>}
                     {!track.published && <Badge variant="outline">{t("unpublished")}</Badge>}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {[track.performers, track.format, formatDuration(track.durationMs / 1000),
-                      `${(track.fileSize / 1024 / 1024).toFixed(1)} MB`].filter(Boolean).join(" · ")}
+                    {[track.side && t("sideLabel", { side: track.side }), track.performers,
+                      ...(track.hasAudio ? [track.format, formatDuration(track.durationMs / 1000), `${(track.fileSize / 1024 / 1024).toFixed(1)} MB`] : [])]
+                      .filter(Boolean).join(" · ")}
                   </div>
                 </div>
                 <Switch checked={track.published} disabled={pending}
@@ -461,13 +545,15 @@ export function AlbumEditor({ album, kinds, numbers = [] }: { album: EditorAlbum
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => setEditing(track)}><Pencil />{t("edit")}</DropdownMenuItem>
-                    <DropdownMenuItem render={<Link href={`/manage/tracks/${track.id}/lyrics`} />}>
-                      <TextQuote />{t("editLyrics")}
-                    </DropdownMenuItem>
+                    {track.hasAudio && (
+                      <DropdownMenuItem render={<Link href={`/manage/tracks/${track.id}/lyrics`} />}>
+                        <TextQuote />{t("editLyrics")}
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={() => {
                       replaceFor.current = track.id;
                       replaceInput.current?.click();
-                    }}><RefreshCw />{t("replaceAudio")}</DropdownMenuItem>
+                    }}><RefreshCw />{track.hasAudio ? t("replaceAudio") : t("uploadAudio")}</DropdownMenuItem>
                     <DropdownMenuItem variant="destructive"
                                       onClick={() => run(() => trashTrackAction(album.id, track.id, true), t("trashed"))}>
                       <Trash2 />{t("toTrash")}
@@ -502,6 +588,7 @@ export function AlbumEditor({ album, kinds, numbers = [] }: { album: EditorAlbum
       </section>
 
       {editing && <TrackDialog albumId={album.id} track={editing} numbers={numbers} onClose={() => setEditing(null)} />}
+      {adding && <TrackDialog albumId={album.id} track={adding} numbers={numbers} adding onClose={() => setAdding(null)} />}
     </div>
   );
 }

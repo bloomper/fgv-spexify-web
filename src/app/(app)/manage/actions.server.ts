@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import {
   albumCoverRemove,
+  albumBackCoverRemove,
+  trackAdd,
   albumCreate,
   albumDelete,
   albumPublish,
@@ -108,6 +110,27 @@ export async function removeCoverAction(id: string): Promise<ActionResult<null>>
   return editor(async () => {
     await albumCoverRemove(id);
     changed(id);
+    return null;
+  });
+}
+
+export async function removeBackCoverAction(id: string): Promise<ActionResult<null>> {
+  requireId(id);
+  return editor(async () => {
+    await albumBackCoverRemove(id);
+    changed(id);
+    return null;
+  });
+}
+
+/**
+ * A track without audio, for the discography of a record that is not digitised yet; its audio is uploaded later.
+ */
+export async function addTrackAction(albumId: string, input: TrackInput): Promise<ActionResult<null>> {
+  requireId(albumId);
+  return editor(async () => {
+    await trackAdd(albumId, input);
+    changed(albumId);
     return null;
   });
 }

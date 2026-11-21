@@ -269,7 +269,8 @@
     "collections": "Collections",
     "top": "Top list",
     "recent": "Recently played",
-    "tabs": "Library"
+    "tabs": "Library",
+    "adminMedia": "Media"
   },
   "Home": {
     "title": "Spexify",
@@ -382,7 +383,9 @@
     "playNext": "Play next",
     "goToMelody": "Go to the melody",
     "goToCredit": "Go to {name}",
-    "sheetMusicInArchive": "Sheet music in Spexarkivet"
+    "sheetMusicInArchive": "Sheet music in Spexarkivet",
+    "released": "released {date}",
+    "conductor": "conducted by {name}"
   },
   "Player": {
     "label": "Player",
@@ -577,7 +580,27 @@
     "otherSpexipediaNumber": "A number that is not one of the album's spex",
     "numberOption": "Act {act}, no. {position}: {title}",
     "spexipediaNumberHelp": "Which song of the spex the track is a recording of. The track is then shown on the spex's page in Spexipedia.",
-    "editLyrics": "Lyrics and timing"
+    "editLyrics": "Lyrics and timing",
+    "discography": "Discography",
+    "discographyHelp": "For a released record: catalogue number, medium, dates and conductor. A record can be entered before it is digitised.",
+    "catalogueNumber": "Catalogue number",
+    "medium": "Medium",
+    "noMedium": "Not released",
+    "released": "Released",
+    "recorded": "Recorded",
+    "conductor": "Conductor",
+    "addTrack": "Add track",
+    "addTrackWithoutAudio": "Track without audio",
+    "side": "Side",
+    "sideLabel": "side {side}",
+    "creditsFromNumber": "The melody and credits come from the number in Spexipedia",
+    "noCreditsFromNumber": "The number has no credits, or Spexipedia does not answer.",
+    "editInSpexipedia": "Edit in Spexipedia",
+    "noAudio": "No audio",
+    "uploadAudio": "Upload audio",
+    "uploadBackCover": "Upload back cover",
+    "replaceBackCover": "Replace back cover",
+    "removeBackCover": "Remove the back cover"
   },
   "Trash": {
     "title": "Trash",
@@ -799,7 +822,8 @@
     "searching": "Searching…",
     "results": "Search results",
     "alreadyPicked": "chosen",
-    "revival": "Revival"
+    "revival": "Revival",
+    "editInSpexipedia": "Edit in Spexipedia"
   },
   "Top": {
     "title": "Top list",
@@ -961,5 +985,9 @@
     "stampFrom": "From here",
     "removeLine": "Remove line {line}",
     "waveform": "Waveform"
+  },
+  "AdminMedia": {
+    "title": "Media",
+    "text": "The media the records of the discography came out on, e.g. LP, EP, CD and digital. An album that was never released has none."
   }
 }

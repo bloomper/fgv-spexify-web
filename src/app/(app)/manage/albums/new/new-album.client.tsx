@@ -12,13 +12,13 @@ import { track } from "@/utils/umami";
  * The form for a new album. Cache Components keep the page mounted after leaving it, so the form starts over once an
  * album was created; otherwise the next new album would begin with the previous one's spex.
  */
-export function NewAlbum({ kinds }: { kinds: KindOption[] }) {
+export function NewAlbum({ kinds, media }: { kinds: KindOption[]; media: KindOption[] }) {
   const t = useTranslations("Manage");
   const router = useRouter();
   const [generation, setGeneration] = useState(0);
 
   return (
-    <AlbumForm key={generation} kinds={kinds} submitLabel={t("create")} onSubmit={async input => {
+    <AlbumForm key={generation} kinds={kinds} media={media} submitLabel={t("create")} onSubmit={async input => {
       const result = await createAlbumAction(input);
 
       if (result.ok && result.data) {
