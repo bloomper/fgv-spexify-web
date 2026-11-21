@@ -387,7 +387,7 @@ export function AlbumEditor({ album, kinds, media = [], numbers = [], spexipedia
         <div className="w-48 shrink-0 space-y-2">
           <CoverImage key={String(album.hasCover)} albumId={album.id} title={album.title}
                       className="w-48 rounded-lg shadow" />
-          <input ref={coverInput} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+          <input ref={coverInput} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" name="cover" aria-label={t("uploadCover")}
                  onChange={event => event.target.files?.[0] && uploadCover(event.target.files[0])} />
           <div className="flex flex-col gap-2">
             <Button variant="outline" size="sm" disabled={pending} onClick={() => coverInput.current?.click()}>
@@ -400,7 +400,7 @@ export function AlbumEditor({ album, kinds, media = [], numbers = [], spexipedia
               </Button>
             )}
             {!album.hasCover && <p className="text-xs text-muted-foreground">{t("posterFallback")}</p>}
-            <input ref={backCoverInput} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+            <input ref={backCoverInput} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" name="back-cover" aria-label={t("uploadBackCover")}
                    onChange={event => event.target.files?.[0] && uploadCover(event.target.files[0], true)} />
             <Button variant="outline" size="sm" disabled={pending} onClick={() => backCoverInput.current?.click()}>
               <ImageUp />{album.hasBackCover ? t("replaceBackCover") : t("uploadBackCover")}
