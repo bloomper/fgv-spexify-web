@@ -486,6 +486,24 @@ const resolvers = {
       })),
     };
   },
+  SpexipediaSync: persona => {
+    requireAdmin(persona);
+    return {
+      spexipediaSync: {
+        lastPulledAt: "2026-11-01T11:55:00Z",
+        lastSuccess: "2026-11-01T11:55:00Z",
+        lastError: null,
+        skipped: [{
+          sequence: "412",
+          kind: "SPEX",
+          id: "00000000-0000-7000-8000-0000000000e2",
+          change: "UPSERT",
+          error: "The category is not here yet",
+          skippedAt: "2026-10-30T09:00:00Z",
+        }],
+      },
+    };
+  },
   MaintenanceJobs: persona => {
     requireAdmin(persona);
     return { maintenanceJobs: state.maintenanceJobs };
