@@ -8,8 +8,8 @@ test.describe("The application shell", () => {
     await expect(sidebar.getByRole("link", { name: "Hem" })).toHaveAttribute("href", "/");
     await expect(sidebar.getByRole("link", { name: "Album" }).first()).toHaveAttribute("href", "/albums");
     await expect(sidebar.getByRole("link", { name: "Mina appar" })).toBeVisible();
-    await expect(sidebar.getByRole("link", { name: "Redigera" })).toBeVisible();
-    await expect(sidebar.getByRole("link", { name: "Administration" })).toBeVisible();
+    await expect(sidebar.getByRole("button", { name: "Redigera", exact: true })).toBeVisible();
+    await expect(sidebar.getByRole("button", { name: "Administration", exact: true })).toBeVisible();
   });
 
   test("hides editing and administration from a listener", async ({ page, loginAs }) => {
@@ -17,8 +17,8 @@ test.describe("The application shell", () => {
 
     const sidebar = page.locator("[data-slot=\"sidebar\"]:visible");
     await expect(sidebar.getByRole("link", { name: "Gillat" })).toBeVisible();
-    await expect(sidebar.getByRole("link", { name: "Redigera" })).toHaveCount(0);
-    await expect(sidebar.getByRole("link", { name: "Administration" })).toHaveCount(0);
+    await expect(sidebar.getByRole("button", { name: "Redigera", exact: true })).toHaveCount(0);
+    await expect(sidebar.getByRole("button", { name: "Administration", exact: true })).toHaveCount(0);
     await page.goto("/admin/library");
     await expect(page.getByRole("heading", { name: "Du har inte behörighet" })).toBeVisible();
   });
