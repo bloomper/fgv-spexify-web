@@ -10,9 +10,9 @@ const pdf = vi.hoisted(() => ({
 vi.mock("pdfjs-dist", () => ({
   GlobalWorkerOptions: {},
   getDocument: () => ({
+    destroy: pdf.destroy,
     promise: Promise.resolve({
       numPages: 3,
-      destroy: pdf.destroy,
       getPage: async () => ({ getViewport: ({ scale }: { scale: number }) => ({ width: 600 * scale, height: 800 * scale }), render: pdf.render }),
     }),
   }),

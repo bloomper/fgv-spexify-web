@@ -12,16 +12,18 @@ type PdfDocument = {
     getViewport: (options: { scale: number }) => { width: number; height: number };
     render: (options: { canvasContext: CanvasRenderingContext2D; viewport: unknown; canvas: HTMLCanvasElement }) => { promise: Promise<void>; cancel: () => void };
   }>;
-  destroy: () => Promise<void>;
 };
 
-let pdfjs: Promise<{ getDocument: (source: { data: ArrayBuffer }) => { promise: Promise<PdfDocument> } }> | null = null;
+// The loading task, not the document, is what pdf.js destroys: it also destroys the document and stops its worker
+type PdfLoadingTask = { promise: Promise<PdfDocument>; destroy: () => Promise<void> };
+
+let pdfjs: Promise<{ getDocument: (source: { data: ArrayBuffer }) => PdfLoadingTask }> | null = null;
 
 /** pdf.js, loaded the first time a score is read; its worker is served from this origin. */
 function loadPdfJs() {
   pdfjs ??= import("pdfjs-dist").then(module => {
     module.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
-    return module as unknown as { getDocument: (source: { data: ArrayBuffer }) => { promise: Promise<PdfDocument> } };
+    return module as unknown as { getDocument: (source: { data: ArrayBuffer }) => PdfLoadingTask };
   });
   return pdfjs;
 }
@@ -42,7 +44,7 @@ export function PdfReader({ url, title }: { url: string; title: string }) {
 
   useEffect(() => {
     let dead = false;
-    let loaded: PdfDocument | null = null;
+    let task: PdfLoadingTask | null = null;
 
     (async () => {
       try {
@@ -54,7 +56,13 @@ export function PdfReader({ url, title }: { url: string; title: string }) {
 
         const [library, data] = await Promise.all([loadPdfJs(), response.arrayBuffer()]);
 
-        loaded = await library.getDocument({ data }).promise;
+        if (dead) {
+          return;
+        }
+        task = library.getDocument({ data });
+
+        const loaded = await task.promise;
+
         if (!dead) {
           setPdf(loaded);
           setState("ready");
@@ -67,7 +75,7 @@ export function PdfReader({ url, title }: { url: string; title: string }) {
     })();
     return () => {
       dead = true;
-      void loaded?.destroy();
+      void task?.destroy();
     };
   }, [url]);
 
