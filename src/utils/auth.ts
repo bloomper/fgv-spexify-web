@@ -2,6 +2,11 @@ import { AccessTokenClaims, type Role } from "@/types/auth";
 
 export const CLIENT_ID = "fgv-spexify";
 
+/**
+ * Set for a minute when the app has asked Keycloak whether the user is already logged in to another FGV application.
+ */
+export const SSO_CHECKED_COOKIE = "sso_checked";
+
 export const hasAccess = (roles: Role[]) => roles.includes("USER");
 /** Editors upload and edit; admins can do everything editors can. */
 export const isEditor = (roles: Role[]) => hasAccess(roles) && (roles.includes("EDITOR") || roles.includes("ADMIN"));
