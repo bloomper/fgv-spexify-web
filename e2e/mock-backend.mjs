@@ -1130,11 +1130,21 @@ function handleAuthorize(url, res) {
     res.writeHead(400).end("missing redirect_uri");
     return;
   }
+  const target = new URL(redirectUri);
+  const stateParam = url.searchParams.get("state");
+  // The mock keeps no Keycloak session, so a silent login (prompt=none), as the one a visitor gets on arrival, finds
+  // nobody logged in, as Keycloak says it
+  if (url.searchParams.get("prompt") === "none") {
+    target.searchParams.set("error", "login_required");
+    if (stateParam) {
+      target.searchParams.set("state", stateParam);
+    }
+    res.writeHead(302, { location: target.toString() }).end();
+    return;
+  }
   const code = randomUUID();
   pendingCodes.set(code, { nonce: url.searchParams.get("nonce"), persona: PERSONAS[currentPersona] });
-  const target = new URL(redirectUri);
   target.searchParams.set("code", code);
-  const stateParam = url.searchParams.get("state");
   if (stateParam) {
     target.searchParams.set("state", stateParam);
   }
