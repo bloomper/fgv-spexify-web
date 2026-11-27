@@ -13,7 +13,10 @@ vi.mock("pdfjs-dist", () => ({
     destroy: pdf.destroy,
     promise: Promise.resolve({
       numPages: 3,
-      getPage: async () => ({ getViewport: ({ scale }: { scale: number }) => ({ width: 600 * scale, height: 800 * scale }), render: pdf.render }),
+      getPage: async () => ({
+        getViewport: ({ scale }: { scale: number }) => ({ width: 600 * scale, height: 800 * scale }),
+        render: pdf.render,
+      }),
     }),
   }),
 }));
@@ -21,7 +24,7 @@ vi.mock("pdfjs-dist", () => ({
 describe("the PDF reader", () => {
   beforeEach(() => {
     pdf.render.mockClear();
-    globalThis.fetch = (vi.fn(async () => new Response("%PDF")));
+    globalThis.fetch = vi.fn(async () => new Response("%PDF"));
     HTMLCanvasElement.prototype.getContext = vi.fn(() => ({})) as unknown as HTMLCanvasElement["getContext"];
     Object.defineProperty(HTMLElement.prototype, "clientWidth", { configurable: true, get: () => 600 });
   });
@@ -33,7 +36,12 @@ describe("the PDF reader", () => {
   });
 
   it("draws the pages one at a time, with zoom", async () => {
-    render(<PdfReader url="/api/sheet-music/t/f" title="Partitur" />);
+    render(
+      <PdfReader
+        url="/api/sheet-music/t/f"
+        title="Partitur"
+      />
+    );
     expect(await screen.findByText('page:{"page":1,"pages":3}')).toBeInTheDocument();
     await waitFor(() => expect(pdf.render).toHaveBeenCalled());
     expect(screen.getByRole("button", { name: "previousPage" })).toBeDisabled();
@@ -47,8 +55,13 @@ describe("the PDF reader", () => {
   });
 
   it("says when the file cannot be read", async () => {
-    globalThis.fetch = (vi.fn(async () => new Response("", { status: 403 })));
-    render(<PdfReader url="/api/sheet-music/t/f" title="Partitur" />);
+    globalThis.fetch = vi.fn(async () => new Response("", { status: 403 }));
+    render(
+      <PdfReader
+        url="/api/sheet-music/t/f"
+        title="Partitur"
+      />
+    );
     expect(await screen.findByRole("alert")).toHaveTextContent("couldNotLoad");
   });
 });

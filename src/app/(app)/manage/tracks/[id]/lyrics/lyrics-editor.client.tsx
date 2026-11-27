@@ -45,7 +45,11 @@ export function LyricsEditor({ track }: { track: EditorTrack }) {
   const player = usePlayer();
   const audio = useRef<HTMLAudioElement>(null);
   const [lines, setLines] = useState<TimedLine[]>(() => toLines(track.lyrics, track.lyricsSynced));
-  const [text, setText] = useState(() => toLines(track.lyrics, track.lyricsSynced).map(line => line.text).join("\n"));
+  const [text, setText] = useState(() =>
+    toLines(track.lyrics, track.lyricsSynced)
+      .map((line) => line.text)
+      .join("\n")
+  );
   const [revisions, setRevisions] = useState(track.lyricsRevisions);
   const [base, setBase] = useState<string | null>(track.lyricsRevisions[0]?.id ?? null);
   const [next, setNext] = useState(0);
@@ -111,14 +115,17 @@ export function LyricsEditor({ track }: { track: EditorTrack }) {
     }
   }, [player, t]);
 
-  const seek = useCallback((seconds: number) => {
-    const element = audio.current;
+  const seek = useCallback(
+    (seconds: number) => {
+      const element = audio.current;
 
-    if (element) {
-      element.currentTime = Math.min(Math.max(0, seconds), duration);
-      setTime(element.currentTime);
-    }
-  }, [duration]);
+      if (element) {
+        element.currentTime = Math.min(Math.max(0, seconds), duration);
+        setTime(element.currentTime);
+      }
+    },
+    [duration]
+  );
 
   const stamp = useCallback(() => {
     if (next >= lines.length) {
@@ -127,7 +134,7 @@ export function LyricsEditor({ track }: { track: EditorTrack }) {
 
     const at = Math.round((audio.current?.currentTime ?? 0) * 100) / 100;
 
-    change(lines.map((line, i) => i === next ? { ...line, time: at } : line));
+    change(lines.map((line, i) => (i === next ? { ...line, time: at } : line)));
     setNext(next + 1);
   }, [lines, next]);
 
@@ -153,11 +160,21 @@ export function LyricsEditor({ track }: { track: EditorTrack }) {
     return () => window.removeEventListener("keydown", key, true);
   }, [toggle, stamp]);
 
-  const shift = (index: number, by: number) => change(lines.map((line, i) => i === index && line.time !== null
-    ? { ...line, time: Math.max(0, Math.round((line.time + by) * 100) / 100) } : line));
+  const shift = (index: number, by: number) =>
+    change(
+      lines.map((line, i) =>
+        i === index && line.time !== null
+          ? { ...line, time: Math.max(0, Math.round((line.time + by) * 100) / 100) }
+          : line
+      )
+    );
 
-  const shiftAll = (by: number) => change(lines.map(line => line.time === null ? line
-    : { ...line, time: Math.max(0, Math.round((line.time + by) * 100) / 100) }));
+  const shiftAll = (by: number) =>
+    change(
+      lines.map((line) =>
+        line.time === null ? line : { ...line, time: Math.max(0, Math.round((line.time + by) * 100) / 100) }
+      )
+    );
 
   const save = async () => {
     const { lyrics, synced } = toLyrics(lines);
@@ -179,7 +196,13 @@ export function LyricsEditor({ track }: { track: EditorTrack }) {
   };
 
   const restore = async (revision: Revision) => {
-    if (!await dialogs.confirm({ title: t("restoreTitle"), description: t("restoreDescription"), confirmLabel: t("restore") })) {
+    if (
+      !(await dialogs.confirm({
+        title: t("restoreTitle"),
+        description: t("restoreDescription"),
+        confirmLabel: t("restore"),
+      }))
+    ) {
       return;
     }
 
@@ -189,7 +212,7 @@ export function LyricsEditor({ track }: { track: EditorTrack }) {
       const restored = toLines(result.data.lyrics, result.data.lyricsSynced);
 
       setLines(restored);
-      setText(restored.map(line => line.text).join("\n"));
+      setText(restored.map((line) => line.text).join("\n"));
       setRevisions(result.data.lyricsRevisions);
       setBase(result.data.lyricsRevisions[0]?.id ?? null);
       setDirty(false);
@@ -200,83 +223,205 @@ export function LyricsEditor({ track }: { track: EditorTrack }) {
     }
   };
 
-  const timed = lines.filter(line => line.time !== null).length;
+  const timed = lines.filter((line) => line.time !== null).length;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="min-w-0 space-y-4">
-        <section aria-labelledby="text-heading" className="space-y-2">
-          <h2 id="text-heading" className="text-lg font-semibold">{t("text")}</h2>
-          <Textarea rows={6} value={text} onChange={event => setText(event.target.value)} className="font-mono text-sm"
-                    aria-describedby="text-hint" />
+        <section
+          aria-labelledby="text-heading"
+          className="space-y-2"
+        >
+          <h2
+            id="text-heading"
+            className="text-lg font-semibold"
+          >
+            {t("text")}
+          </h2>
+          <Textarea
+            rows={6}
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            className="font-mono text-sm"
+            aria-describedby="text-hint"
+          />
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => change(withText(lines, text))}>{t("useText")}</Button>
-            <span id="text-hint" className="text-xs text-muted-foreground">{t("textHint")}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => change(withText(lines, text))}
+            >
+              {t("useText")}
+            </Button>
+            <span
+              id="text-hint"
+              className="text-muted-foreground text-xs"
+            >
+              {t("textHint")}
+            </span>
           </div>
         </section>
 
-        <section aria-labelledby="timing-heading" className="space-y-3">
-          <h2 id="timing-heading" className="text-lg font-semibold">{t("timing")}</h2>
-          {track.fileMissing ? <p className="text-sm text-destructive">{t("fileMissing")}</p> : (
+        <section
+          aria-labelledby="timing-heading"
+          className="space-y-3"
+        >
+          <h2
+            id="timing-heading"
+            className="text-lg font-semibold"
+          >
+            {t("timing")}
+          </h2>
+          {track.fileMissing ? (
+            <p className="text-destructive text-sm">{t("fileMissing")}</p>
+          ) : (
             <>
-              <audio ref={audio} src={`/api/audio/${track.id}`} preload="metadata" className="hidden" />
-              <Waveform peaks={track.waveform} duration={duration} time={time} lines={lines} current={current} onSeek={seek} />
+              <audio
+                ref={audio}
+                src={`/api/audio/${track.id}`}
+                preload="metadata"
+                className="hidden"
+              />
+              <Waveform
+                peaks={track.waveform}
+                duration={duration}
+                time={time}
+                lines={lines}
+                current={current}
+                onSeek={seek}
+              />
               <div className="flex flex-wrap items-center gap-2">
-                <Button onClick={toggle} aria-label={playing ? t("pause") : t("play")}>
+                <Button
+                  onClick={toggle}
+                  aria-label={playing ? t("pause") : t("play")}
+                >
                   {playing ? <Pause className="fill-current" /> : <Play className="fill-current" />}
-                  <span className="tabular-nums">{formatDuration(time)} / {formatDuration(duration)}</span>
+                  <span className="tabular-nums">
+                    {formatDuration(time)} / {formatDuration(duration)}
+                  </span>
                 </Button>
-                <Button variant="secondary" onClick={stamp} disabled={next >= lines.length}>
-                  <Stamp />{next < lines.length ? t("stamp", { line: next + 1 }) : t("allStamped")}
+                <Button
+                  variant="secondary"
+                  onClick={stamp}
+                  disabled={next >= lines.length}
+                >
+                  <Stamp />
+                  {next < lines.length ? t("stamp", { line: next + 1 }) : t("allStamped")}
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => seek(time - 3)}>{t("back3")}</Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => seek(time - 3)}
+                >
+                  {t("back3")}
+                </Button>
                 <div className="flex-1" />
-                <span className="text-sm text-muted-foreground">{t("shiftAll")}</span>
-                <Button variant="outline" size="icon" onClick={() => shiftAll(-NUDGE)} aria-label={t("earlierAll")}><Minus /></Button>
-                <Button variant="outline" size="icon" onClick={() => shiftAll(NUDGE)} aria-label={t("laterAll")}><Plus /></Button>
+                <span className="text-muted-foreground text-sm">{t("shiftAll")}</span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => shiftAll(-NUDGE)}
+                  aria-label={t("earlierAll")}
+                >
+                  <Minus />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => shiftAll(NUDGE)}
+                  aria-label={t("laterAll")}
+                >
+                  <Plus />
+                </Button>
               </div>
-              <p className="text-xs text-muted-foreground">{t("howTo")}</p>
+              <p className="text-muted-foreground text-xs">{t("howTo")}</p>
             </>
           )}
           <ol className="divide-y rounded-lg border">
             {lines.map((line, i) => (
-              <LineRow key={i} index={i} line={line} current={i === current} next={i === next}
-                       onTime={value => change(lines.map((other, k) => k === i ? { ...other, time: value } : other))}
-                       onText={value => change(lines.map((other, k) => k === i ? { ...other, text: value } : other))}
-                       onShift={by => shift(i, by)}
-                       onNow={() => change(lines.map((other, k) => k === i ? { ...other, time: Math.round(time * 100) / 100 } : other))}
-                       onNext={() => setNext(i)}
-                       onSeek={() => line.time !== null && seek(line.time)}
-                       onRemove={() => change(lines.filter((_, k) => k !== i))} />
+              <LineRow
+                key={i}
+                index={i}
+                line={line}
+                current={i === current}
+                next={i === next}
+                onTime={(value) => change(lines.map((other, k) => (k === i ? { ...other, time: value } : other)))}
+                onText={(value) => change(lines.map((other, k) => (k === i ? { ...other, text: value } : other)))}
+                onShift={(by) => shift(i, by)}
+                onNow={() =>
+                  change(lines.map((other, k) => (k === i ? { ...other, time: Math.round(time * 100) / 100 } : other)))
+                }
+                onNext={() => setNext(i)}
+                onSeek={() => line.time !== null && seek(line.time)}
+                onRemove={() => change(lines.filter((_, k) => k !== i))}
+              />
             ))}
           </ol>
-          <Button variant="outline" size="sm" onClick={() => change([...lines, { time: null, text: "" }])}><Plus />{t("addLine")}</Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => change([...lines, { time: null, text: "" }])}
+          >
+            <Plus />
+            {t("addLine")}
+          </Button>
         </section>
 
-        <div className="sticky bottom-[calc(var(--player-height,0px)+0.5rem)] flex flex-wrap items-center gap-3 rounded-lg border bg-background/95 p-3 backdrop-blur">
-          <span className="text-sm text-muted-foreground">{t("timedCount", { timed, lines: lines.length })}</span>
+        <div className="bg-background/95 sticky bottom-[calc(var(--player-height,0px)+0.5rem)] flex flex-wrap items-center gap-3 rounded-lg border p-3 backdrop-blur">
+          <span className="text-muted-foreground text-sm">{t("timedCount", { timed, lines: lines.length })}</span>
           <div className="flex-1" />
-          {dirty && <span className="text-sm text-muted-foreground">{t("unsaved")}</span>}
-          <Button onClick={save} disabled={saving || !dirty}>{timed === lines.length && timed > 0 ? t("saveSynced") : t("savePlain")}</Button>
+          {dirty && <span className="text-muted-foreground text-sm">{t("unsaved")}</span>}
+          <Button
+            onClick={save}
+            disabled={saving || !dirty}
+          >
+            {timed === lines.length && timed > 0 ? t("saveSynced") : t("savePlain")}
+          </Button>
         </div>
       </div>
 
-      <aside aria-labelledby="history-heading" className="space-y-2">
-        <h2 id="history-heading" className="text-lg font-semibold">{t("history")}</h2>
-        {revisions.length === 0 ? <p className="text-sm text-muted-foreground">{t("noHistory")}</p> : (
+      <aside
+        aria-labelledby="history-heading"
+        className="space-y-2"
+      >
+        <h2
+          id="history-heading"
+          className="text-lg font-semibold"
+        >
+          {t("history")}
+        </h2>
+        {revisions.length === 0 ? (
+          <p className="text-muted-foreground text-sm">{t("noHistory")}</p>
+        ) : (
           <ol className="space-y-2">
             {revisions.map((revision, i) => (
-              <li key={revision.id} className="rounded-md border p-2 text-sm">
+              <li
+                key={revision.id}
+                className="rounded-md border p-2 text-sm"
+              >
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="font-medium">{revision.createdBy ?? t("original")}</span>
-                  <time dateTime={revision.createdAt} className="text-xs text-muted-foreground">
+                  <time
+                    dateTime={revision.createdAt}
+                    className="text-muted-foreground text-xs"
+                  >
                     {format.dateTime(new Date(revision.createdAt), { dateStyle: "short", timeStyle: "short" })}
                   </time>
                 </div>
-                <p className="line-clamp-2 text-xs text-muted-foreground">
-                  {revision.synced ? t("synced") : t("plain")} · {(revision.lyrics ?? "").replace(/\[[\d:.]+]/g, "").slice(0, 120) || t("empty")}
+                <p className="text-muted-foreground line-clamp-2 text-xs">
+                  {revision.synced ? t("synced") : t("plain")} ·{" "}
+                  {(revision.lyrics ?? "").replace(/\[[\d:.]+]/g, "").slice(0, 120) || t("empty")}
                 </p>
-                {i > 0 && <Button variant="ghost" size="sm" onClick={() => restore(revision)}><RotateCcw />{t("restore")}</Button>}
+                {i > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => restore(revision)}
+                  >
+                    <RotateCcw />
+                    {t("restore")}
+                  </Button>
+                )}
               </li>
             ))}
           </ol>
@@ -286,7 +431,19 @@ export function LyricsEditor({ track }: { track: EditorTrack }) {
   );
 }
 
-function LineRow({ index, line, current, next, onTime, onText, onShift, onNow, onNext, onSeek, onRemove }: {
+function LineRow({
+  index,
+  line,
+  current,
+  next,
+  onTime,
+  onText,
+  onShift,
+  onNow,
+  onNext,
+  onSeek,
+  onRemove,
+}: {
   index: number;
   line: TimedLine;
   current: boolean;
@@ -303,29 +460,83 @@ function LineRow({ index, line, current, next, onTime, onText, onShift, onNow, o
   const [typed, setTyped] = useState<string | null>(null);
 
   return (
-    <li className={cn("flex flex-wrap items-center gap-1 px-2 py-1", current && "bg-primary/10", next && "border-l-4 border-l-primary")}>
-      <span className="w-8 text-xs tabular-nums text-muted-foreground">{index + 1}</span>
-      <Input value={typed ?? (line.time === null ? "" : lrcTime(line.time))} placeholder="--:--.--"
-             aria-label={t("timeOf", { line: index + 1 })} className="h-8 w-24 font-mono text-xs"
-             onChange={event => setTyped(event.target.value)}
-             onBlur={() => {
-               if (typed !== null) {
-                 onTime(typed.trim() === "" ? null : parseTime(typed) ?? line.time);
-                 setTyped(null);
-               }
-             }} />
-      <Button variant="ghost" size="icon-sm" onClick={() => onShift(-NUDGE)} disabled={line.time === null}
-              aria-label={t("earlier", { line: index + 1 })}><Minus /></Button>
-      <Button variant="ghost" size="icon-sm" onClick={() => onShift(NUDGE)} disabled={line.time === null}
-              aria-label={t("later", { line: index + 1 })}><Plus /></Button>
-      <Button variant="ghost" size="sm" onClick={onNow}>{t("now")}</Button>
-      <Input value={line.text} onChange={event => onText(event.target.value)} aria-label={t("textOf", { line: index + 1 })}
-             className="h-8 min-w-40 flex-1" />
-      <Button variant="ghost" size="icon-sm" onClick={onSeek} disabled={line.time === null} aria-label={t("playFrom", { line: index + 1 })}>
+    <li
+      className={cn(
+        "flex flex-wrap items-center gap-1 px-2 py-1",
+        current && "bg-primary/10",
+        next && "border-l-primary border-l-4"
+      )}
+    >
+      <span className="text-muted-foreground w-8 text-xs tabular-nums">{index + 1}</span>
+      <Input
+        value={typed ?? (line.time === null ? "" : lrcTime(line.time))}
+        placeholder="--:--.--"
+        aria-label={t("timeOf", { line: index + 1 })}
+        className="h-8 w-24 font-mono text-xs"
+        onChange={(event) => setTyped(event.target.value)}
+        onBlur={() => {
+          if (typed !== null) {
+            onTime(typed.trim() === "" ? null : (parseTime(typed) ?? line.time));
+            setTyped(null);
+          }
+        }}
+      />
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={() => onShift(-NUDGE)}
+        disabled={line.time === null}
+        aria-label={t("earlier", { line: index + 1 })}
+      >
+        <Minus />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={() => onShift(NUDGE)}
+        disabled={line.time === null}
+        aria-label={t("later", { line: index + 1 })}
+      >
+        <Plus />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onNow}
+      >
+        {t("now")}
+      </Button>
+      <Input
+        value={line.text}
+        onChange={(event) => onText(event.target.value)}
+        aria-label={t("textOf", { line: index + 1 })}
+        className="h-8 min-w-40 flex-1"
+      />
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={onSeek}
+        disabled={line.time === null}
+        aria-label={t("playFrom", { line: index + 1 })}
+      >
         <Play />
       </Button>
-      <Button variant="ghost" size="sm" onClick={onNext} aria-pressed={next}>{t("stampFrom")}</Button>
-      <Button variant="ghost" size="icon-sm" onClick={onRemove} aria-label={t("removeLine", { line: index + 1 })}><Trash2 /></Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onNext}
+        aria-pressed={next}
+      >
+        {t("stampFrom")}
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={onRemove}
+        aria-label={t("removeLine", { line: index + 1 })}
+      >
+        <Trash2 />
+      </Button>
     </li>
   );
 }
@@ -333,7 +544,14 @@ function LineRow({ index, line, current, next, onTime, onText, onShift, onNow, o
 /**
  * The recording's loudness over time, the lines' starts as marks and where it plays; a click seeks.
  */
-function Waveform({ peaks, duration, time, lines, current, onSeek }: {
+function Waveform({
+  peaks,
+  duration,
+  time,
+  lines,
+  current,
+  onSeek,
+}: {
   peaks: number[];
   duration: number;
   time: number;
@@ -347,32 +565,69 @@ function Waveform({ peaks, duration, time, lines, current, onSeek }: {
   const path = useMemo(() => {
     const step = width / Math.max(1, peaks.length);
 
-    return peaks.map((peak, i) => `M${(i * step).toFixed(1)} ${(height / 2 - (peak * height) / 2).toFixed(1)}V${(height / 2 + (peak * height) / 2).toFixed(1)}`).join("");
+    return peaks
+      .map(
+        (peak, i) =>
+          `M${(i * step).toFixed(1)} ${(height / 2 - (peak * height) / 2).toFixed(1)}V${(height / 2 + (peak * height) / 2).toFixed(1)}`
+      )
+      .join("");
   }, [peaks]);
   const x = (seconds: number) => (duration > 0 ? (seconds / duration) * width : 0);
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="slider" tabIndex={0}
-         aria-label={t("waveform")} aria-valuemin={0} aria-valuemax={Math.round(duration)} aria-valuenow={Math.round(time)}
-         aria-valuetext={formatDuration(time)}
-         className="h-20 w-full cursor-pointer rounded-md bg-secondary/50 text-link"
-         onKeyDown={event => {
-           if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-             event.preventDefault();
-             onSeek(time + (event.key === "ArrowLeft" ? -2 : 2));
-           }
-         }}
-         onClick={event => {
-           const bounds = event.currentTarget.getBoundingClientRect();
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="none"
+      role="slider"
+      tabIndex={0}
+      aria-label={t("waveform")}
+      aria-valuemin={0}
+      aria-valuemax={Math.round(duration)}
+      aria-valuenow={Math.round(time)}
+      aria-valuetext={formatDuration(time)}
+      className="bg-secondary/50 text-link h-20 w-full cursor-pointer rounded-md"
+      onKeyDown={(event) => {
+        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+          event.preventDefault();
+          onSeek(time + (event.key === "ArrowLeft" ? -2 : 2));
+        }
+      }}
+      onClick={(event) => {
+        const bounds = event.currentTarget.getBoundingClientRect();
 
-           onSeek(((event.clientX - bounds.left) / bounds.width) * duration);
-         }}>
-      <path d={path} stroke="currentColor" strokeOpacity={0.45} strokeWidth={width / Math.max(1, peaks.length) * 0.8} />
-      {lines.map((line, i) => line.time === null ? null : (
-        <line key={i} x1={x(line.time)} x2={x(line.time)} y1={0} y2={height} stroke="currentColor"
-              strokeWidth={i === current ? 3 : 1.5} vectorEffect="non-scaling-stroke" strokeOpacity={i === current ? 1 : 0.6} />
-      ))}
-      <line x1={x(time)} x2={x(time)} y1={0} y2={height} stroke="var(--foreground)" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+        onSeek(((event.clientX - bounds.left) / bounds.width) * duration);
+      }}
+    >
+      <path
+        d={path}
+        stroke="currentColor"
+        strokeOpacity={0.45}
+        strokeWidth={(width / Math.max(1, peaks.length)) * 0.8}
+      />
+      {lines.map((line, i) =>
+        line.time === null ? null : (
+          <line
+            key={i}
+            x1={x(line.time)}
+            x2={x(line.time)}
+            y1={0}
+            y2={height}
+            stroke="currentColor"
+            strokeWidth={i === current ? 3 : 1.5}
+            vectorEffect="non-scaling-stroke"
+            strokeOpacity={i === current ? 1 : 0.6}
+          />
+        )
+      )}
+      <line
+        x1={x(time)}
+        x2={x(time)}
+        y1={0}
+        y2={height}
+        stroke="var(--foreground)"
+        strokeWidth={2}
+        vectorEffect="non-scaling-stroke"
+      />
     </svg>
   );
 }

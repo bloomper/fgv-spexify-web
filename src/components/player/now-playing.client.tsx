@@ -5,7 +5,19 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { BookOpenText, ChevronDown, ListX, Pause, Play, Repeat, Repeat1, RotateCcw, Shuffle, SkipBack, SkipForward } from "lucide-react";
+import {
+  BookOpenText,
+  ChevronDown,
+  ListX,
+  Pause,
+  Play,
+  Repeat,
+  Repeat1,
+  RotateCcw,
+  Shuffle,
+  SkipBack,
+  SkipForward,
+} from "lucide-react";
 import { Button } from "@bloomper/fgv-web-ui/ui/button";
 import { CoverImage } from "@/components/album/cover-image.client";
 import { NumberKindIcon } from "@/components/album/number-kind-icon";
@@ -58,109 +70,232 @@ export function NowPlaying({ open, onClose }: { open: boolean; onClose: () => vo
 
   // On a large screen the cover is always there, so the panel beside it shows the lyrics or the queue
   const panel: Exclude<Tab, "playing"> = tab === "playing" ? (current.lyrics ? "lyrics" : "queue") : tab;
-  const tabs: Tab[] = ["playing", ...(current.lyrics ? ["lyrics" as const] : []), ...(sheetMusic ? ["notes" as const] : []), "queue", "about"];
+  const tabs: Tab[] = [
+    "playing",
+    ...(current.lyrics ? ["lyrics" as const] : []),
+    ...(sheetMusic ? ["notes" as const] : []),
+    "queue",
+    "about",
+  ];
   const duration = player.duration || current.durationMs / 1000;
 
   return createPortal(
-    <div role="dialog" aria-modal="true" aria-label={t("nowPlaying")}
-         className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-background animate-in slide-in-from-bottom-8 fade-in duration-200">
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-0">
-        <CoverImage albumId={current.albumId} title="" className="size-full scale-125 opacity-40 blur-3xl saturate-150" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/70 to-background" />
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={t("nowPlaying")}
+      className="bg-background animate-in slide-in-from-bottom-8 fade-in fixed inset-0 z-50 flex flex-col overflow-hidden duration-200"
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-0"
+      >
+        <CoverImage
+          albumId={current.albumId}
+          title=""
+          className="size-full scale-125 opacity-40 blur-3xl saturate-150"
+        />
+        <div className="from-background/40 via-background/70 to-background absolute inset-0 bg-gradient-to-b" />
       </div>
       <div className="relative flex items-center gap-2 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] md:px-6">
-        <Button variant="ghost" size="icon-lg" onClick={onClose} aria-label={t("closeNowPlaying")}>
+        <Button
+          variant="ghost"
+          size="icon-lg"
+          onClick={onClose}
+          aria-label={t("closeNowPlaying")}
+        >
           <ChevronDown className="size-6" />
         </Button>
         <div className="min-w-0 flex-1 text-center">
-          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("nowPlaying")}</div>
-          <Link href={`/albums/${current.albumId}`} onClick={onClose} className="block truncate text-sm font-medium hover:underline">
+          <div className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">{t("nowPlaying")}</div>
+          <Link
+            href={`/albums/${current.albumId}`}
+            onClick={onClose}
+            className="block truncate text-sm font-medium hover:underline"
+          >
             {current.albumTitle}
           </Link>
         </div>
         <div className="size-10" />
       </div>
-      <div role="tablist" aria-label={t("nowPlaying")} className="relative flex gap-1 px-3 py-2 md:justify-end md:px-8">
-        {tabs.map(item => (
-          <button key={item} type="button" role="tab" aria-selected={tab === item || (item === panel && tab === "playing")}
-                  onClick={() => setTab(item)}
-                  className={cn("min-h-9 flex-1 rounded-full px-3 text-sm font-medium md:flex-none md:px-4",
-                    item === "playing" && "md:hidden",
-                    tab === item ? "bg-foreground text-background" : "bg-secondary/80 hover:bg-secondary",
-                    tab === "playing" && item === panel && "md:bg-foreground md:text-background")}>
+      <div
+        role="tablist"
+        aria-label={t("nowPlaying")}
+        className="relative flex gap-1 px-3 py-2 md:justify-end md:px-8"
+      >
+        {tabs.map((item) => (
+          <button
+            key={item}
+            type="button"
+            role="tab"
+            aria-selected={tab === item || (item === panel && tab === "playing")}
+            onClick={() => setTab(item)}
+            className={cn(
+              "min-h-9 flex-1 rounded-full px-3 text-sm font-medium md:flex-none md:px-4",
+              item === "playing" && "md:hidden",
+              tab === item ? "bg-foreground text-background" : "bg-secondary/80 hover:bg-secondary",
+              tab === "playing" && item === panel && "md:bg-foreground md:text-background"
+            )}
+          >
             {t(`tabs.${item}`)}
           </button>
         ))}
       </div>
       <div className="relative grid min-h-0 flex-1 gap-8 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:px-8 lg:px-16">
-        <div className={cn("min-h-0 flex-col items-center justify-center gap-4 md:flex", tab === "playing" ? "flex" : "hidden")}>
-          <CoverImage albumId={current.albumId} title={current.albumTitle}
-                      className="aspect-square w-full max-w-[min(26rem,55vh)] rounded-lg shadow-2xl" />
+        <div
+          className={cn(
+            "min-h-0 flex-col items-center justify-center gap-4 md:flex",
+            tab === "playing" ? "flex" : "hidden"
+          )}
+        >
+          <CoverImage
+            albumId={current.albumId}
+            title={current.albumTitle}
+            className="aspect-square w-full max-w-[min(26rem,55vh)] rounded-lg shadow-2xl"
+          />
           <div className="w-full max-w-[26rem] space-y-4">
             <div className="min-w-0">
-              <h2 className="flex items-center gap-2 text-2xl font-bold leading-tight">
-                {current.numberKind && <NumberKindIcon kind={current.numberKind} locale={locale} />}
+              <h2 className="flex items-center gap-2 text-2xl leading-tight font-bold">
+                {current.numberKind && (
+                  <NumberKindIcon
+                    kind={current.numberKind}
+                    locale={locale}
+                  />
+                )}
                 <span className="truncate">{current.title}</span>
               </h2>
-              {player.failed
-                ? <p role="alert" className="text-sm text-destructive">{t("error")}</p>
-                : <p className="truncate text-muted-foreground">{current.performers ?? current.albumTitle}</p>}
+              {player.failed ? (
+                <p
+                  role="alert"
+                  className="text-destructive text-sm"
+                >
+                  {t("error")}
+                </p>
+              ) : (
+                <p className="text-muted-foreground truncate">{current.performers ?? current.albumTitle}</p>
+              )}
             </div>
             <div>
-              <input type="range" min={0} max={duration} step={1} value={player.time}
-                     onChange={event => player.seek(Number(event.target.value))}
-                     aria-label={t("seek")} className="block h-6 w-full cursor-pointer accent-primary" />
-              <div className="flex justify-between text-xs tabular-nums text-muted-foreground">
+              <input
+                type="range"
+                min={0}
+                max={duration}
+                step={1}
+                value={player.time}
+                onChange={(event) => player.seek(Number(event.target.value))}
+                aria-label={t("seek")}
+                className="accent-primary block h-6 w-full cursor-pointer"
+              />
+              <div className="text-muted-foreground flex justify-between text-xs tabular-nums">
                 <span>{formatDuration(player.time)}</span>
                 <span>{formatDuration(duration)}</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <Button variant="ghost" size="icon-lg" onClick={() => player.setShuffle(!player.shuffle)}
-                      aria-pressed={player.shuffle} aria-label={t("shuffle")}>
+              <Button
+                variant="ghost"
+                size="icon-lg"
+                onClick={() => player.setShuffle(!player.shuffle)}
+                aria-pressed={player.shuffle}
+                aria-label={t("shuffle")}
+              >
                 <Shuffle className={cn(player.shuffle && "text-link")} />
               </Button>
-              <Button variant="ghost" size="icon-lg" onClick={player.previous} aria-label={t("previous")}>
+              <Button
+                variant="ghost"
+                size="icon-lg"
+                onClick={player.previous}
+                aria-label={t("previous")}
+              >
                 <SkipBack className="size-6 fill-current" />
               </Button>
-              <Button className="size-16 rounded-full" onClick={player.toggle}
-                      aria-label={player.failed ? t("retry") : player.playing ? t("pause") : t("play")}>
-                {player.failed ? <RotateCcw className="size-7" /> : player.playing
-                  ? <Pause className="size-7 fill-current" /> : <Play className="size-7 fill-current" />}
+              <Button
+                className="size-16 rounded-full"
+                onClick={player.toggle}
+                aria-label={player.failed ? t("retry") : player.playing ? t("pause") : t("play")}
+              >
+                {player.failed ? (
+                  <RotateCcw className="size-7" />
+                ) : player.playing ? (
+                  <Pause className="size-7 fill-current" />
+                ) : (
+                  <Play className="size-7 fill-current" />
+                )}
               </Button>
-              <Button variant="ghost" size="icon-lg" onClick={player.next} aria-label={t("next")}>
+              <Button
+                variant="ghost"
+                size="icon-lg"
+                onClick={player.next}
+                aria-label={t("next")}
+              >
                 <SkipForward className="size-6 fill-current" />
               </Button>
-              <Button variant="ghost" size="icon-lg" onClick={cycleRepeat} aria-label={t(`repeat.${player.repeat}`)}>
-                {player.repeat === "one" ? <Repeat1 className="text-link" />
-                  : <Repeat className={cn(player.repeat === "all" && "text-link")} />}
+              <Button
+                variant="ghost"
+                size="icon-lg"
+                onClick={cycleRepeat}
+                aria-label={t(`repeat.${player.repeat}`)}
+              >
+                {player.repeat === "one" ? (
+                  <Repeat1 className="text-link" />
+                ) : (
+                  <Repeat className={cn(player.repeat === "all" && "text-link")} />
+                )}
               </Button>
             </div>
           </div>
         </div>
-        <div role="tabpanel" className={cn("min-h-0 overflow-y-auto overscroll-contain md:block md:py-4", tab === "playing" ? "hidden" : "block")}>
-          {panel === "lyrics" && current.lyrics && <LyricsView track={current} singers={studio?.singers} follow large />}
+        <div
+          role="tabpanel"
+          className={cn(
+            "min-h-0 overflow-y-auto overscroll-contain md:block md:py-4",
+            tab === "playing" ? "hidden" : "block"
+          )}
+        >
+          {panel === "lyrics" && current.lyrics && (
+            <LyricsView
+              track={current}
+              singers={studio?.singers}
+              follow
+              large
+            />
+          )}
           {panel === "notes" && studio && sheetMusic && (
-            <SheetMusicPanel key={current.id} trackId={current.id} studio={{ ...studio, sheetMusic }} onChanged={reload} />
+            <SheetMusicPanel
+              key={current.id}
+              trackId={current.id}
+              studio={{ ...studio, sheetMusic }}
+              onChanged={reload}
+            />
           )}
           {panel === "queue" && (
             <>
               <div className="mb-3 flex justify-end">
-                <Button variant="outline" size="sm" onClick={() => {
-                  onClose();
-                  player.clear();
-                }}>
-                  <ListX />{t("clearQueue")}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    onClose();
+                    player.clear();
+                  }}
+                >
+                  <ListX />
+                  {t("clearQueue")}
                 </Button>
               </div>
               <QueueList />
             </>
           )}
-          {panel === "about" && <AboutTrack track={current} onNavigate={onClose} />}
+          {panel === "about" && (
+            <AboutTrack
+              track={current}
+              onNavigate={onClose}
+            />
+          )}
         </div>
       </div>
     </div>,
-    document.body,
+    document.body
   );
 }
 
@@ -177,18 +312,38 @@ function AboutTrack({ track, onNavigate }: { track: PlayerTrack; onNavigate: () 
     return names.map((name, i) => (
       <React.Fragment key={name}>
         {i > 0 && ", "}
-        <Link href={creditHref(kind, name)} onClick={onNavigate} className="hover:underline">{name}</Link>
+        <Link
+          href={creditHref(kind, name)}
+          onClick={onNavigate}
+          className="hover:underline"
+        >
+          {name}
+        </Link>
       </React.Fragment>
     ));
   };
   const rows: [string, React.ReactNode][] = [
     ...(track.numberTitle ? [[t("about.number"), track.numberTitle] as [string, React.ReactNode]] : []),
     ...(track.numberKind ? [[t("about.kind"), kindName(track.numberKind, locale)] as [string, React.ReactNode]] : []),
-    ...(track.performers ? [[t("about.performers"), credit("PERFORMER", track.performers)] as [string, React.ReactNode]] : []),
+    ...(track.performers
+      ? [[t("about.performers"), credit("PERFORMER", track.performers)] as [string, React.ReactNode]]
+      : []),
     ...(track.melody ? [[t("about.melody"), credit("MELODY", track.melody)] as [string, React.ReactNode]] : []),
-    ...(track.lyricsAuthor ? [[t("about.lyricsAuthor"), credit("LYRICS_AUTHOR", track.lyricsAuthor)] as [string, React.ReactNode]] : []),
+    ...(track.lyricsAuthor
+      ? [[t("about.lyricsAuthor"), credit("LYRICS_AUTHOR", track.lyricsAuthor)] as [string, React.ReactNode]]
+      : []),
     ...(track.arranger ? [[t("about.arranger"), credit("ARRANGER", track.arranger)] as [string, React.ReactNode]] : []),
-    [t("about.album"), <Link key="album" href={`/albums/${track.albumId}`} onClick={onNavigate} className="hover:underline">{track.albumTitle}</Link>],
+    [
+      t("about.album"),
+      <Link
+        key="album"
+        href={`/albums/${track.albumId}`}
+        onClick={onNavigate}
+        className="hover:underline"
+      >
+        {track.albumTitle}
+      </Link>,
+    ],
   ];
 
   return (
@@ -197,15 +352,25 @@ function AboutTrack({ track, onNavigate }: { track: PlayerTrack; onNavigate: () 
       <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3">
         {rows.map(([label, value]) => (
           <React.Fragment key={label}>
-            <dt className="text-sm text-muted-foreground">{label}</dt>
+            <dt className="text-muted-foreground text-sm">{label}</dt>
             <dd className="text-sm font-medium">{value}</dd>
           </React.Fragment>
         ))}
       </dl>
       {track.spexipediaUrl && (
-        <Button variant="outline" nativeButton={false}
-                render={<a href={track.spexipediaUrl} target="_blank" rel="noopener noreferrer" />}>
-          <BookOpenText />{t("about.inSpexipedia")}
+        <Button
+          variant="outline"
+          nativeButton={false}
+          render={
+            <a
+              href={track.spexipediaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            />
+          }
+        >
+          <BookOpenText />
+          {t("about.inSpexipedia")}
         </Button>
       )}
     </div>

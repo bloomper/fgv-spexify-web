@@ -18,17 +18,27 @@ export class FakeAudioContext {
 
   private param() {
     return {
-      value: 0, setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn(), setTargetAtTime: vi.fn(),
-      exponentialRampToValueAtTime: vi.fn(), cancelScheduledValues: vi.fn(),
+      value: 0,
+      setValueAtTime: vi.fn(),
+      linearRampToValueAtTime: vi.fn(),
+      setTargetAtTime: vi.fn(),
+      exponentialRampToValueAtTime: vi.fn(),
+      cancelScheduledValues: vi.fn(),
     };
   }
 
   private node(type: string) {
     const node = {
-      type, gain: this.param(), frequency: this.param(), buffer: null as unknown, onended: null as null | (() => void),
+      type,
+      gain: this.param(),
+      frequency: this.param(),
+      buffer: null as unknown,
+      onended: null as null | (() => void),
       connect: vi.fn((target: unknown) => target),
       disconnect: vi.fn(),
-      start: vi.fn((at: number) => this.started.push({ type, at, frequency: node.frequency.setValueAtTime.mock.calls[0]?.[0] })),
+      start: vi.fn((at: number) =>
+        this.started.push({ type, at, frequency: node.frequency.setValueAtTime.mock.calls[0]?.[0] })
+      ),
       stop: vi.fn(() => node.onended?.()),
     };
 

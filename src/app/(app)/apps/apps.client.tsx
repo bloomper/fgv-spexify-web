@@ -25,7 +25,7 @@ type Credential = {
   createdAt: string;
   lastUsedAt?: string | null;
   expiresAt?: string;
-  expired?: boolean
+  expired?: boolean;
 };
 
 function CopyField({ label, value }: { label: string; value: string }) {
@@ -36,9 +36,20 @@ function CopyField({ label, value }: { label: string; value: string }) {
     <div className="space-y-1">
       <Label htmlFor={id}>{label}</Label>
       <div className="flex gap-2">
-        <Input id={id} readOnly value={value} className="font-mono" onFocus={event => event.target.select()} />
-        <Button type="button" variant="outline" size="icon" aria-label={t("copy", { what: label })}
-                onClick={() => navigator.clipboard.writeText(value).then(() => toast.success(t("copied")))}>
+        <Input
+          id={id}
+          readOnly
+          value={value}
+          className="font-mono"
+          onFocus={(event) => event.target.select()}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          aria-label={t("copy", { what: label })}
+          onClick={() => navigator.clipboard.writeText(value).then(() => toast.success(t("copied")))}
+        >
           <Copy />
         </Button>
       </div>
@@ -49,7 +60,12 @@ function CopyField({ label, value }: { label: string; value: string }) {
 /**
  * App passwords and API keys: created with a name, shown once, listed with when they were last used, and revoked.
  */
-export function AppsManager({ serverUrl, username, passwords, apiKeys }: {
+export function AppsManager({
+  serverUrl,
+  username,
+  passwords,
+  apiKeys,
+}: {
   serverUrl: string;
   username: string;
   passwords: Credential[];
@@ -62,7 +78,8 @@ export function AppsManager({ serverUrl, username, passwords, apiKeys }: {
   const [keyName, setKeyName] = useState("");
   const [created, setCreated] = useState<{ password?: string; key?: string } | null>(null);
   const [pending, startTransition] = useTransition();
-  const date = (value?: string | null) => value ? format.dateTime(new Date(value), { dateStyle: "medium" }) : t("never");
+  const date = (value?: string | null) =>
+    value ? format.dateTime(new Date(value), { dateStyle: "medium" }) : t("never");
 
   const create = (event: React.FormEvent) => {
     event.preventDefault();
@@ -95,7 +112,7 @@ export function AppsManager({ serverUrl, username, passwords, apiKeys }: {
   };
 
   const revoke = async (id: string, apiKey: boolean) => {
-    if (!await confirm({ title: t("confirmRevoke"), destructive: true })) {
+    if (!(await confirm({ title: t("confirmRevoke"), destructive: true }))) {
       return;
     }
     startTransition(async () => {
@@ -111,10 +128,16 @@ export function AppsManager({ serverUrl, username, passwords, apiKeys }: {
     <div className="space-y-8">
       <section className="space-y-3 rounded-lg border p-4">
         <h2 className="text-lg font-semibold">{t("connect")}</h2>
-        <p className="text-sm text-muted-foreground">{t("connectText")}</p>
+        <p className="text-muted-foreground text-sm">{t("connectText")}</p>
         <div className="grid gap-3 sm:grid-cols-2">
-          <CopyField label={t("server")} value={serverUrl} />
-          <CopyField label={t("username")} value={username} />
+          <CopyField
+            label={t("server")}
+            value={serverUrl}
+          />
+          <CopyField
+            label={t("username")}
+            value={username}
+          />
         </div>
       </section>
 
@@ -124,38 +147,74 @@ export function AppsManager({ serverUrl, username, passwords, apiKeys }: {
           <AlertTitle>{created.password ? t("createdPassword") : t("createdKey")}</AlertTitle>
           <AlertDescription className="space-y-3">
             <p>{t("shownOnce")}</p>
-            <CopyField label={created.password ? t("password") : t("apiKey")}
-                       value={(created.password ?? created.key)!} />
-            <Button variant="outline" onClick={() => setCreated(null)}>{t("done")}</Button>
+            <CopyField
+              label={created.password ? t("password") : t("apiKey")}
+              value={(created.password ?? created.key)!}
+            />
+            <Button
+              variant="outline"
+              onClick={() => setCreated(null)}
+            >
+              {t("done")}
+            </Button>
           </AlertDescription>
         </Alert>
       )}
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">{t("passwords")}</h2>
-        <form onSubmit={create} className="flex flex-col gap-2 sm:flex-row sm:items-end">
+        <form
+          onSubmit={create}
+          className="flex flex-col gap-2 sm:flex-row sm:items-end"
+        >
           <div className="flex-1 space-y-1">
             <Label htmlFor="app-name">{t("name")}</Label>
-            <Input id="app-name" value={name} maxLength={100} required placeholder={t("namePlaceholder")}
-                   onChange={event => setName(event.target.value)} />
+            <Input
+              id="app-name"
+              value={name}
+              maxLength={100}
+              required
+              placeholder={t("namePlaceholder")}
+              onChange={(event) => setName(event.target.value)}
+            />
           </div>
-          <Button type="submit" disabled={pending || !name.trim()}>{t("create")}</Button>
+          <Button
+            type="submit"
+            disabled={pending || !name.trim()}
+          >
+            {t("create")}
+          </Button>
         </form>
-        {passwords.length === 0 ? <p className="text-sm text-muted-foreground">{t("noPasswords")}</p> : (
+        {passwords.length === 0 ? (
+          <p className="text-muted-foreground text-sm">{t("noPasswords")}</p>
+        ) : (
           <ul className="divide-y rounded-lg border">
-            {passwords.map(password => (
-              <li key={password.id} className="flex flex-wrap items-center gap-3 px-3 py-3">
-                <Smartphone className="size-5 text-muted-foreground" />
+            {passwords.map((password) => (
+              <li
+                key={password.id}
+                className="flex flex-wrap items-center gap-3 px-3 py-3"
+              >
+                <Smartphone className="text-muted-foreground size-5" />
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium">{password.name} {password.expired &&
-                    <Badge variant="destructive">{t("expired")}</Badge>}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {t("created", { date: date(password.createdAt) })} · {t("lastUsed", { date: date(password.lastUsedAt) })}
-                    {!password.expired && password.expiresAt && ` · ${t("expires", { date: date(password.expiresAt) })}`}
+                  <div className="font-medium">
+                    {password.name} {password.expired && <Badge variant="destructive">{t("expired")}</Badge>}
+                  </div>
+                  <div className="text-muted-foreground text-xs">
+                    {t("created", { date: date(password.createdAt) })} ·{" "}
+                    {t("lastUsed", { date: date(password.lastUsedAt) })}
+                    {!password.expired &&
+                      password.expiresAt &&
+                      ` · ${t("expires", { date: date(password.expiresAt) })}`}
                   </div>
                 </div>
-                <Button variant="outline" size="sm" disabled={pending}
-                        onClick={() => revoke(password.id, false)}>{t("revoke")}</Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pending}
+                  onClick={() => revoke(password.id, false)}
+                >
+                  {t("revoke")}
+                </Button>
               </li>
             ))}
           </ul>
@@ -164,28 +223,52 @@ export function AppsManager({ serverUrl, username, passwords, apiKeys }: {
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">{t("apiKeys")}</h2>
-        <p className="text-sm text-muted-foreground">{t("apiKeysText")}</p>
-        <form onSubmit={createKey} className="flex flex-col gap-2 sm:flex-row sm:items-end">
+        <p className="text-muted-foreground text-sm">{t("apiKeysText")}</p>
+        <form
+          onSubmit={createKey}
+          className="flex flex-col gap-2 sm:flex-row sm:items-end"
+        >
           <div className="flex-1 space-y-1">
             <Label htmlFor="key-name">{t("name")}</Label>
-            <Input id="key-name" value={keyName} maxLength={100} required
-                   onChange={event => setKeyName(event.target.value)} />
+            <Input
+              id="key-name"
+              value={keyName}
+              maxLength={100}
+              required
+              onChange={(event) => setKeyName(event.target.value)}
+            />
           </div>
-          <Button type="submit" variant="outline" disabled={pending || !keyName.trim()}>{t("createKey")}</Button>
+          <Button
+            type="submit"
+            variant="outline"
+            disabled={pending || !keyName.trim()}
+          >
+            {t("createKey")}
+          </Button>
         </form>
         {apiKeys.length > 0 && (
           <ul className="divide-y rounded-lg border">
-            {apiKeys.map(apiKey => (
-              <li key={apiKey.id} className="flex flex-wrap items-center gap-3 px-3 py-3">
-                <KeyRound className="size-5 text-muted-foreground" />
+            {apiKeys.map((apiKey) => (
+              <li
+                key={apiKey.id}
+                className="flex flex-wrap items-center gap-3 px-3 py-3"
+              >
+                <KeyRound className="text-muted-foreground size-5" />
                 <div className="min-w-0 flex-1">
                   <div className="font-medium">{apiKey.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {t("created", { date: date(apiKey.createdAt) })} · {t("lastUsed", { date: date(apiKey.lastUsedAt) })}
+                  <div className="text-muted-foreground text-xs">
+                    {t("created", { date: date(apiKey.createdAt) })} ·{" "}
+                    {t("lastUsed", { date: date(apiKey.lastUsedAt) })}
                   </div>
                 </div>
-                <Button variant="outline" size="sm" disabled={pending}
-                        onClick={() => revoke(apiKey.id, true)}>{t("revoke")}</Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pending}
+                  onClick={() => revoke(apiKey.id, true)}
+                >
+                  {t("revoke")}
+                </Button>
               </li>
             ))}
           </ul>

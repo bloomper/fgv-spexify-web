@@ -54,8 +54,7 @@ function readTrack(d: Uint8Array, p: number, end: number) {
       const a = d[p++];
       if (hi === 0xc0) {
         if (!out.prog.has(ch)) out.prog.set(ch, a);
-      }
-      else if (hi === 0xd0) continue;
+      } else if (hi === 0xd0) continue;
       else {
         const b = d[p++];
         if (hi === 0x90 && b > 0) out.on.push({ t, ch, key: a });

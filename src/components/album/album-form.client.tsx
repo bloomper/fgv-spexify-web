@@ -19,7 +19,14 @@ export type KindOption = KindName & { id: string };
  * default to the main spex's. The albums are FGV's discography: a released record also has its catalogue number,
  * medium, dates and conductor.
  */
-export function AlbumForm({ kinds, media = [], initial, submitLabel, onSubmit, spexipediaUrl }: {
+export function AlbumForm({
+  kinds,
+  media = [],
+  initial,
+  submitLabel,
+  onSubmit,
+  spexipediaUrl,
+}: {
   /** Spexipedia's web, for editing the picked spex there. */
   spexipediaUrl?: string | null;
   /** The album kinds in order; the first is the default. */
@@ -61,7 +68,7 @@ export function AlbumForm({ kinds, media = [], initial, submitLabel, onSubmit, s
     event.preventDefault();
     startTransition(async () => {
       await onSubmit({
-        spexIds: spex.map(item => item.id),
+        spexIds: spex.map((item) => item.id),
         title: title.trim() || null,
         year: year ? Number(year) : null,
         kindId: kindId || null,
@@ -76,70 +83,140 @@ export function AlbumForm({ kinds, media = [], initial, submitLabel, onSubmit, s
   };
 
   return (
-    <form onSubmit={submit} className="max-w-2xl space-y-4">
-      <SpexPicker value={spex} onChange={setSpex} none={none} onNoneChange={setNone} spexipediaUrl={spexipediaUrl} />
+    <form
+      onSubmit={submit}
+      className="max-w-2xl space-y-4"
+    >
+      <SpexPicker
+        value={spex}
+        onChange={setSpex}
+        none={none}
+        onNoneChange={setNone}
+        spexipediaUrl={spexipediaUrl}
+      />
       <div className="grid gap-4 sm:grid-cols-[1fr_8rem_12rem]">
         <div className="space-y-1.5">
           <Label htmlFor="title">{t("title")}</Label>
-          <Input id="title" value={title} maxLength={255} required={none} placeholder={main?.title ?? ""}
-                 onChange={event => setTitle(event.target.value)} />
+          <Input
+            id="title"
+            value={title}
+            maxLength={255}
+            required={none}
+            placeholder={main?.title ?? ""}
+            onChange={(event) => setTitle(event.target.value)}
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="year">{t("year")}</Label>
-          <Input id="year" inputMode="numeric" pattern="\d{4}" value={year}
-                 placeholder={main?.year ? String(main.year) : ""}
-                 onChange={event => setYear(event.target.value)} />
+          <Input
+            id="year"
+            inputMode="numeric"
+            pattern="\d{4}"
+            value={year}
+            placeholder={main?.year ? String(main.year) : ""}
+            onChange={(event) => setYear(event.target.value)}
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="kind">{t("kind")}</Label>
-          <NativeSelect id="kind" value={kindId} onChange={event => setKindId(event.target.value)}>
-            {kinds.map(kind => <NativeSelectOption key={kind.id}
-                                                   value={kind.id}>{kindName(kind, locale)}</NativeSelectOption>)}
+          <NativeSelect
+            id="kind"
+            value={kindId}
+            onChange={(event) => setKindId(event.target.value)}
+          >
+            {kinds.map((kind) => (
+              <NativeSelectOption
+                key={kind.id}
+                value={kind.id}
+              >
+                {kindName(kind, locale)}
+              </NativeSelectOption>
+            ))}
           </NativeSelect>
         </div>
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="description">{t("description")}</Label>
-        <Textarea id="description" rows={4} value={description}
-                  onChange={event => setDescription(event.target.value)} />
+        <Textarea
+          id="description"
+          rows={4}
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+        />
       </div>
       <fieldset className="space-y-3 rounded-lg border p-3">
         <legend className="px-1 text-sm font-medium">{t("discography")}</legend>
-        <p className="text-xs text-muted-foreground">{t("discographyHelp")}</p>
+        <p className="text-muted-foreground text-xs">{t("discographyHelp")}</p>
         <div className="grid gap-4 sm:grid-cols-[1fr_10rem]">
           <div className="space-y-1.5">
             <Label htmlFor="catalogue-number">{t("catalogueNumber")}</Label>
-            <Input id="catalogue-number" value={catalogueNumber} maxLength={50} placeholder="CEP 019"
-                   onChange={event => setCatalogueNumber(event.target.value)} />
+            <Input
+              id="catalogue-number"
+              value={catalogueNumber}
+              maxLength={50}
+              placeholder="CEP 019"
+              onChange={(event) => setCatalogueNumber(event.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="medium">{t("medium")}</Label>
-            <NativeSelect id="medium" value={mediumId} onChange={event => setMediumId(event.target.value)}>
+            <NativeSelect
+              id="medium"
+              value={mediumId}
+              onChange={(event) => setMediumId(event.target.value)}
+            >
               <NativeSelectOption value="">{t("noMedium")}</NativeSelectOption>
-              {media.map(medium => <NativeSelectOption key={medium.id}
-                                                       value={medium.id}>{kindName(medium, locale)}</NativeSelectOption>)}
+              {media.map((medium) => (
+                <NativeSelectOption
+                  key={medium.id}
+                  value={medium.id}
+                >
+                  {kindName(medium, locale)}
+                </NativeSelectOption>
+              ))}
             </NativeSelect>
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-1.5">
             <Label htmlFor="released">{t("released")}</Label>
-            <Input id="released" value={released} maxLength={10} placeholder="1987-04" pattern="\d{4}(-\d{2}(-\d{2})?)?"
-                   onChange={event => setReleased(event.target.value)} />
+            <Input
+              id="released"
+              value={released}
+              maxLength={10}
+              placeholder="1987-04"
+              pattern="\d{4}(-\d{2}(-\d{2})?)?"
+              onChange={(event) => setReleased(event.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="recorded">{t("recorded")}</Label>
-            <Input id="recorded" value={recorded} maxLength={10} placeholder="1987" pattern="\d{4}(-\d{2}(-\d{2})?)?"
-                   onChange={event => setRecorded(event.target.value)} />
+            <Input
+              id="recorded"
+              value={recorded}
+              maxLength={10}
+              placeholder="1987"
+              pattern="\d{4}(-\d{2}(-\d{2})?)?"
+              onChange={(event) => setRecorded(event.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="conductor">{t("conductor")}</Label>
-            <Input id="conductor" value={conductor} maxLength={255}
-                   onChange={event => setConductor(event.target.value)} />
+            <Input
+              id="conductor"
+              value={conductor}
+              maxLength={255}
+              onChange={(event) => setConductor(event.target.value)}
+            />
           </div>
         </div>
       </fieldset>
-      <Button type="submit" disabled={pending || (spex.length === 0 && !(none && title.trim()))}>{submitLabel}</Button>
+      <Button
+        type="submit"
+        disabled={pending || (spex.length === 0 && !(none && title.trim()))}
+      >
+        {submitLabel}
+      </Button>
     </form>
   );
 }

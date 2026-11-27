@@ -17,9 +17,25 @@ export default async function ManageCollectionsPage() {
 
     return (
       <Page variant="content">
-        <PageHeader title={t("manageTitle")} actions={<Button nativeButton={false} render={<Link href="/manage/collections/new" />}><Plus />{t("new")}</Button>}/>
-        <p className="max-w-prose text-sm text-muted-foreground">{t("manageText")}</p>
-        {collections.length === 0 ? <DataEmpty title={t("none")} description={null} /> : (
+        <PageHeader
+          title={t("manageTitle")}
+          actions={
+            <Button
+              nativeButton={false}
+              render={<Link href="/manage/collections/new" />}
+            >
+              <Plus />
+              {t("new")}
+            </Button>
+          }
+        />
+        <p className="text-muted-foreground max-w-prose text-sm">{t("manageText")}</p>
+        {collections.length === 0 ? (
+          <DataEmpty
+            title={t("none")}
+            description={null}
+          />
+        ) : (
           <div className="rounded-lg border">
             <Table>
               <TableHeader>
@@ -30,15 +46,20 @@ export default async function ManageCollectionsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {collections.map(collection => (
+                {collections.map((collection) => (
                   <TableRow key={collection.id}>
                     <TableCell className="whitespace-normal">
-                      <Link href={`/manage/collections/${collection.id}`}
-                            className="font-medium hover:text-link">{collection.title}</Link>
+                      <Link
+                        href={`/manage/collections/${collection.id}`}
+                        className="hover:text-link font-medium"
+                      >
+                        {collection.title}
+                      </Link>
                     </TableCell>
                     <TableCell className="tabular-nums">{collection.albums.length}</TableCell>
-                    <TableCell
-                      className="hidden tabular-nums sm:table-cell">{formatInstant(collection.lastModifiedAt ?? collection.createdAt)?.slice(0, 10)}</TableCell>
+                    <TableCell className="hidden tabular-nums sm:table-cell">
+                      {formatInstant(collection.lastModifiedAt ?? collection.createdAt)?.slice(0, 10)}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

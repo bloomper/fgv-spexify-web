@@ -22,7 +22,7 @@ async function load(id: string) {
     cache.set(id, null);
   } finally {
     loading.delete(id);
-    listeners.forEach(listener => listener());
+    listeners.forEach((listener) => listener());
   }
 }
 
@@ -30,8 +30,15 @@ async function load(id: string) {
  * The playing track's sheet music, score maps and singers. reload() fetches them again, e.g. after an editor saved a
  * map or while an automatic one is being made.
  */
-export function useTrackStudio(trackId: string | null | undefined): { studio: TrackStudio | null; reload: () => Promise<void> } {
-  const studio = useSyncExternalStore(subscribe, () => (trackId ? cache.get(trackId) ?? null : null), () => null);
+export function useTrackStudio(trackId: string | null | undefined): {
+  studio: TrackStudio | null;
+  reload: () => Promise<void>;
+} {
+  const studio = useSyncExternalStore(
+    subscribe,
+    () => (trackId ? (cache.get(trackId) ?? null) : null),
+    () => null
+  );
 
   useEffect(() => {
     if (trackId && !cache.has(trackId) && !loading.has(trackId)) {

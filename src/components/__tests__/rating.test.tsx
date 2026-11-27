@@ -6,12 +6,24 @@ import { RatingInput, RatingStars } from "@/components/rating.client";
 describe("RatingInput", () => {
   it("rates by click, removes the rating when the same star is chosen again, and moves with the arrow keys", async () => {
     const onChange = vi.fn();
-    const { rerender } = render(<RatingInput value={0} onChange={onChange} label="Betyg" />);
+    const { rerender } = render(
+      <RatingInput
+        value={0}
+        onChange={onChange}
+        label="Betyg"
+      />
+    );
 
     await userEvent.click(screen.getByRole("radio", { name: /"count":3/ }));
     expect(onChange).toHaveBeenLastCalledWith(3);
 
-    rerender(<RatingInput value={3} onChange={onChange} label="Betyg" />);
+    rerender(
+      <RatingInput
+        value={3}
+        onChange={onChange}
+        label="Betyg"
+      />
+    );
     expect(screen.getByRole("radio", { name: /"count":3/ })).toHaveAttribute("aria-checked", "true");
     await userEvent.click(screen.getByRole("radio", { name: /"count":3/ }));
     expect(onChange).toHaveBeenLastCalledWith(0);

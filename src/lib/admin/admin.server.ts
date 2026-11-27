@@ -37,7 +37,9 @@ const SettingsQuery = graphql(`
     query Settings { settings { welcomeSv welcomeEn appPasswordExpiryMonths lockoutAttempts lockoutMinutes } }
 `);
 
-const UserCredentialsRevokeMutation = graphql(`mutation UserCredentialsRevoke($userId: ID!) { userCredentialsRevoke(userId: $userId) }`);
+const UserCredentialsRevokeMutation = graphql(
+  `mutation UserCredentialsRevoke($userId: ID!) { userCredentialsRevoke(userId: $userId) }`
+);
 const UserUnlockMutation = graphql(`mutation UserUnlock($userId: ID!) { userUnlock(userId: $userId) }`);
 const TrashEmptyMutation = graphql(`mutation TrashEmpty { trashEmpty }`);
 const LibraryRescanMutation = graphql(`mutation LibraryRescan { libraryRescan }`);
@@ -49,7 +51,9 @@ export const getUsers = async () => (await runQuery(UsersQuery, {}))?.users ?? [
 const MaintenanceJobsQuery = graphql(`
     query MaintenanceJobs { maintenanceJobs { job schedule running lastStartedAt lastFinishedAt lastSucceeded } }
 `);
-const MaintenanceJobRunMutation = graphql(`mutation MaintenanceJobRun($job: MaintenanceJob!) { maintenanceJobRun(job: $job) }`);
+const MaintenanceJobRunMutation = graphql(
+  `mutation MaintenanceJobRun($job: MaintenanceJob!) { maintenanceJobRun(job: $job) }`
+);
 const SpexipediaSyncQuery = graphql(`
     query SpexipediaSync { spexipediaSync { lastPulledAt lastSuccess lastError skipped { sequence kind id change error skippedAt } } }
 `);
@@ -67,4 +71,5 @@ export const libraryRescan = () => runMutation(LibraryRescanMutation, {});
 export const settingsUpdate = (input: SettingsInput) => runMutation(SettingsUpdateMutation, { input });
 export const getMaintenanceJobs = async () => (await runQuery(MaintenanceJobsQuery, {}))?.maintenanceJobs ?? [];
 export const getSpexipediaSync = async () => (await runQuery(SpexipediaSyncQuery, {}))?.spexipediaSync;
-export const maintenanceJobRun = async (job: MaintenanceJob) => Boolean((await runMutation(MaintenanceJobRunMutation, { job }))?.maintenanceJobRun);
+export const maintenanceJobRun = async (job: MaintenanceJob) =>
+  Boolean((await runMutation(MaintenanceJobRunMutation, { job }))?.maintenanceJobRun);

@@ -8,8 +8,14 @@ vi.mock("next/link", () => ({
   default: ({ children, href }: { children?: ReactNode; href: string }) => <a href={href}>{children}</a>,
 }));
 
-const track = (id: string, extra: Partial<PlayerTrack> = {}): PlayerTrack =>
-  ({ id, title: `Låt ${id}`, albumId: "7", albumTitle: "Nobel", durationMs: 125_000, ...extra });
+const track = (id: string, extra: Partial<PlayerTrack> = {}): PlayerTrack => ({
+  id,
+  title: `Låt ${id}`,
+  albumId: "7",
+  albumTitle: "Nobel",
+  durationMs: 125_000,
+  ...extra,
+});
 
 const player = vi.hoisted(() => ({ state: {} as Record<string, unknown> }));
 
@@ -142,7 +148,6 @@ describe("PlayerBar", () => {
     expect(state.move).toHaveBeenCalledWith(0, 1);
     fireEvent.click(within(items[1]).getByRole("button", { name: /removeFromQueue/ }));
     expect(state.remove).toHaveBeenCalledWith(1);
-
   });
 
   it("follows synced lyrics and seeks to a line", () => {
@@ -198,8 +203,14 @@ describe("PlayerBar", () => {
     const state = playing({
       time: 2,
       current: track("1", {
-        lyrics, lyricsSynced: true, performers: "Kören", melody: "Yesterday (The Beatles)", lyricsAuthor: "Lisa",
-        arranger: "Arne", numberTitle: "Ouvertyr", numberKind: { id: "k1", nameSv: "Ouvertyr", nameEn: "Overture" },
+        lyrics,
+        lyricsSynced: true,
+        performers: "Kören",
+        melody: "Yesterday (The Beatles)",
+        lyricsAuthor: "Lisa",
+        arranger: "Arne",
+        numberTitle: "Ouvertyr",
+        numberKind: { id: "k1", nameSv: "Ouvertyr", nameEn: "Overture" },
         spexipediaUrl: "https://spexipedia.test/spex/1#number-1",
       }),
     });
@@ -232,9 +243,15 @@ describe("PlayerBar", () => {
     expect(within(full).getAllByRole("button", { name: /removeFromQueue/ })).toHaveLength(2);
 
     fireEvent.click(within(full).getByRole("tab", { name: "tabs.about" }));
-    expect(within(full).getByRole("link", { name: "Yesterday (The Beatles)" })).toHaveAttribute("href", expect.stringContaining("/credits/"));
+    expect(within(full).getByRole("link", { name: "Yesterday (The Beatles)" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("/credits/")
+    );
     expect(within(full).getByRole("link", { name: "Kören" })).toBeInTheDocument();
-    expect(within(full).getByText("about.inSpexipedia").closest("a")).toHaveAttribute("href", "https://spexipedia.test/spex/1#number-1");
+    expect(within(full).getByText("about.inSpexipedia").closest("a")).toHaveAttribute(
+      "href",
+      "https://spexipedia.test/spex/1#number-1"
+    );
 
     fireEvent.keyDown(window, { key: "Escape" });
     expect(screen.queryByRole("dialog", { name: "nowPlaying" })).not.toBeInTheDocument();

@@ -5,14 +5,29 @@ import { singerOf } from "@/components/player/lyrics";
 describe("the lyrics editor's lines", () => {
   it("reads synced and plain lyrics", () => {
     expect(toLines("[00:01.50]Här står vi\n[00:04.00]på scenen", true)).toEqual([
-      { time: 1.5, text: "Här står vi" }, { time: 4, text: "på scenen" }]);
-    expect(toLines("Här står vi\npå scenen", false)).toEqual([{ time: null, text: "Här står vi" }, { time: null, text: "på scenen" }]);
+      { time: 1.5, text: "Här står vi" },
+      { time: 4, text: "på scenen" },
+    ]);
+    expect(toLines("Här står vi\npå scenen", false)).toEqual([
+      { time: null, text: "Här står vi" },
+      { time: null, text: "på scenen" },
+    ]);
     expect(toLines(null, false)).toEqual([]);
   });
 
   it("writes LRC when every line has a time, else plain text", () => {
-    expect(toLyrics([{ time: 64.255, text: "b" }, { time: 1.5, text: "a" }])).toEqual({ lyrics: "[00:01.50]a\n[01:04.26]b", synced: true });
-    expect(toLyrics([{ time: 1.5, text: "a" }, { time: null, text: "b" }])).toEqual({ lyrics: "a\nb", synced: false });
+    expect(
+      toLyrics([
+        { time: 64.255, text: "b" },
+        { time: 1.5, text: "a" },
+      ])
+    ).toEqual({ lyrics: "[00:01.50]a\n[01:04.26]b", synced: true });
+    expect(
+      toLyrics([
+        { time: 1.5, text: "a" },
+        { time: null, text: "b" },
+      ])
+    ).toEqual({ lyrics: "a\nb", synced: false });
     expect(toLyrics([{ time: null, text: " " }])).toEqual({ lyrics: null, synced: false });
   });
 
@@ -25,12 +40,27 @@ describe("the lyrics editor's lines", () => {
   });
 
   it("keeps the times of the lines that stay when the text changes", () => {
-    expect(withText([{ time: 1, text: "a" }, { time: 2, text: "b" }], "A\nB\nC"))
-      .toEqual([{ time: 1, text: "A" }, { time: 2, text: "B" }, { time: null, text: "C" }]);
+    expect(
+      withText(
+        [
+          { time: 1, text: "a" },
+          { time: 2, text: "b" },
+        ],
+        "A\nB\nC"
+      )
+    ).toEqual([
+      { time: 1, text: "A" },
+      { time: 2, text: "B" },
+      { time: null, text: "C" },
+    ]);
   });
 
   it("finds the line playing", () => {
-    const lines = [{ time: 1, text: "a" }, { time: null, text: "b" }, { time: 3, text: "c" }];
+    const lines = [
+      { time: 1, text: "a" },
+      { time: null, text: "b" },
+      { time: 3, text: "c" },
+    ];
 
     expect(lineAt(lines, 0.5)).toBe(-1);
     expect(lineAt(lines, 2)).toBe(0);
@@ -39,7 +69,10 @@ describe("the lyrics editor's lines", () => {
 });
 
 describe("singer labels", () => {
-  const names = new Map([["Ph", "Philip"], ["Ph/Pa", "Philip & Pamela"]]);
+  const names = new Map([
+    ["Ph", "Philip"],
+    ["Ph/Pa", "Philip & Pamela"],
+  ]);
 
   it("shows the singer's name and drops the label", () => {
     expect(singerOf("Ph: Här står jag", names)).toEqual({ singer: "Philip", text: "Här står jag" });

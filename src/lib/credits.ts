@@ -2,11 +2,11 @@ import type { CreditKind } from "@/gql/graphql";
 
 /** The kinds of credit by their path segment under /credits. */
 export const CREDIT_KINDS: Record<string, CreditKind> = {
-  "performers": "PERFORMER",
-  "melodies": "MELODY",
+  performers: "PERFORMER",
+  melodies: "MELODY",
   "original-artists": "ORIGINAL_ARTIST",
   "lyrics-authors": "LYRICS_AUTHOR",
-  "arrangers": "ARRANGER",
+  arrangers: "ARRANGER",
 };
 
 export function creditSegment(kind: CreditKind): string {
@@ -27,13 +27,17 @@ export function splitCredits(value: string | null | undefined): string[] {
 
   const seen = new Set<string>();
 
-  return value.trim().split(/\s*[,;/&]\s*/).map(name => name.trim()).filter(name => {
-    const key = name.toLowerCase();
+  return value
+    .trim()
+    .split(/\s*[,;/&]\s*/)
+    .map((name) => name.trim())
+    .filter((name) => {
+      const key = name.toLowerCase();
 
-    if (!name || seen.has(key)) {
-      return false;
-    }
-    seen.add(key);
-    return true;
-  });
+      if (!name || seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
 }

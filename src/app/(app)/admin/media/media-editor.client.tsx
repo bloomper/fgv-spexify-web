@@ -15,5 +15,10 @@ const MEDIA_ACTIONS = {
  * The album media, edited as the album kinds are.
  */
 export function MediaEditor({ media }: { media: EditableKind[] }) {
-  return <KindsEditor kinds={media} actions={MEDIA_ACTIONS} />;
+  return (
+    <KindsEditor
+      kinds={media}
+      actions={MEDIA_ACTIONS}
+    />
+  );
 }

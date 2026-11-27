@@ -75,7 +75,6 @@ const ScoreAlignMutation = graphql(`
     }
 `);
 
-
 export async function getTrackStudio(id: string) {
   return (await runQuery(TrackStudioQuery, { id }))?.track ?? null;
 }
@@ -84,7 +83,12 @@ export async function getLyricsEditor(id: string, points: number) {
   return (await runQuery(LyricsEditorQuery, { id, points }))?.track ?? null;
 }
 
-export async function trackLyricsUpdate(id: string, lyrics: string | null, synced: boolean, baseRevisionId: string | null) {
+export async function trackLyricsUpdate(
+  id: string,
+  lyrics: string | null,
+  synced: boolean,
+  baseRevisionId: string | null
+) {
   return (await runMutation(TrackLyricsUpdateMutation, { id, lyrics, synced, baseRevisionId }))?.trackLyricsUpdate;
 }
 

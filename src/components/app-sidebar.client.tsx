@@ -124,32 +124,36 @@ export function AppSidebar({ roles, accountUrl, ...props }: AppSidebarProps) {
   }, [roles, pathname, t]);
 
   return (
-    <Sidebar collapsible="icon"
-             className="top-(--header-height) h-[calc(100svh-var(--header-height)-var(--player-height,0px))]!"
-             {...props}
+    <Sidebar
+      collapsible="icon"
+      className="top-(--header-height) h-[calc(100svh-var(--header-height)-var(--player-height,0px))]!"
+      {...props}
     >
       <SidebarBrand />
       <SidebarContent onClickCapture={closeOnNavigate}>
         {isClient ? (
           <>
             <NavMain items={navigation.main} />
-            <NavSecondary items={navigation.secondary} className="mt-auto" />
+            <NavSecondary
+              items={navigation.secondary}
+              className="mt-auto"
+            />
           </>
         ) : (
           <div className="flex flex-col gap-2 p-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 px-2 py-1.5">
-                <div className="size-4 shrink-0 animate-pulse rounded bg-sidebar-accent/50" />
-                <div
-                  className="h-3 w-24 animate-pulse rounded bg-sidebar-accent/50 group-data-[collapsible=icon]:hidden" />
+              <div
+                key={i}
+                className="flex items-center gap-3 px-2 py-1.5"
+              >
+                <div className="bg-sidebar-accent/50 size-4 shrink-0 animate-pulse rounded" />
+                <div className="bg-sidebar-accent/50 h-3 w-24 animate-pulse rounded group-data-[collapsible=icon]:hidden" />
               </div>
             ))}
           </div>
         )}
       </SidebarContent>
-      <SidebarFooter onClickCapture={closeOnNavigate}>
-        {isClient && <NavUser accountUrl={accountUrl} />}
-      </SidebarFooter>
+      <SidebarFooter onClickCapture={closeOnNavigate}>{isClient && <NavUser accountUrl={accountUrl} />}</SidebarFooter>
     </Sidebar>
   );
 }

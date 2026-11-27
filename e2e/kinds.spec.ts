@@ -3,10 +3,10 @@ import { answerDialog, expect, test } from "./fixtures";
 
 test.describe("Album kinds", () => {
   test("an admin adds, renames and reorders kinds, and an editor picks one for an album", async ({
-                                                                                                   page,
-                                                                                                   loginAs,
-                                                                                                   mock,
-                                                                                                 }) => {
+    page,
+    loginAs,
+    mock,
+  }) => {
     await loginAs("admin");
     await page.goto("/admin/kinds");
     await expect(page.getByRole("heading", { level: 1, name: "Albumsorter" })).toBeVisible();
@@ -22,7 +22,9 @@ test.describe("Album kinds", () => {
     await expect(page.getByText("/ Trailer")).toBeVisible();
 
     await page.getByRole("button", { name: "Flytta upp Studio" }).click();
-    await expect.poll(async () => (await mock.state()).kinds.find(kind => kind.nameSv === "Studio")?.position).toBe(1);
+    await expect
+      .poll(async () => (await mock.state()).kinds.find((kind) => kind.nameSv === "Studio")?.position)
+      .toBe(1);
     await expect(page.getByRole("listitem").filter({ hasText: "Studio" }).getByText("Förvald")).toBeVisible();
 
     await page.goto("/manage/albums/new");

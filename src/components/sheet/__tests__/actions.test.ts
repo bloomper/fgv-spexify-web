@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const server = vi.hoisted(() => ({
-  getTrackStudio: vi.fn(), scoreSyncSave: vi.fn(), scoreSyncDelete: vi.fn(), scoreAlign: vi.fn(),
+  getTrackStudio: vi.fn(),
+  scoreSyncSave: vi.fn(),
+  scoreSyncDelete: vi.fn(),
+  scoreAlign: vi.fn(),
 }));
 
 vi.mock("@/lib/catalog/sheet-music.server", () => server);
@@ -9,13 +12,14 @@ vi.mock("@/utils/auth.server", () => ({ getSessionContext: async () => ({ roles:
 vi.mock("@/utils/route.server", () => ({ withPolicyAction: (_: unknown, handler: () => unknown) => handler() }));
 vi.mock("@/utils/policy.server", () => ({ Policies: { app: {}, editor: {} } }));
 
-const { alignScoreAction, deleteScoreSyncAction, saveScoreSyncAction, trackStudioAction } = await import("@/components/sheet/actions.server");
+const { alignScoreAction, deleteScoreSyncAction, saveScoreSyncAction, trackStudioAction } =
+  await import("@/components/sheet/actions.server");
 
 const TRACK = "01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e";
 const FILE = "01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9f";
 
 describe("the sheet music actions", () => {
-  beforeEach(() => Object.values(server).forEach(fn => fn.mockReset()));
+  beforeEach(() => Object.values(server).forEach((fn) => fn.mockReset()));
 
   it("fetches a track's studio and says whether the caller edits", async () => {
     server.getTrackStudio.mockResolvedValue({ id: TRACK, sheetMusic: null, scoreSyncs: [], singers: [] });

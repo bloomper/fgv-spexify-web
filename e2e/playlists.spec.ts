@@ -72,6 +72,8 @@ test.describe("Playlists", () => {
 
     await page.getByRole("button", { name: "Mer för Kärleksduetten" }).click();
     await page.getByRole("menuitem", { name: "Flytta upp" }).click();
-    await expect.poll(async () => (await mock.state()).playlists[0].entries).toEqual([`nd-${uuidOf(12)}`, `nd-${uuidOf(11)}`]);
+    await expect
+      .poll(async () => (await mock.state()).playlists[0].entries)
+      .toEqual([`nd-${uuidOf(12)}`, `nd-${uuidOf(11)}`]);
   });
 });

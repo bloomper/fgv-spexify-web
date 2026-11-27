@@ -4,7 +4,7 @@ test.describe("The application shell", () => {
   test("shows listening, editing and administration to an admin", async ({ page, loginAs }) => {
     await loginAs("admin");
 
-    const sidebar = page.locator("[data-slot=\"sidebar\"]:visible");
+    const sidebar = page.locator('[data-slot="sidebar"]:visible');
     await expect(sidebar.getByRole("link", { name: "Hem" })).toHaveAttribute("href", "/");
     await expect(sidebar.getByRole("link", { name: "Album" }).first()).toHaveAttribute("href", "/albums");
     await expect(sidebar.getByRole("link", { name: "Mina appar" })).toBeVisible();
@@ -15,7 +15,7 @@ test.describe("The application shell", () => {
   test("hides editing and administration from a listener", async ({ page, loginAs }) => {
     await loginAs("listener");
 
-    const sidebar = page.locator("[data-slot=\"sidebar\"]:visible");
+    const sidebar = page.locator('[data-slot="sidebar"]:visible');
     await expect(sidebar.getByRole("link", { name: "Gillat" })).toBeVisible();
     await expect(sidebar.getByRole("button", { name: "Redigera", exact: true })).toHaveCount(0);
     await expect(sidebar.getByRole("button", { name: "Administration", exact: true })).toHaveCount(0);
@@ -28,7 +28,9 @@ test.describe("The application shell", () => {
 
     await expect(page.getByRole("heading", { level: 1, name: "Hej Lisa Lyssnare!" })).toBeVisible();
     // The album is on more shelves than this one (its decade, its kind)
-    await expect(page.getByRole("list", { name: "Senast publicerat", exact: true }).getByRole("link", { name: /Nobel/ })).toBeVisible();
+    await expect(
+      page.getByRole("list", { name: "Senast publicerat", exact: true }).getByRole("link", { name: /Nobel/ })
+    ).toBeVisible();
     await expect(page.getByText("Opublicerat album")).toHaveCount(0);
   });
 });

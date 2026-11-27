@@ -6,7 +6,12 @@ import { TrackList, type TrackRow } from "@/components/album/track-list.client";
 import { DialogsProvider } from "@bloomper/fgv-web-ui/shell/dialogs";
 
 const player = vi.hoisted(() => ({
-  current: null as null | { id: string }, playing: false, playQueue: vi.fn(), toggle: vi.fn(), enqueue: vi.fn(), playNext: vi.fn(),
+  current: null as null | { id: string },
+  playing: false,
+  playQueue: vi.fn(),
+  toggle: vi.fn(),
+  enqueue: vi.fn(),
+  playNext: vi.fn(),
   plays: {} as Record<string, { count: number; at: string }>,
 }));
 const radio = vi.hoisted(() => ({ start: vi.fn(), pending: false }));
@@ -19,8 +24,8 @@ const actions = vi.hoisted(() => ({
 }));
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 
-vi.mock("@/components/player/player-provider.client", async importOriginal => ({
-  ...await importOriginal<typeof import("@/components/player/player-provider.client")>(),
+vi.mock("@/components/player/player-provider.client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/player/player-provider.client")>()),
   usePlayer: () => player,
 }));
 vi.mock("@/components/player/radio.client", () => ({ useRadio: () => radio }));
@@ -31,15 +36,31 @@ vi.mock("next/link", () => ({
 }));
 
 const row = (id: string, extra: Partial<TrackRow> = {}): TrackRow => ({
-  id, title: `Låt ${id}`, albumId: "1", albumTitle: "Nobel", durationMs: 61_000, navidromeId: `nd-${id}`,
-  discNumber: 1, trackNumber: Number(id), listed: true, fileMissing: false, ...extra,
+  id,
+  title: `Låt ${id}`,
+  albumId: "1",
+  albumTitle: "Nobel",
+  durationMs: 61_000,
+  navidromeId: `nd-${id}`,
+  discNumber: 1,
+  trackNumber: Number(id),
+  listed: true,
+  fileMissing: false,
+  ...extra,
 });
 
 const show = (tracks: TrackRow[], props: Partial<Parameters<typeof TrackList>[0]> = {}) =>
-  render(<DialogsProvider>
-    <TrackList tracks={tracks} starred={[]} playlists={[{ id: "pl-1", name: "Favoriter" }]}
-               spexflixUrl={null} {...props} />
-  </DialogsProvider>);
+  render(
+    <DialogsProvider>
+      <TrackList
+        tracks={tracks}
+        starred={[]}
+        playlists={[{ id: "pl-1", name: "Favoriter" }]}
+        spexflixUrl={null}
+        {...props}
+      />
+    </DialogsProvider>
+  );
 
 describe("TrackList", () => {
   beforeEach(() => {
@@ -59,7 +80,10 @@ describe("TrackList", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /play:.*Låt 3/ }));
 
-    expect(player.playQueue).toHaveBeenCalledWith([expect.objectContaining({ id: "1" }), expect.objectContaining({ id: "3" })], 1);
+    expect(player.playQueue).toHaveBeenCalledWith(
+      [expect.objectContaining({ id: "1" }), expect.objectContaining({ id: "3" })],
+      1
+    );
     expect(screen.getByText("fileMissing")).toBeInTheDocument();
   });
 
@@ -113,10 +137,14 @@ describe("TrackList", () => {
   });
 
   it("plays a track next or last, shows its number kind and links its credits from its menu", async () => {
-    show([row("1", {
-      performers: "Anna, Bo", melody: "Yesterday (The Beatles)", spexipediaUrl: "https://spexipedia.test/n",
-      numberKind: { id: "k1", nameSv: "Final", nameEn: "Finale" },
-    })]);
+    show([
+      row("1", {
+        performers: "Anna, Bo",
+        melody: "Yesterday (The Beatles)",
+        spexipediaUrl: "https://spexipedia.test/n",
+        numberKind: { id: "k1", nameSv: "Final", nameEn: "Finale" },
+      }),
+    ]);
 
     expect(screen.getByRole("img", { name: "Final" })).toHaveTextContent("F");
     await userEvent.click(screen.getByRole("button", { name: /more/ }));
@@ -124,7 +152,10 @@ describe("TrackList", () => {
     expect(player.playNext).toHaveBeenCalledWith([expect.objectContaining({ id: "1" })]);
 
     await userEvent.click(screen.getByRole("button", { name: /more/ }));
-    expect((await screen.findByText("goToMelody")).closest("a")).toHaveAttribute("href", expect.stringContaining("/credits/"));
+    expect((await screen.findByText("goToMelody")).closest("a")).toHaveAttribute(
+      "href",
+      expect.stringContaining("/credits/")
+    );
     expect(screen.getAllByText(/goToCredit/)).toHaveLength(2);
     await userEvent.click(screen.getByRole("menuitem", { name: "addToQueue" }));
     expect(player.enqueue).toHaveBeenCalled();
@@ -149,11 +180,16 @@ describe("TrackList", () => {
   });
 
   it("splits discs and links to Spexflix when there are links", () => {
-    show([row("1"), row("2", {
-        discNumber: 2,
-        videoLinks: [{ videoId: "7", videoTitle: "Nobel", chapterTitle: "Ouvertyr", startSeconds: 42 }],
-      })],
-      { spexflixUrl: "https://spexflix.test" });
+    show(
+      [
+        row("1"),
+        row("2", {
+          discNumber: 2,
+          videoLinks: [{ videoId: "7", videoTitle: "Nobel", chapterTitle: "Ouvertyr", startSeconds: 42 }],
+        }),
+      ],
+      { spexflixUrl: "https://spexflix.test" }
+    );
 
     expect(screen.getByText(/disc:.*"number":2/)).toBeInTheDocument();
     const link = screen.getByRole("link", { name: /watchInSpexflix/ });
@@ -167,7 +203,10 @@ describe("TrackList", () => {
     show([row("1", { spexipediaUrl: "https://spexipedia.test/spex/s1#number-n1" }), row("2")]);
 
     expect(screen.getAllByRole("link", { name: /inSpexipedia/ })).toHaveLength(1);
-    expect(screen.getByRole("link", { name: /inSpexipedia/ })).toHaveAttribute("href", "https://spexipedia.test/spex/s1#number-n1");
+    expect(screen.getByRole("link", { name: /inSpexipedia/ })).toHaveAttribute(
+      "href",
+      "https://spexipedia.test/spex/s1#number-n1"
+    );
   });
 
   it("shows a play button in place of the number when a row is hovered", () => {
@@ -217,8 +256,14 @@ describe("TrackList", () => {
   it("links performers and melodies to their pages and starts radio from a track", async () => {
     show([row("1", { performers: "Kungen, Drottningen", melody: "Dancing Queen (ABBA)" })]);
 
-    expect(screen.getByRole("link", { name: "Drottningen" })).toHaveAttribute("href", "/credits/performers/Drottningen");
-    expect(screen.getByRole("link", { name: "Dancing Queen (ABBA)" })).toHaveAttribute("href", "/credits/melodies/Dancing%20Queen%20(ABBA)");
+    expect(screen.getByRole("link", { name: "Drottningen" })).toHaveAttribute(
+      "href",
+      "/credits/performers/Drottningen"
+    );
+    expect(screen.getByRole("link", { name: "Dancing Queen (ABBA)" })).toHaveAttribute(
+      "href",
+      "/credits/melodies/Dancing%20Queen%20(ABBA)"
+    );
 
     await userEvent.click(screen.getByRole("button", { name: /more/ }));
     await userEvent.click(await screen.findByRole("menuitem", { name: "startRadio" }));

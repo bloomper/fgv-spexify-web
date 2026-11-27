@@ -23,8 +23,9 @@ test.describe("Editing an album", () => {
     await expect(page.getByText("03 Finalen.flac")).toBeVisible();
     await expect(page.getByText("Klar", { exact: true })).toBeVisible();
     await expect(page.getByText("Finalen", { exact: true })).toBeVisible();
-    expect((await mock.state()).tracks.filter(track => track.albumId === uuidOf(1)).map(track => track.title))
-      .toEqual(["Ouvertyr", "Kärleksduetten", "Finalen"]);
+    expect(
+      (await mock.state()).tracks.filter((track) => track.albumId === uuidOf(1)).map((track) => track.title)
+    ).toEqual(["Ouvertyr", "Kärleksduetten", "Finalen"]);
   });
 
   test("shows why an upload that is not audio fails", async ({ page }) => {
@@ -47,7 +48,7 @@ test.describe("Editing an album", () => {
 
     await expect(dialog).toBeHidden();
     await expect(page.getByText("Uvertyr", { exact: true })).toBeVisible();
-    expect((await mock.state()).tracks.find(track => track.id === uuidOf(11))?.title).toBe("Uvertyr");
+    expect((await mock.state()).tracks.find((track) => track.id === uuidOf(11))?.title).toBe("Uvertyr");
   });
 
   test("reorders tracks", async ({ page, mock }) => {
@@ -56,15 +57,19 @@ test.describe("Editing an album", () => {
 
     await expect(page.getByRole("button", { name: "Flytta upp Ouvertyr" })).toBeEnabled();
     await expect(page.getByRole("button", { name: "Flytta ner Ouvertyr" })).toBeDisabled();
-    expect((await mock.state()).tracks.filter(track => track.albumId === uuidOf(1)).sort((a, b) => a.trackNumber - b.trackNumber)
-      .map(track => track.title)).toEqual(["Kärleksduetten", "Ouvertyr"]);
+    expect(
+      (await mock.state()).tracks
+        .filter((track) => track.albumId === uuidOf(1))
+        .sort((a, b) => a.trackNumber - b.trackNumber)
+        .map((track) => track.title)
+    ).toEqual(["Kärleksduetten", "Ouvertyr"]);
   });
 
   test("unpublishes one track, which listeners then no longer see", async ({ page, mock, loginAs }) => {
     await page.goto(`/manage/albums/${uuidOf(1)}`);
     await page.getByRole("switch", { name: "Publicera Kärleksduetten" }).click();
     await expect(page.getByRole("switch", { name: "Publicera Kärleksduetten" })).not.toBeChecked();
-    expect((await mock.state()).tracks.find(track => track.id === uuidOf(12))?.listed).toBe(false);
+    expect((await mock.state()).tracks.find((track) => track.id === uuidOf(12))?.listed).toBe(false);
 
     await loginAs("listener");
     await page.goto(`/albums/${uuidOf(1)}`);
@@ -96,11 +101,19 @@ test.describe("Editing an album", () => {
   test("uploads a cover, which replaces the spex poster", async ({ page, mock }) => {
     await page.goto(`/manage/albums/${uuidOf(1)}`);
     await expect(page.getByText("Utan omslag visas spexets affisch.")).toBeVisible();
-    await chooseFile(page, "input[type=file][name=cover]", "omslag.png", "image/png",
-      Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64"));
+    await chooseFile(
+      page,
+      "input[type=file][name=cover]",
+      "omslag.png",
+      "image/png",
+      Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+        "base64"
+      )
+    );
 
     await expect(page.getByRole("button", { name: "Byt omslag" })).toBeVisible();
-    expect((await mock.state()).albums.find(album => album.id === uuidOf(1))?.hasCover).toBe(true);
+    expect((await mock.state()).albums.find((album) => album.id === uuidOf(1))?.hasCover).toBe(true);
 
     await page.getByRole("button", { name: "Ta bort omslaget" }).click();
     await expect(page.getByRole("button", { name: "Ladda upp omslag" })).toBeVisible();

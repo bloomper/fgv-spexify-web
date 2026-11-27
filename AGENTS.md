@@ -124,7 +124,7 @@ The theme, the shadcn components and the application shell come from `@bloomper/
   and `sort` (`SortSelect`).
 - **The start page** is shelves that scroll sideways (`Shelf`, `ShelfItem` in `src/components/shelf.tsx`, `AlbumCard`
   with a play button on the cover): greeting and categories, then recently played (all of it on `/recent`), most
-  played, recently published, *this day* (`thisDayAlbums`: albums of spex that premiered on today's date), one shelf
+  played, recently published, _this day_ (`thisDayAlbums`: albums of spex that premiered on today's date), one shelf
   per decade and per album kind that is not the default (from `albums` and `albumKinds`, grouped by `byDecade` and
   `byKind`), one per number kind (`numberKinds` with their tracks, `TrackShelfItems`), radio (`RadioShelfItems`:
   random, then from albums the user played), liked, highest rated and the top list. Kinds are data from the API,
@@ -163,7 +163,7 @@ The theme, the shadcn components and the application shell come from `@bloomper/
 - **Links to Spexflix** (`Track.videoLinks`) are shown only when `me.spexflixUser` and `SPEXFLIX_WEB_URL` are set.
 - **Sheet music** comes from Spexarkivet through the server (`Track.sheetMusic`, files at `/api/sheet-music/[trackId]/[fileId]`,
   which streams them from the server, as they are small and pdf.js and the score reader fetch them same-origin). Now
-  playing's *Notes* tab (`src/components/sheet/`) loads it lazily per track with `useTrackStudio` (sheet music, score
+  playing's _Notes_ tab (`src/components/sheet/`) loads it lazily per track with `useTrackStudio` (sheet music, score
   sync maps, singers). PDFs are drawn by pdf.js (`PdfReader`), MusicXML by OpenSheetMusicDisplay (`ScoreView`), both
   loaded on demand. The cursor follows the recording through a sync map (`Track.scoreSyncs`, points of seconds,
   measure and beat; `src/lib/score/timeline.ts` maps recording time to score time) or the notes played by

@@ -11,7 +11,10 @@ import { BottomDock, MobileTabBar } from "@/components/bottom-dock.client";
 import type { PlayerTrack } from "@/components/player/player-provider.client";
 
 const player = vi.hoisted(() => ({
-  current: null as null | { id: string }, playing: false, playQueue: vi.fn(), toggle: vi.fn(),
+  current: null as null | { id: string },
+  playing: false,
+  playQueue: vi.fn(),
+  toggle: vi.fn(),
 }));
 const radio = vi.hoisted(() => ({ start: vi.fn(), pending: false }));
 const albumTracksAction = vi.hoisted(() => vi.fn());
@@ -25,11 +28,24 @@ vi.mock("@/components/player/player-bar.client", () => ({ PlayerBar: () => <div>
 vi.mock("sonner", () => ({ toast }));
 vi.mock("next/navigation", () => ({ usePathname: () => pathname }));
 vi.mock("next/link", () => ({
-  default: ({ children, href, ...rest }: { children?: ReactNode; href: string }) => <a href={href} {...rest}>{children}</a>,
+  default: ({ children, href, ...rest }: { children?: ReactNode; href: string }) => (
+    <a
+      href={href}
+      {...rest}
+    >
+      {children}
+    </a>
+  ),
 }));
 
-const album = { id: "a1", title: "Nobel", year: 1975, trackCount: 3, kind: { nameSv: "Skiva", nameEn: "Record", isDefault: false },
-  spex: [{ categoryName: "Chalmersspexet", revival: true }] };
+const album = {
+  id: "a1",
+  title: "Nobel",
+  year: 1975,
+  trackCount: 3,
+  kind: { nameSv: "Skiva", nameEn: "Record", isDefault: false },
+  spex: [{ categoryName: "Chalmersspexet", revival: true }],
+};
 const tracks: PlayerTrack[] = [
   { id: "t1", title: "Final", albumId: "a1", albumTitle: "Nobel", durationMs: 1000 },
   { id: "t2", title: "Slutsång", albumId: "a2", albumTitle: "Cleopatra", durationMs: 1000 },
@@ -47,7 +63,15 @@ describe("the start page's shelves", () => {
     const scrollBy = vi.fn();
 
     Element.prototype.scrollBy = scrollBy;
-    render(<Shelf id="s" title="Nytt" more={{ href: "/albums", label: "Alla" }}><ShelfItem>x</ShelfItem></Shelf>);
+    render(
+      <Shelf
+        id="s"
+        title="Nytt"
+        more={{ href: "/albums", label: "Alla" }}
+      >
+        <ShelfItem>x</ShelfItem>
+      </Shelf>
+    );
 
     expect(screen.getByRole("heading", { name: "Nytt" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Alla" })).toHaveAttribute("href", "/albums");
@@ -71,7 +95,12 @@ describe("the start page's shelves", () => {
 
   it("says when an album cannot be played, and offers no play button without tracks", async () => {
     albumTracksAction.mockResolvedValue(null);
-    const { rerender } = render(<AlbumCard album={album} label="Spelat igår" />);
+    const { rerender } = render(
+      <AlbumCard
+        album={album}
+        label="Spelat igår"
+      />
+    );
 
     expect(screen.getByText("Spelat igår")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /playAlbum/ }));
@@ -86,7 +115,11 @@ describe("the start page's shelves", () => {
   });
 
   it("plays a shelf of songs from the chosen one, and pauses the playing one", () => {
-    const { rerender } = render(<ul><TrackShelfItems tracks={tracks} /></ul>);
+    const { rerender } = render(
+      <ul>
+        <TrackShelfItems tracks={tracks} />
+      </ul>
+    );
 
     fireEvent.click(screen.getByRole("button", { name: /play:.*Slutsång/ }));
     expect(player.playQueue).toHaveBeenCalledWith(tracks, 1);
@@ -94,13 +127,21 @@ describe("the start page's shelves", () => {
 
     player.current = { id: "t1" };
     player.playing = true;
-    rerender(<ul><TrackShelfItems tracks={tracks} /></ul>);
+    rerender(
+      <ul>
+        <TrackShelfItems tracks={tracks} />
+      </ul>
+    );
     fireEvent.click(screen.getByRole("button", { name: /pause:.*Final/ }));
     expect(player.toggle).toHaveBeenCalled();
   });
 
   it("starts radio at random or from an album", () => {
-    render(<ul><RadioShelfItems albums={[{ id: "a1", title: "Nobel" }]} /></ul>);
+    render(
+      <ul>
+        <RadioShelfItems albums={[{ id: "a1", title: "Nobel" }]} />
+      </ul>
+    );
 
     fireEvent.click(screen.getByRole("button", { name: /randomRadio/ }));
     fireEvent.click(screen.getByRole("button", { name: /radioFrom/ }));
@@ -109,7 +150,12 @@ describe("the start page's shelves", () => {
   });
 
   it("shows a number kind by its initial in a colour of its own", () => {
-    render(<NumberKindIcon kind={{ id: "k1", nameSv: "Ouvertyr", nameEn: "Overture" }} locale="en" />);
+    render(
+      <NumberKindIcon
+        kind={{ id: "k1", nameSv: "Ouvertyr", nameEn: "Overture" }}
+        locale="en"
+      />
+    );
 
     expect(screen.getByRole("img", { name: "Overture" })).toHaveTextContent("O");
     expect(colourOf("k1")).toBe(colourOf("k1"));

@@ -10,7 +10,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const download = request.nextUrl.searchParams.get("download") === "true";
 
   return ID.test(trackId) && ID.test(fileId)
-    ? streamFromApi(request, `/api/tracks/${trackId}/sheet-music/${fileId}${download ? "?download=true" : ""}`,
-      { "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox" })
+    ? streamFromApi(request, `/api/tracks/${trackId}/sheet-music/${fileId}${download ? "?download=true" : ""}`, {
+        "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+      })
     : invalid();
 }

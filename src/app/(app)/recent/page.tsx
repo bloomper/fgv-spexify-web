@@ -19,14 +19,22 @@ export default async function RecentPage() {
 
     return (
       <Page variant="content">
-        <PageHeader title={t("title")}/>
+        <PageHeader title={t("title")} />
         {recent.length > 0 ? (
-          <AlbumGrid albums={recent} label={album => {
-            const date = formatDate(recent.find(item => item.id === album.id)?.played);
+          <AlbumGrid
+            albums={recent}
+            label={(album) => {
+              const date = formatDate(recent.find((item) => item.id === album.id)?.played);
 
-            return date ? t("lastPlayed", { date }) : null;
-          }} />
-        ) : <DataEmpty title={t("empty")} description={null} />}
+              return date ? t("lastPlayed", { date }) : null;
+            }}
+          />
+        ) : (
+          <DataEmpty
+            title={t("empty")}
+            description={null}
+          />
+        )}
       </Page>
     );
   });

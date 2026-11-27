@@ -24,7 +24,11 @@ export function colourOf(id: string): string {
  * A number kind (overture, finale…) as a small badge with its initial and its name as tooltip. The kinds are
  * Spexipedia's data and have no icons of their own, so each gets its initial in a colour of its own.
  */
-export function NumberKindIcon({ kind, locale, className }: {
+export function NumberKindIcon({
+  kind,
+  locale,
+  className,
+}: {
   kind: KindName & { id: string };
   locale: string;
   className?: string;
@@ -32,9 +36,16 @@ export function NumberKindIcon({ kind, locale, className }: {
   const name = kindName(kind, locale);
 
   return (
-    <span role="img" aria-label={name} title={name}
-          className={cn("inline-flex size-5 shrink-0 items-center justify-center rounded text-[0.65rem] font-bold uppercase",
-            colourOf(kind.id), className)}>
+    <span
+      role="img"
+      aria-label={name}
+      title={name}
+      className={cn(
+        "inline-flex size-5 shrink-0 items-center justify-center rounded text-[0.65rem] font-bold uppercase",
+        colourOf(kind.id),
+        className
+      )}
+    >
       {name.charAt(0)}
     </span>
   );

@@ -26,15 +26,33 @@ export default async function EditAlbumPage({ params }: { params: Promise<{ id: 
       notFound();
     }
 
-    const numbers = await getSpexNumbers(album.spex.map(spex => spex.id));
+    const numbers = await getSpexNumbers(album.spex.map((spex) => spex.id));
 
     return (
       <Page variant="content">
-        <PageHeader title={album.title} actions={<Link href={`/albums/${album.id}`}
-                className="text-sm text-link hover:text-link/80">{t("viewAsListener")}</Link>}/>
-        <AlbumEditor album={album} kinds={kinds} media={media} numbers={numbers}
-                     spexipediaUrl={process.env.SPEXIPEDIA_WEB_URL?.trim().replace(/\/+$/, "") || null} />
-        <RecordHistory entityId={album.id} path="/manage/audit" linkOf={auditLink} />
+        <PageHeader
+          title={album.title}
+          actions={
+            <Link
+              href={`/albums/${album.id}`}
+              className="text-link hover:text-link/80 text-sm"
+            >
+              {t("viewAsListener")}
+            </Link>
+          }
+        />
+        <AlbumEditor
+          album={album}
+          kinds={kinds}
+          media={media}
+          numbers={numbers}
+          spexipediaUrl={process.env.SPEXIPEDIA_WEB_URL?.trim().replace(/\/+$/, "") || null}
+        />
+        <RecordHistory
+          entityId={album.id}
+          path="/manage/audit"
+          linkOf={auditLink}
+        />
       </Page>
     );
   });

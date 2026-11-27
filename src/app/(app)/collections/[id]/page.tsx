@@ -32,14 +32,28 @@ export default async function CollectionPage({ params }: { params: Promise<{ id:
     }
     return (
       <Page variant="content">
-        <PageHeader title={collection.title} description={collection.description && collection.description}/>
+        <PageHeader
+          title={collection.title}
+          description={collection.description && collection.description}
+        />
         {isEditor(authz.roles) && (
-          <Button variant="ghost" nativeButton={false} render={<Link href={`/manage/collections/${collection.id}`} />}>
-            <Pencil />{t("edit")}
+          <Button
+            variant="ghost"
+            nativeButton={false}
+            render={<Link href={`/manage/collections/${collection.id}`} />}
+          >
+            <Pencil />
+            {t("edit")}
           </Button>
         )}
-        {collection.albums.length > 0 ? <AlbumGrid albums={collection.albums} /> :
-          <DataEmpty title={t("empty")} description={null} />}
+        {collection.albums.length > 0 ? (
+          <AlbumGrid albums={collection.albums} />
+        ) : (
+          <DataEmpty
+            title={t("empty")}
+            description={null}
+          />
+        )}
       </Page>
     );
   });

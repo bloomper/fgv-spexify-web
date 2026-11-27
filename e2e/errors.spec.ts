@@ -3,10 +3,10 @@ import { expect, test } from "./fixtures";
 
 test.describe("When something is unavailable", () => {
   test("a new album cannot pick a spex while Spexregister is down, but the catalogue works", async ({
-                                                                                                      page,
-                                                                                                      loginAs,
-                                                                                                      mock,
-                                                                                                    }) => {
+    page,
+    loginAs,
+    mock,
+  }) => {
     await mock.spexregister(false);
     await loginAs("editor");
     await page.goto("/manage/albums/new");

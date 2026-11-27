@@ -35,13 +35,30 @@ export default async function CreditPage({ params }: { params: Promise<{ kind: s
       <Page variant="content">
         <PageHeader
           title={rows.length > 0 ? creditName(rows, name) : name}
-          eyebrow={<Link href={`/credits/${segment}`} className="text-link hover:text-link/80">{t(`kind.${segment}`)}</Link>}
+          eyebrow={
+            <Link
+              href={`/credits/${segment}`}
+              className="text-link hover:text-link/80"
+            >
+              {t(`kind.${segment}`)}
+            </Link>
+          }
         />
-        {rows.length === 0 ? <DataEmpty title={t("noTracks")} description={null} /> : (
+        {rows.length === 0 ? (
+          <DataEmpty
+            title={t("noTracks")}
+            description={null}
+          />
+        ) : (
           <>
             <PlayAllButtons tracks={rows} />
-            <TrackList tracks={rows} starred={listening.starred} playlists={listening.playlists} spexflixUrl={null}
-                       showAlbum />
+            <TrackList
+              tracks={rows}
+              starred={listening.starred}
+              playlists={listening.playlists}
+              spexflixUrl={null}
+              showAlbum
+            />
           </>
         )}
       </Page>
@@ -55,7 +72,7 @@ function creditName(rows: { performers?: string | null; melody?: string | null }
 
   for (const row of rows) {
     for (const value of [row.performers, row.melody]) {
-      const found = value?.split(/\s*[,;/&()]\s*/).find(part => part.trim().toLowerCase() === lower);
+      const found = value?.split(/\s*[,;/&()]\s*/).find((part) => part.trim().toLowerCase() === lower);
 
       if (found) {
         return found.trim();

@@ -31,7 +31,7 @@ export default async function TopPage({ searchParams }: { searchParams: Promise<
     const t = await getTranslations("Top");
     const query = await searchParams;
     const what = query.what === "albums" ? "albums" : "tracks";
-    const by = BY.find(candidate => candidate === query.by) ?? "RATED";
+    const by = BY.find((candidate) => candidate === query.by) ?? "RATED";
     const decade = parseDecade(query.decade);
     const categoryId = query.category && ID.test(query.category) ? query.category : null;
     const [data, listening] = await Promise.all([
@@ -57,57 +57,136 @@ export default async function TopPage({ searchParams }: { searchParams: Promise<
       }
       return `/top${search.size ? `?${search}` : ""}`;
     };
-    const chip = (active: boolean) => cn("rounded-full border px-2.5 py-0.5 text-xs",
-      active ? "border-primary bg-primary/10 text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground");
+    const chip = (active: boolean) =>
+      cn(
+        "rounded-full border px-2.5 py-0.5 text-xs",
+        active
+          ? "border-primary bg-primary/10 text-foreground"
+          : "text-muted-foreground hover:bg-accent hover:text-foreground"
+      );
     // The user's own rating is known only for the songs Navidrome gave us; the others show everyone's average alone
-    const rows = toRows(data?.topTracks ?? [], listening.starredPlays)
-      .map(row => row.navidromeId && listening.starredPlays[row.navidromeId] ? row : { ...row, rating: undefined });
-    const value = (item: Counts) => by === "LIKED"
-      ? t("likes", { count: item.likeCount })
-      : by === "PLAYED" ? t("plays", { count: item.totalPlays }) : null;
+    const rows = toRows(data?.topTracks ?? [], listening.starredPlays).map((row) =>
+      row.navidromeId && listening.starredPlays[row.navidromeId] ? row : { ...row, rating: undefined }
+    );
+    const value = (item: Counts) =>
+      by === "LIKED"
+        ? t("likes", { count: item.likeCount })
+        : by === "PLAYED"
+          ? t("plays", { count: item.totalPlays })
+          : null;
     // Rows the user can rate already show everyone's average beside their own rating
-    const ratable = new Set(rows.filter(row => row.rating !== undefined).map(row => row.id));
-    const stats = Object.fromEntries((data?.topTracks ?? [])
-      .filter(item => by !== "RATED" || !ratable.has(item.id))
-      .map(item => [item.id, value(item) ?? <AverageRating average={item.averageRating} count={item.ratingCount} stars />]));
+    const ratable = new Set(rows.filter((row) => row.rating !== undefined).map((row) => row.id));
+    const stats = Object.fromEntries(
+      (data?.topTracks ?? [])
+        .filter((item) => by !== "RATED" || !ratable.has(item.id))
+        .map((item) => [
+          item.id,
+          value(item) ?? (
+            <AverageRating
+              average={item.averageRating}
+              count={item.ratingCount}
+              stars
+            />
+          ),
+        ])
+    );
 
     return (
       <Page variant="content">
-        <PageHeader title={t("title")} description={t(`text.${by}`)} actions={<LinkSegments label={t("what")} items={[
-            { href: link({ what: "tracks" }), label: t("tracks"), active: what === "tracks" },
-            { href: link({ what: "albums" }), label: t("albums"), active: what === "albums" },
-          ]} />}/>
-        <LinkTabs label={t("by")} items={BY.map(item => ({
-          href: link({ by: item }), label: t(`byLabel.${item}`), active: by === item,
-        }))} />
-        <nav aria-label={t("filters")} className="space-y-2 pt-1">
+        <PageHeader
+          title={t("title")}
+          description={t(`text.${by}`)}
+          actions={
+            <LinkSegments
+              label={t("what")}
+              items={[
+                { href: link({ what: "tracks" }), label: t("tracks"), active: what === "tracks" },
+                { href: link({ what: "albums" }), label: t("albums"), active: what === "albums" },
+              ]}
+            />
+          }
+        />
+        <LinkTabs
+          label={t("by")}
+          items={BY.map((item) => ({
+            href: link({ by: item }),
+            label: t(`byLabel.${item}`),
+            active: by === item,
+          }))}
+        />
+        <nav
+          aria-label={t("filters")}
+          className="space-y-2 pt-1"
+        >
           <div className="flex flex-wrap gap-1.5">
-            <Link href={link({ category: null })} className={chip(!categoryId)}>{t("allCategories")}</Link>
-            {data?.categories.map(item => (
-              <Link key={item.id} href={link({ category: item.id })} className={chip(categoryId === item.id)}
-                    aria-current={categoryId === item.id ? "page" : undefined}>{item.name}</Link>
+            <Link
+              href={link({ category: null })}
+              className={chip(!categoryId)}
+            >
+              {t("allCategories")}
+            </Link>
+            {data?.categories.map((item) => (
+              <Link
+                key={item.id}
+                href={link({ category: item.id })}
+                className={chip(categoryId === item.id)}
+                aria-current={categoryId === item.id ? "page" : undefined}
+              >
+                {item.name}
+              </Link>
             ))}
           </div>
           <div className="flex flex-wrap gap-1.5">
-            <Link href={link({ decade: null })} className={chip(!decade)}>{t("allYears")}</Link>
-            {decadesOf(data?.years ?? []).map(item => (
-              <Link key={item} href={link({ decade: item })} className={cn(chip(decade === item), "tabular-nums")}
-                    aria-current={decade === item ? "page" : undefined}>{t("decade", { decade: item })}</Link>
+            <Link
+              href={link({ decade: null })}
+              className={chip(!decade)}
+            >
+              {t("allYears")}
+            </Link>
+            {decadesOf(data?.years ?? []).map((item) => (
+              <Link
+                key={item}
+                href={link({ decade: item })}
+                className={cn(chip(decade === item), "tabular-nums")}
+                aria-current={decade === item ? "page" : undefined}
+              >
+                {t("decade", { decade: item })}
+              </Link>
             ))}
           </div>
         </nav>
         {what === "albums" ? (
-          data && data.topAlbums.length > 0
-            ? <AlbumGrid albums={data.topAlbums} ranked
-                         label={album => value(data.topAlbums.find(item => item.id === album.id)!)} />
-            : <DataEmpty title={t("none")} description={null} />
+          data && data.topAlbums.length > 0 ? (
+            <AlbumGrid
+              albums={data.topAlbums}
+              ranked
+              label={(album) => value(data.topAlbums.find((item) => item.id === album.id)!)}
+            />
+          ) : (
+            <DataEmpty
+              title={t("none")}
+              description={null}
+            />
+          )
         ) : rows.length > 0 ? (
           <div className="space-y-3">
             <PlayAllButtons tracks={rows} />
-            <TrackList tracks={rows} starred={listening.starred} playlists={listening.playlists} spexflixUrl={null}
-                       showAlbum ranked stats={stats} />
+            <TrackList
+              tracks={rows}
+              starred={listening.starred}
+              playlists={listening.playlists}
+              spexflixUrl={null}
+              showAlbum
+              ranked
+              stats={stats}
+            />
           </div>
-        ) : <DataEmpty title={t("none")} description={null} />}
+        ) : (
+          <DataEmpty
+            title={t("none")}
+            description={null}
+          />
+        )}
       </Page>
     );
   });

@@ -3,7 +3,14 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Search } from "lucide-react";
 import { SubmitButton } from "@/components/submit-button.client";
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@bloomper/fgv-web-ui/ui/empty";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@bloomper/fgv-web-ui/ui/empty";
 import { Input } from "@bloomper/fgv-web-ui/ui/input";
 import { AlbumGrid } from "@/components/album/album-grid";
 import { TrackList } from "@/components/album/track-list.client";
@@ -27,28 +34,57 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
     return (
       <Page variant="content">
-        <PageHeader title={ready ? t("resultsFor", { q }) : t("title")}/>
-        <Form action="/search" role="search" className="flex max-w-xl gap-2">
-          <Input key={q} name="q" type="search" defaultValue={q} maxLength={200} placeholder={t("placeholder")}
-                 aria-label={t("query")} aria-invalid={tooShort || undefined}
-                 aria-describedby={tooShort ? "search-q-error" : undefined} />
+        <PageHeader title={ready ? t("resultsFor", { q }) : t("title")} />
+        <Form
+          action="/search"
+          role="search"
+          className="flex max-w-xl gap-2"
+        >
+          <Input
+            key={q}
+            name="q"
+            type="search"
+            defaultValue={q}
+            maxLength={200}
+            placeholder={t("placeholder")}
+            aria-label={t("query")}
+            aria-invalid={tooShort || undefined}
+            aria-describedby={tooShort ? "search-q-error" : undefined}
+          />
           <SubmitButton>{t("title")}</SubmitButton>
         </Form>
-        {tooShort && <p id="search-q-error" className="-mt-4 text-sm text-destructive">{t("tooShort")}</p>}
+        {tooShort && (
+          <p
+            id="search-q-error"
+            className="text-destructive -mt-4 text-sm"
+          >
+            {t("tooShort")}
+          </p>
+        )}
         {!q.trim() && (
           <Empty className="border">
             <EmptyHeader>
-              <EmptyMedia variant="icon"><Search /></EmptyMedia>
+              <EmptyMedia variant="icon">
+                <Search />
+              </EmptyMedia>
               <EmptyTitle>{t("emptyTitle")}</EmptyTitle>
               <EmptyDescription>{t("hint")}</EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <Link href="/albums" className="text-sm text-link hover:text-link/80">{t("browse")}</Link>
+              <Link
+                href="/albums"
+                className="text-link hover:text-link/80 text-sm"
+              >
+                {t("browse")}
+              </Link>
             </EmptyContent>
           </Empty>
         )}
         {result && result.albums.length === 0 && result.tracks.length === 0 && (
-          <DataEmpty title={t("none")} description={null} />
+          <DataEmpty
+            title={t("none")}
+            description={null}
+          />
         )}
         {result && result.albums.length > 0 && (
           <section className="space-y-3">
@@ -59,8 +95,13 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         {result && result.tracks.length > 0 && (
           <section className="space-y-3">
             <h2 className="text-lg font-semibold">{t("tracks")}</h2>
-            <TrackList tracks={toRows(result.tracks)} starred={listening.starred}
-                       playlists={listening.playlists} spexflixUrl={null} showAlbum />
+            <TrackList
+              tracks={toRows(result.tracks)}
+              starred={listening.starred}
+              playlists={listening.playlists}
+              spexflixUrl={null}
+              showAlbum
+            />
           </section>
         )}
       </Page>

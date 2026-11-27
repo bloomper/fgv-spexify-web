@@ -12,7 +12,10 @@ vi.hoisted(() => {
 });
 
 // No Keycloak here: OIDC discovery gets an answer at once instead of reaching the network.
-vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 503 })));
+vi.stubGlobal(
+  "fetch",
+  vi.fn(async () => new Response(null, { status: 503 }))
+);
 vi.spyOn(console, "error").mockImplementation(() => undefined);
 
 type Handler = (request: Request) => Promise<Response>;
@@ -52,7 +55,8 @@ describe("Better Auth endpoints that return Keycloak tokens", () => {
     const { auth } = await import("@/auth");
 
     // Reaches the endpoint itself (no session, so unauthorized) instead of being cut off as not found.
-    await expect(auth.api.getAccessToken({ body: { useAccountCookie: true }, headers: new Headers() }))
-      .rejects.toMatchObject({ statusCode: 401 });
+    await expect(
+      auth.api.getAccessToken({ body: { useAccountCookie: true }, headers: new Headers() })
+    ).rejects.toMatchObject({ statusCode: 401 });
   });
 });

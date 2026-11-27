@@ -17,7 +17,7 @@ async function subsonic<T>(endpoint: string, params: Record<string, string | str
   }
 
   const response = await apiFetch(`/rest/${endpoint}?${query.toString()}`);
-  const body = await response.json() as { "subsonic-response": { status: string; error?: { message: string } } & T };
+  const body = (await response.json()) as { "subsonic-response": { status: string; error?: { message: string } } & T };
   const result = body["subsonic-response"];
 
   if (result.status !== "ok") {
@@ -44,8 +44,12 @@ export type SubsonicAlbum = { id: string; name: string; playCount?: number; play
 export type Plays = Record<string, { playCount: number; played: string | null; rating: number }>;
 
 export function playsOf(songs: SubsonicSong[]): Plays {
-  return Object.fromEntries(songs.map(song => [song.id,
-    { playCount: song.playCount ?? 0, played: song.played ?? null, rating: song.userRating ?? 0 }]));
+  return Object.fromEntries(
+    songs.map((song) => [
+      song.id,
+      { playCount: song.playCount ?? 0, played: song.played ?? null, rating: song.userRating ?? 0 },
+    ])
+  );
 }
 
 export type SubsonicPlaylist = {
@@ -88,10 +92,10 @@ export async function getAlbumSongs(navidromeAlbumId: string): Promise<SubsonicS
 export async function getAlbumWithSongs(navidromeAlbumId: string): Promise<{
   rating: number;
   starred: boolean;
-  songs: SubsonicSong[]
+  songs: SubsonicSong[];
 }> {
   const result = await subsonic<{
-    album: { userRating?: number; starred?: string; song?: SubsonicSong[] }
+    album: { userRating?: number; starred?: string; song?: SubsonicSong[] };
   }>("getAlbum", { id: navidromeAlbumId });
 
   return {
@@ -134,14 +138,14 @@ export async function setRating(navidromeId: string, rating: number) {
  */
 export async function getPlayQueue(): Promise<{ ids: string[]; current: string | null; positionMs: number } | null> {
   const result = await subsonic<{
-    playQueue?: { current?: string; position?: number; entry?: SubsonicSong[] }
+    playQueue?: { current?: string; position?: number; entry?: SubsonicSong[] };
   }>("getPlayQueue");
 
   if (!result.playQueue) {
     return null;
   }
   return {
-    ids: (result.playQueue.entry ?? []).map(song => song.id),
+    ids: (result.playQueue.entry ?? []).map((song) => song.id),
     current: result.playQueue.current ?? null,
     positionMs: result.playQueue.position ?? 0,
   };
@@ -182,11 +186,14 @@ export async function addToPlaylist(playlistId: string, songIds: string[]) {
 /**
  * Renames a playlist, changes its comment or makes it public (other Spexify users can listen to it) or private.
  */
-export async function updatePlaylistInfo(playlistId: string, info: {
-  name?: string;
-  comment?: string;
-  public?: boolean
-}) {
+export async function updatePlaylistInfo(
+  playlistId: string,
+  info: {
+    name?: string;
+    comment?: string;
+    public?: boolean;
+  }
+) {
   await subsonic("updatePlaylist", {
     playlistId,
     ...(info.name !== undefined ? { name: info.name } : {}),

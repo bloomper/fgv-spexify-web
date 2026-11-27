@@ -18,17 +18,23 @@ export function NewAlbum({ kinds, media }: { kinds: KindOption[]; media: KindOpt
   const [generation, setGeneration] = useState(0);
 
   return (
-    <AlbumForm key={generation} kinds={kinds} media={media} submitLabel={t("create")} onSubmit={async input => {
-      const result = await createAlbumAction(input);
+    <AlbumForm
+      key={generation}
+      kinds={kinds}
+      media={media}
+      submitLabel={t("create")}
+      onSubmit={async (input) => {
+        const result = await createAlbumAction(input);
 
-      if (result.ok && result.data) {
-        track("album-create", { defaultKind: !input.kindId || input.kindId === kinds[0]?.id });
-        router.push(`/manage/albums/${result.data}`);
-        setGeneration(current => current + 1);
-        return true;
-      }
-      toast.error(result.ok ? t("failed") : result.message);
-      return false;
-    }} />
+        if (result.ok && result.data) {
+          track("album-create", { defaultKind: !input.kindId || input.kindId === kinds[0]?.id });
+          router.push(`/manage/albums/${result.data}`);
+          setGeneration((current) => current + 1);
+          return true;
+        }
+        toast.error(result.ok ? t("failed") : result.message);
+        return false;
+      }}
+    />
   );
 }

@@ -3,10 +3,10 @@ import { answerDialog, expect, test } from "./fixtures";
 
 test.describe("The trash", () => {
   test("an editor trashes an album and a track and restores them, but cannot delete", async ({
-                                                                                               page,
-                                                                                               loginAs,
-                                                                                               mock,
-                                                                                             }) => {
+    page,
+    loginAs,
+    mock,
+  }) => {
     await loginAs("editor");
     await page.goto(`/manage/albums/${uuidOf(1)}`);
     await page.getByRole("button", { name: "Mer för Kärleksduetten" }).click();
@@ -22,7 +22,7 @@ test.describe("The trash", () => {
     await expect(page.getByRole("button", { name: "Radera" })).toHaveCount(0);
     await page.getByRole("button", { name: "Återställ" }).first().click();
     await expect(page.getByText("Nobel", { exact: true })).toHaveCount(0);
-    expect((await mock.state()).albums.find(album => album.id === uuidOf(1))?.trashedAt).toBeNull();
+    expect((await mock.state()).albums.find((album) => album.id === uuidOf(1))?.trashedAt).toBeNull();
   });
 
   test("an admin deletes from the trash and empties it", async ({ page, loginAs, mock }) => {
@@ -37,13 +37,17 @@ test.describe("The trash", () => {
     await expect(page.getByText("Lagt i papperskorgen")).toBeVisible();
 
     await page.goto("/manage/trash");
-    await page.getByRole("listitem").filter({ hasText: "Opublicerat album" }).getByRole("button", { name: "Radera" }).click();
+    await page
+      .getByRole("listitem")
+      .filter({ hasText: "Opublicerat album" })
+      .getByRole("button", { name: "Radera" })
+      .click();
     await answerDialog(page, "Radera");
     await expect(page.getByText("Opublicerat album")).toHaveCount(0);
     await page.getByRole("button", { name: "Töm papperskorgen" }).click();
     await answerDialog(page, "Töm papperskorgen");
     await expect(page.getByText("Papperskorgen är tom.")).toBeVisible();
-    expect((await mock.state()).tracks.map(track => track.title)).toEqual(["Kärleksduetten"]);
+    expect((await mock.state()).tracks.map((track) => track.title)).toEqual(["Kärleksduetten"]);
   });
 });
 
@@ -82,10 +86,12 @@ test.describe("The change log", () => {
     await page.getByRole("option", { name: "Avpublicerad" }).click();
     await expect(page).toHaveURL(/action=UNPUBLISH/);
     await expect(page.getByText("1 ändring", { exact: true })).toBeVisible();
-    await expect(page.getByRole("link", {
-      name: "Avpublicerade albumet Nobel",
-      exact: true,
-    })).toHaveAttribute("href", `/manage/albums/${uuidOf(1)}`);
+    await expect(
+      page.getByRole("link", {
+        name: "Avpublicerade albumet Nobel",
+        exact: true,
+      })
+    ).toHaveAttribute("href", `/manage/albums/${uuidOf(1)}`);
     await expect(page.getByText("Publicerade albumet Opublicerat album")).toHaveCount(0);
 
     await page.getByRole("button", { name: "Rensa filtret" }).click();

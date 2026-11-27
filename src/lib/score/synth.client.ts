@@ -2,14 +2,30 @@
 
 import { instrumentFor, type Voice } from "@/lib/score/instruments";
 import type { ParsedScore } from "@/lib/score/parse";
-import { baseQpm, buildEvents, buildTimeline, type NoteEvent, positionAt, type Timeline, timeOfMeasure } from "@/lib/score/timeline";
+import {
+  baseQpm,
+  buildEvents,
+  buildTimeline,
+  type NoteEvent,
+  positionAt,
+  type Timeline,
+  timeOfMeasure,
+} from "@/lib/score/timeline";
 
 /**
  * A part of the score as the listener mixes it.
  */
 export type PartState = { name: string; voice: Voice; mute: boolean; solo: boolean; volume: number };
 
-type Timbre = { wave: OscillatorType; attack: number; decay: number; sustain: number; release: number; cutoff: number; vibrato?: number };
+type Timbre = {
+  wave: OscillatorType;
+  attack: number;
+  decay: number;
+  sustain: number;
+  release: number;
+  cutoff: number;
+  vibrato?: number;
+};
 
 /**
  * Timbres by General MIDI program family: oscillators and envelopes, no samples, so that nothing has to be downloaded
@@ -77,7 +93,7 @@ export class ScoreSynth {
   }
 
   private changed() {
-    this.listeners.forEach(listener => listener());
+    this.listeners.forEach((listener) => listener());
   }
 
   get isPlaying(): boolean {
@@ -97,9 +113,15 @@ export class ScoreSynth {
     this.timeline = buildTimeline(score.measures, undefined, order);
     this.events = buildEvents(this.timeline, score.parts);
 
-    const voices = score.parts.map(part => instrumentFor(part.name, part.xmlProgram, part.xmlDrum));
+    const voices = score.parts.map((part) => instrumentFor(part.name, part.xmlProgram, part.xmlDrum));
 
-    this.parts = score.parts.map((part, i) => ({ name: part.name, voice: voices[i], mute: false, solo: false, volume: 0.8 }));
+    this.parts = score.parts.map((part, i) => ({
+      name: part.name,
+      voice: voices[i],
+      mute: false,
+      solo: false,
+      volume: 0.8,
+    }));
     this.baseTime = 0;
     this.next = 0;
     this.changed();
@@ -108,8 +130,8 @@ export class ScoreSynth {
   /** Call from a click, so that the browser lets the sound start. */
   private audio(): AudioContext {
     if (!this.context) {
-      const Context = window.AudioContext
-        ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const Context =
+        window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
 
       this.context = new Context();
       this.master = this.context.createGain();
@@ -133,7 +155,7 @@ export class ScoreSynth {
   }
 
   private gain(part: number): number {
-    const anySolo = this.parts.some(p => p.solo);
+    const anySolo = this.parts.some((p) => p.solo);
     const state = this.parts[part];
 
     return !state || state.mute || (anySolo && !state.solo) ? 0 : state.volume;
@@ -163,7 +185,9 @@ export class ScoreSynth {
 
   /** Where the playing is, in seconds of the score at its own tempo. */
   time(): number {
-    return this.playing ? Math.min(this.total, this.baseTime + (this.clock() - this.baseClock) * this.scale) : this.baseTime;
+    return this.playing
+      ? Math.min(this.total, this.baseTime + (this.clock() - this.baseClock) * this.scale)
+      : this.baseTime;
   }
 
   /** The written measure and the offset in it, in whole notes, for the cursor. */
@@ -251,7 +275,13 @@ export class ScoreSynth {
       if (gain > 0 && event.t >= now - 0.05) {
         const at = this.baseClock + (event.t - this.baseTime) / this.scale;
 
-        this.note(this.parts[event.part].voice, event.midi, Math.max(context.currentTime, at), Math.max(0.05, event.d / this.scale), gain);
+        this.note(
+          this.parts[event.part].voice,
+          event.midi,
+          Math.max(context.currentTime, at),
+          Math.max(0.05, event.d / this.scale),
+          gain
+        );
       }
     }
     if (now >= this.total && this.next >= this.events.length) {
@@ -358,7 +388,7 @@ export class ScoreSynth {
   private silence() {
     const at = this.clock();
 
-    this.sounding.forEach(note => note.stop(at));
+    this.sounding.forEach((note) => note.stop(at));
     this.sounding.clear();
   }
 }

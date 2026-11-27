@@ -21,22 +21,51 @@ export default async function StarredPage() {
 
     return (
       <Page variant="content">
-        <PageHeader title={t("title")} description={t("text")}/>
+        <PageHeader
+          title={t("title")}
+          description={t("text")}
+        />
         {albums.length > 0 && (
-          <section className="space-y-3" aria-labelledby="starred-albums">
-            <h2 id="starred-albums" className="text-lg font-semibold">{t("albums")}</h2>
+          <section
+            className="space-y-3"
+            aria-labelledby="starred-albums"
+          >
+            <h2
+              id="starred-albums"
+              className="text-lg font-semibold"
+            >
+              {t("albums")}
+            </h2>
             <AlbumGrid albums={albums} />
           </section>
         )}
         {rows.length > 0 && (
-          <section className="space-y-3" aria-labelledby="starred-tracks">
-            <h2 id="starred-tracks" className="text-lg font-semibold">{t("tracks")}</h2>
+          <section
+            className="space-y-3"
+            aria-labelledby="starred-tracks"
+          >
+            <h2
+              id="starred-tracks"
+              className="text-lg font-semibold"
+            >
+              {t("tracks")}
+            </h2>
             <PlayAllButtons tracks={rows} />
-            <TrackList tracks={rows} starred={listening.starred} playlists={listening.playlists} spexflixUrl={null}
-                       showAlbum />
+            <TrackList
+              tracks={rows}
+              starred={listening.starred}
+              playlists={listening.playlists}
+              spexflixUrl={null}
+              showAlbum
+            />
           </section>
         )}
-        {albums.length === 0 && rows.length === 0 && <DataEmpty title={t("none")} description={null} />}
+        {albums.length === 0 && rows.length === 0 && (
+          <DataEmpty
+            title={t("none")}
+            description={null}
+          />
+        )}
       </Page>
     );
   });

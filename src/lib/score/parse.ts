@@ -189,7 +189,14 @@ export function parseMusicXml(xml: string): ParsedScore {
       const implicit = me.getAttribute("implicit") === "yes";
       meas.len = Math.max(meas.len, implicit ? content : Math.max(content, timeLen));
     });
-    part.notes = resolveMeasureRepeats(raw, signs).map(({ m, off, dur, midi, tieStart, tieStop }) => ({ m, off, dur, midi, tieStart, tieStop }));
+    part.notes = resolveMeasureRepeats(raw, signs).map(({ m, off, dur, midi, tieStart, tieStop }) => ({
+      m,
+      off,
+      dur,
+      midi,
+      tieStart,
+      tieStop,
+    }));
     part.xmlDrum = part.xmlDrum || (unpitched > 0 && pitched === 0);
     parts.push(part);
     partNo++;

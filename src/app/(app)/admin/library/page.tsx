@@ -13,23 +13,36 @@ export default async function LibraryPage() {
     const status = await getLibraryStatus();
 
     return (
-      <Page variant="content" className="max-w-2xl">
-        <PageHeader title={t("title")} description={t("text")}/>
+      <Page
+        variant="content"
+        className="max-w-2xl"
+      >
+        <PageHeader
+          title={t("title")}
+          description={t("text")}
+        />
         {status && (
           <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 rounded-lg border p-4 text-sm">
             <dt className="text-muted-foreground">{t("navidrome")}</dt>
-            <dd>{status.navidromeAvailable ? <Badge variant="secondary">{t("available")}</Badge> :
-              <Badge variant="destructive">{t("unavailable")}</Badge>}</dd>
+            <dd>
+              {status.navidromeAvailable ? (
+                <Badge variant="secondary">{t("available")}</Badge>
+              ) : (
+                <Badge variant="destructive">{t("unavailable")}</Badge>
+              )}
+            </dd>
             <dt className="text-muted-foreground">{t("scan")}</dt>
             <dd>{status.scanning ? t("scanning") : status.scanPending ? t("pending") : t("idle")}</dd>
             <dt className="text-muted-foreground">{t("lastScan")}</dt>
             <dd>{status.lastScanAt ? formatInstant(status.lastScanAt) : "–"}</dd>
             <dt className="text-muted-foreground">{t("tracks")}</dt>
             <dd>{t("trackCounts", { listed: status.listedTrackCount, all: status.trackCount })}</dd>
-            {status.lastScanError && (<>
-              <dt className="text-muted-foreground">{t("error")}</dt>
-              <dd className="text-destructive">{status.lastScanError}</dd>
-            </>)}
+            {status.lastScanError && (
+              <>
+                <dt className="text-muted-foreground">{t("error")}</dt>
+                <dd className="text-destructive">{status.lastScanError}</dd>
+              </>
+            )}
           </dl>
         )}
         <RescanButton />

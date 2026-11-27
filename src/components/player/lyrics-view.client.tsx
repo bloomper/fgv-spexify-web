@@ -10,14 +10,19 @@ import { cn } from "@/utils/utils";
  * {@code follow} is set, and a line can be tapped to seek to it; others are plain text. A singer label at the start of
  * a line ("Ph:") is shown as the name of the character it stands for, above the line, when the server knows it.
  */
-export function LyricsView({ track, singers = [], follow = false, large = false }: {
+export function LyricsView({
+  track,
+  singers = [],
+  follow = false,
+  large = false,
+}: {
   track: PlayerTrack;
   singers?: { label: string; name: string }[];
   follow?: boolean;
   large?: boolean;
 }) {
   const player = usePlayer();
-  const lines = useMemo(() => track.lyrics && track.lyricsSynced ? parseLrc(track.lyrics) : [], [track]);
+  const lines = useMemo(() => (track.lyrics && track.lyricsSynced ? parseLrc(track.lyrics) : []), [track]);
   const active = currentLine(lines, player.time);
   const activeLine = useRef<HTMLLIElement>(null);
 
@@ -27,7 +32,7 @@ export function LyricsView({ track, singers = [], follow = false, large = false 
     }
   }, [active, follow]);
 
-  const names = useMemo(() => new Map(singers.map(singer => [singer.label, singer.name])), [singers]);
+  const names = useMemo(() => new Map(singers.map((singer) => [singer.label, singer.name])), [singers]);
 
   if (lines.length === 0) {
     return (
@@ -36,8 +41,11 @@ export function LyricsView({ track, singers = [], follow = false, large = false 
           const { singer, text } = singerOf(raw, names);
 
           return (
-            <p key={i} className="min-h-[1lh]">
-              {singer && <span className="mr-2 text-sm font-semibold uppercase tracking-wide text-link">{singer}</span>}
+            <p
+              key={i}
+              className="min-h-[1lh]"
+            >
+              {singer && <span className="text-link mr-2 text-sm font-semibold tracking-wide uppercase">{singer}</span>}
               {text}
             </p>
           );
@@ -52,14 +60,26 @@ export function LyricsView({ track, singers = [], follow = false, large = false 
         const previous = i > 0 ? singerOf(lines[i - 1].text, names).singer : null;
 
         return (
-          <li key={`${line.time}-${i}`} ref={i === active ? activeLine : undefined}
-              className={cn("transition-colors", i === active ? "text-foreground" : "text-muted-foreground",
-                i === active && !large && "font-semibold")}
-              aria-current={i === active ? "true" : undefined}>
-            {singer && singer !== previous && (
-              <div className={cn("font-semibold uppercase tracking-wide text-link", large ? "text-sm" : "text-xs")}>{singer}</div>
+          <li
+            key={`${line.time}-${i}`}
+            ref={i === active ? activeLine : undefined}
+            className={cn(
+              "transition-colors",
+              i === active ? "text-foreground" : "text-muted-foreground",
+              i === active && !large && "font-semibold"
             )}
-            <button type="button" className="text-left hover:text-foreground" onClick={() => player.seek(line.time)}>
+            aria-current={i === active ? "true" : undefined}
+          >
+            {singer && singer !== previous && (
+              <div className={cn("text-link font-semibold tracking-wide uppercase", large ? "text-sm" : "text-xs")}>
+                {singer}
+              </div>
+            )}
+            <button
+              type="button"
+              className="hover:text-foreground text-left"
+              onClick={() => player.seek(line.time)}
+            >
               {text || "♪"}
             </button>
           </li>

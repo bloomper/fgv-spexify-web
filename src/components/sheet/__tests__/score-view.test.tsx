@@ -32,9 +32,17 @@ vi.mock("opensheetmusicdisplay", () => {
     };
     // Three measures of one cursor step each, side by side
     GraphicSheet = {
-      MeasureList: [0, 1, 2].map(m => [{
-        PositionAndShape: { AbsolutePosition: { x: m * 10, y: 0 }, BorderLeft: 0, BorderRight: 10, BorderTop: 0, BorderBottom: 10 },
-      }]),
+      MeasureList: [0, 1, 2].map((m) => [
+        {
+          PositionAndShape: {
+            AbsolutePosition: { x: m * 10, y: 0 },
+            BorderLeft: 0,
+            BorderRight: 10,
+            BorderTop: 0,
+            BorderBottom: 10,
+          },
+        },
+      ]),
     };
 
     constructor() {
@@ -59,21 +67,49 @@ vi.mock("opensheetmusicdisplay", () => {
 });
 
 const XML = `<score-partwise><part-list><score-part id="P1"><part-name>Sång</part-name></score-part><score-part id="P2"><part-name>Bas</part-name></score-part></part-list>
-  <part id="P1">${[60, 62, 64].map((midi, i) => `<measure>${i === 0 ? "<attributes><divisions>1</divisions></attributes><sound tempo=\"120\"/>" : ""}
-    <note><pitch><step>${["C", "D", "E"][i]}</step><octave>4</octave></pitch><duration>4</duration></note></measure>`).join("")}</part>
-  <part id="P2">${[0, 1, 2].map(i => `<measure>${i === 0 ? "<attributes><divisions>1</divisions></attributes>" : ""}<note><rest/><duration>4</duration></note></measure>`).join("")}</part>
+  <part id="P1">${[60, 62, 64]
+    .map(
+      (midi, i) => `<measure>${i === 0 ? '<attributes><divisions>1</divisions></attributes><sound tempo="120"/>' : ""}
+    <note><pitch><step>${["C", "D", "E"][i]}</step><octave>4</octave></pitch><duration>4</duration></note></measure>`
+    )
+    .join("")}</part>
+  <part id="P2">${[0, 1, 2].map((i) => `<measure>${i === 0 ? "<attributes><divisions>1</divisions></attributes>" : ""}<note><rest/><duration>4</duration></note></measure>`).join("")}</part>
 </score-partwise>`;
 
 const sync = (method: "MANUAL" | "AUTOMATIC", extra: Partial<ScoreSync> = {}): ScoreSync => ({
-  fileId: "f", method, status: "DONE", quality: 1, error: null, stale: false, updatedAt: null, version: 3, jumps: [],
-  points: [{ seconds: 1, measure: 0, beat: 0 }, { seconds: 3, measure: 1, beat: 0 }, { seconds: 5, measure: 2, beat: 0 }, { seconds: 7, measure: 2, beat: 4 }],
+  fileId: "f",
+  method,
+  status: "DONE",
+  quality: 1,
+  error: null,
+  stale: false,
+  updatedAt: null,
+  version: 3,
+  jumps: [],
+  points: [
+    { seconds: 1, measure: 0, beat: 0 },
+    { seconds: 3, measure: 1, beat: 0 },
+    { seconds: 5, measure: 2, beat: 0 },
+    { seconds: 7, measure: 2, beat: 4 },
+  ],
   ...extra,
 });
 
 function view(props: Partial<Parameters<typeof ScoreView>[0]> = {}) {
   const onChanged = vi.fn(async () => undefined);
 
-  render(<ScoreView trackId="t" fileId="f" title="Partitur" midi={false} syncs={[]} editor={false} onChanged={onChanged} {...props} />);
+  render(
+    <ScoreView
+      trackId="t"
+      fileId="f"
+      title="Partitur"
+      midi={false}
+      syncs={[]}
+      editor={false}
+      onChanged={onChanged}
+      {...props}
+    />
+  );
   return onChanged;
 }
 
@@ -85,8 +121,8 @@ describe("the score view", () => {
     position = 2;
     player.state = { playing: false, toggle: vi.fn(), seek: vi.fn(), position: () => position };
     (globalThis as unknown as { AudioContext: unknown }).AudioContext = FakeAudioContext;
-    globalThis.fetch = (vi.fn(async () => new Response(XML)));
-    Object.values(actions).forEach(action => action.mockReset());
+    globalThis.fetch = vi.fn(async () => new Response(XML));
+    Object.values(actions).forEach((action) => action.mockReset());
   });
 
   const realFetch = globalThis.fetch;
@@ -109,7 +145,9 @@ describe("the score view", () => {
   it("plays the notes, with tempo and parts", async () => {
     player.state = { ...player.state, playing: true };
     view();
-    await waitFor(() => expect(screen.getByRole("radio", { name: "playNotes" })).toHaveAttribute("aria-checked", "true"));
+    await waitFor(() =>
+      expect(screen.getByRole("radio", { name: "playNotes" })).toHaveAttribute("aria-checked", "true")
+    );
     expect(screen.getByRole("radio", { name: "followRecording" })).toBeDisabled();
     await waitFor(() => expect(screen.getAllByRole("button", { name: "playNotes" })[0]).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "playNotes" }));
@@ -143,17 +181,29 @@ describe("the score view", () => {
     fireEvent.click(screen.getByTestId("score"), { clientX: 200, clientY: 4 });
     fireEvent.click(screen.getByRole("button", { name: 'tap:{"measure":3}' }));
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "save" })));
-    expect(actions.saveScoreSyncAction).toHaveBeenCalledWith("t", "f", {
-      points: [{ seconds: 2, measure: 0, beat: 0 }, { seconds: 4, measure: 1, beat: 0 }, { seconds: 6, measure: 2, beat: 0 }],
-      jumps: [],
-    }, null);
+    expect(actions.saveScoreSyncAction).toHaveBeenCalledWith(
+      "t",
+      "f",
+      {
+        points: [
+          { seconds: 2, measure: 0, beat: 0 },
+          { seconds: 4, measure: 1, beat: 0 },
+          { seconds: 6, measure: 2, beat: 0 },
+        ],
+        jumps: [],
+      },
+      null
+    );
     expect(onChanged).toHaveBeenCalled();
   });
 
   it("lets an editor ask for an automatic sync and remove the manual one", async () => {
     actions.alignScoreAction.mockResolvedValue({ ok: true, data: sync("AUTOMATIC", { status: "PENDING" }) });
     actions.deleteScoreSyncAction.mockResolvedValue({ ok: false, message: "Nej" });
-    view({ editor: true, syncs: [sync("MANUAL", { stale: true }), sync("AUTOMATIC", { status: "DONE", quality: 0.72 })] });
+    view({
+      editor: true,
+      syncs: [sync("MANUAL", { stale: true }), sync("AUTOMATIC", { status: "DONE", quality: 0.72 })],
+    });
     await waitFor(() => expect(screen.getByRole("button", { name: "automatic" })).toBeInTheDocument());
     expect(screen.getByText(/manualExists/)).toHaveTextContent('status.DONE:{"quality":72');
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "automatic" })));
@@ -167,14 +217,42 @@ describe("the score view", () => {
   it("plays a MIDI file without notes to show", async () => {
     const track = [0x00, 0x90, 60, 100, 0x60, 0x80, 60, 0, 0x00, 0xff, 0x2f, 0x00];
 
-    globalThis.fetch = (vi.fn(async () => new Response(new Uint8Array([0x4d, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 0, 0, 1, 0, 96,
-      0x4d, 0x54, 0x72, 0x6b, 0, 0, 0, track.length, ...track]))));
+    globalThis.fetch = vi.fn(
+      async () =>
+        new Response(
+          new Uint8Array([
+            0x4d,
+            0x54,
+            0x68,
+            0x64,
+            0,
+            0,
+            0,
+            6,
+            0,
+            0,
+            0,
+            1,
+            0,
+            96,
+            0x4d,
+            0x54,
+            0x72,
+            0x6b,
+            0,
+            0,
+            0,
+            track.length,
+            ...track,
+          ])
+        )
+    );
     view({ midi: true });
     expect(await screen.findByText(/midiOnly/)).toBeInTheDocument();
   });
 
   it("says when the score cannot be read", async () => {
-    globalThis.fetch = (vi.fn(async () => new Response("", { status: 404 })));
+    globalThis.fetch = vi.fn(async () => new Response("", { status: 404 }));
     view();
     expect(await screen.findByRole("alert")).toHaveTextContent("couldNotLoad");
   });

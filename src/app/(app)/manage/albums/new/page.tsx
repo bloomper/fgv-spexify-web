@@ -12,8 +12,14 @@ export default async function NewAlbumPage() {
 
     return (
       <Page variant="content">
-        <PageHeader title={t("newAlbum")} description={t("newAlbumText")}/>
-        <NewAlbum kinds={kinds} media={media} />
+        <PageHeader
+          title={t("newAlbum")}
+          description={t("newAlbumText")}
+        />
+        <NewAlbum
+          kinds={kinds}
+          media={media}
+        />
       </Page>
     );
   });

@@ -15,10 +15,20 @@ export default async function AppsPage() {
     const serverUrl = (process.env.SUBSONIC_URL || process.env.BETTER_AUTH_URL || "").replace(/\/$/, "");
 
     return (
-      <Page variant="content" className="max-w-3xl">
-        <PageHeader title={t("title")} description={t("intro", { months: data?.settings.appPasswordExpiryMonths ?? 12 })}/>
-        <AppsManager serverUrl={serverUrl} username={data?.me.username ?? ""}
-                     passwords={data?.appPasswords ?? []} apiKeys={data?.apiKeys ?? []} />
+      <Page
+        variant="content"
+        className="max-w-3xl"
+      >
+        <PageHeader
+          title={t("title")}
+          description={t("intro", { months: data?.settings.appPasswordExpiryMonths ?? 12 })}
+        />
+        <AppsManager
+          serverUrl={serverUrl}
+          username={data?.me.username ?? ""}
+          passwords={data?.appPasswords ?? []}
+          apiKeys={data?.apiKeys ?? []}
+        />
       </Page>
     );
   });

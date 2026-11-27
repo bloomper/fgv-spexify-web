@@ -28,7 +28,18 @@ export default async function EditLyricsPage({ params }: { params: Promise<{ id:
     }
     return (
       <Page variant="content">
-        <PageHeader title={t("title", { title: track.title })} description={track.albumTitle} actions={<Link href={`/manage/albums/${track.albumId}`} className="text-sm text-link hover:text-link/80">{t("backToAlbum")}</Link>}/>
+        <PageHeader
+          title={t("title", { title: track.title })}
+          description={track.albumTitle}
+          actions={
+            <Link
+              href={`/manage/albums/${track.albumId}`}
+              className="text-link hover:text-link/80 text-sm"
+            >
+              {t("backToAlbum")}
+            </Link>
+          }
+        />
         <LyricsEditor track={track} />
       </Page>
     );

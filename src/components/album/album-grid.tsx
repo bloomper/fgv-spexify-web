@@ -24,7 +24,12 @@ export type AlbumSummary = {
  * Albums as cover cards with everyone's average rating. A link per card; the badges say what is not obvious from the
  * title.
  */
-export function AlbumGrid({ albums, hrefFor, label, ranked = false }: {
+export function AlbumGrid({
+  albums,
+  hrefFor,
+  label,
+  ranked = false,
+}: {
   albums: AlbumSummary[];
   /** Numbers the covers 1, 2, 3…, for a top list. */
   ranked?: boolean;
@@ -38,23 +43,34 @@ export function AlbumGrid({ albums, hrefFor, label, ranked = false }: {
   return (
     <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
       {albums.map((album, i) => (
-        <li key={album.id} className="relative">
+        <li
+          key={album.id}
+          className="relative"
+        >
           {ranked && (
-            <span className="pointer-events-none absolute left-2 top-2 z-10 flex size-7 items-center justify-center rounded-full bg-background/90 text-sm font-semibold tabular-nums shadow">
+            <span className="bg-background/90 pointer-events-none absolute top-2 left-2 z-10 flex size-7 items-center justify-center rounded-full text-sm font-semibold tabular-nums shadow">
               {i + 1}
             </span>
           )}
-          <Link href={hrefFor ? hrefFor(album.id) : `/albums/${album.id}`}
-                className="group block rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            <CoverImage albumId={album.id} title={album.title}
-                        className="w-full rounded-lg shadow-sm transition-transform group-hover:scale-[1.02]" />
+          <Link
+            href={hrefFor ? hrefFor(album.id) : `/albums/${album.id}`}
+            className="group focus-visible:ring-ring block rounded-lg outline-none focus-visible:ring-2"
+          >
+            <CoverImage
+              albumId={album.id}
+              title={album.title}
+              className="w-full rounded-lg shadow-sm transition-transform group-hover:scale-[1.02]"
+            />
             <div className="mt-2 space-y-0.5">
-              <div className="line-clamp-2 text-sm font-medium leading-tight">{album.title}</div>
-              <div className="text-xs text-muted-foreground">
+              <div className="line-clamp-2 text-sm leading-tight font-medium">{album.title}</div>
+              <div className="text-muted-foreground text-xs">
                 {[album.year, album.spex?.[0]?.categoryName].filter(Boolean).join(" · ")}
               </div>
-              <AverageRating average={album.averageRating} count={album.ratingCount} />
-              {label?.(album) && <div className="text-xs text-muted-foreground">{label(album)}</div>}
+              <AverageRating
+                average={album.averageRating}
+                count={album.ratingCount}
+              />
+              {label?.(album) && <div className="text-muted-foreground text-xs">{label(album)}</div>}
               <div className="flex flex-wrap gap-1 pt-0.5">
                 {!album.kind.isDefault && <Badge variant="secondary">{kindName(album.kind, locale)}</Badge>}
                 {album.spex?.[0]?.revival && <Badge variant="secondary">{t("revival")}</Badge>}

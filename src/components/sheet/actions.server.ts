@@ -10,7 +10,7 @@ import { Policies } from "@/utils/policy.server";
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function requireId(...ids: string[]) {
-  if (ids.some(id => !ID.test(id))) {
+  if (ids.some((id) => !ID.test(id))) {
     throw new Error("Invalid id");
   }
 }
@@ -35,10 +35,15 @@ export async function trackStudioAction(trackId: string): Promise<TrackStudio | 
   });
 }
 
-const editor = <T, >(work: () => Promise<T>) => withPolicyAction(Policies.editor.requireEditor, () => toActionResult(work));
+const editor = <T>(work: () => Promise<T>) =>
+  withPolicyAction(Policies.editor.requireEditor, () => toActionResult(work));
 
-export async function saveScoreSyncAction(trackId: string, fileId: string, input: ScoreSyncInput,
-                                          version: number | null): Promise<ActionResult<ScoreSync | undefined>> {
+export async function saveScoreSyncAction(
+  trackId: string,
+  fileId: string,
+  input: ScoreSyncInput,
+  version: number | null
+): Promise<ActionResult<ScoreSync | undefined>> {
   requireId(trackId, fileId);
   return editor(() => scoreSyncSave(trackId, fileId, input, version));
 }
