@@ -33,18 +33,18 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@bloomper/fgv-web-ui/ui/dropdown-menu";
 import { type ReplayGainMode, usePlayer } from "@/components/player/player-provider.client";
 import { SHOW_SHORTCUTS } from "@/components/player/shortcuts.client";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@bloomper/fgv-web-ui/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@bloomper/fgv-web-ui/ui/sheet";
 import { formatDuration } from "@/components/player/lyrics";
 import { LyricsView } from "@/components/player/lyrics-view.client";
 import { QueueList } from "@/components/player/queue-list.client";
 import { NowPlaying } from "@/components/player/now-playing.client";
 import { useCycleRepeat } from "@/components/player/repeat.client";
 import { CoverImage } from "@/components/album/cover-image.client";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@bloomper/fgv-web-ui/hooks/use-mobile";
 import { cn } from "@/utils/utils";
 
 /**
@@ -118,7 +118,7 @@ export function PlayerBar() {
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" onClick={() => player.setShuffle(!player.shuffle)}
                     aria-pressed={player.shuffle} aria-label={t("shuffle")}>
-              <Shuffle className={cn(player.shuffle && "text-primary")} />
+              <Shuffle className={cn(player.shuffle && "text-link")} />
             </Button>
             <Button variant="ghost" size="icon" onClick={player.previous} aria-label={t("previous")}>
               <SkipBack className="fill-current" />
@@ -132,8 +132,8 @@ export function PlayerBar() {
             </Button>
             <Button variant="ghost" size="icon" onClick={cycleRepeat}
                     aria-label={t(`repeat.${player.repeat}`)} title={t(`repeat.${player.repeat}`)}>
-              {player.repeat === "one" ? <Repeat1 className="text-primary" /> :
-                <Repeat className={cn(player.repeat === "all" && "text-primary")} />}
+              {player.repeat === "one" ? <Repeat1 className="text-link" /> :
+                <Repeat className={cn(player.repeat === "all" && "text-link")} />}
             </Button>
           </div>
           <div className="flex w-full max-w-xl items-center gap-2 text-xs tabular-nums text-muted-foreground">

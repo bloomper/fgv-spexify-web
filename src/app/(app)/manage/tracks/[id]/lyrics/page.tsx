@@ -5,6 +5,7 @@ import { getLyricsEditor } from "@/lib/catalog/sheet-music.server";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
 import { LyricsEditor } from "./lyrics-editor.client";
+import { Page, PageHeader } from "@bloomper/fgv-web-ui/shell/page-header";
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -26,16 +27,10 @@ export default async function EditLyricsPage({ params }: { params: Promise<{ id:
       notFound();
     }
     return (
-      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">{t("title", { title: track.title })}</h1>
-            <p className="text-sm text-muted-foreground">{track.albumTitle}</p>
-          </div>
-          <Link href={`/manage/albums/${track.albumId}`} className="text-sm text-primary hover:text-primary/80">{t("backToAlbum")}</Link>
-        </div>
+      <Page variant="content">
+        <PageHeader title={t("title", { title: track.title })} description={track.albumTitle} actions={<Link href={`/manage/albums/${track.albumId}`} className="text-sm text-link hover:text-link/80">{t("backToAlbum")}</Link>}/>
         <LyricsEditor track={track} />
-      </div>
+      </Page>
     );
   });
 }

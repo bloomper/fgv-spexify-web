@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@bloomper/fgv-web-ui/ui/button";
 import { CollectionForm, type CollectionAlbumOption } from "@/components/album/collection-form.client";
 import {
   createCollectionAction,
   deleteCollectionAction,
   updateCollectionAction,
 } from "@/app/(app)/manage/actions.server";
-import { useDialogs } from "@/components/dialogs.client";
+import { useDialogs } from "@bloomper/fgv-web-ui/shell/dialogs";
 import { track } from "@/utils/umami";
 
 type Props = {

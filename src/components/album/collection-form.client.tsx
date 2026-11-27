@@ -3,11 +3,11 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowDown, ArrowUp, Plus, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@bloomper/fgv-web-ui/ui/button";
+import { Input } from "@bloomper/fgv-web-ui/ui/input";
+import { Label } from "@bloomper/fgv-web-ui/ui/label";
+import { NativeSelect, NativeSelectOption } from "@bloomper/fgv-web-ui/ui/native-select";
+import { Textarea } from "@bloomper/fgv-web-ui/ui/textarea";
 import type { CollectionInput } from "@/gql/graphql";
 
 export type CollectionAlbumOption = { id: string; title: string; year?: number | null; published: boolean };

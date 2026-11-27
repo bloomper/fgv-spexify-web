@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { BookOpenText, ChevronDown, ListX, Pause, Play, Repeat, Repeat1, RotateCcw, Shuffle, SkipBack, SkipForward } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@bloomper/fgv-web-ui/ui/button";
 import { CoverImage } from "@/components/album/cover-image.client";
 import { NumberKindIcon } from "@/components/album/number-kind-icon";
 import { formatDuration } from "@/components/player/lyrics";
@@ -118,7 +118,7 @@ export function NowPlaying({ open, onClose }: { open: boolean; onClose: () => vo
             <div className="flex items-center justify-between">
               <Button variant="ghost" size="icon-lg" onClick={() => player.setShuffle(!player.shuffle)}
                       aria-pressed={player.shuffle} aria-label={t("shuffle")}>
-                <Shuffle className={cn(player.shuffle && "text-primary")} />
+                <Shuffle className={cn(player.shuffle && "text-link")} />
               </Button>
               <Button variant="ghost" size="icon-lg" onClick={player.previous} aria-label={t("previous")}>
                 <SkipBack className="size-6 fill-current" />
@@ -132,8 +132,8 @@ export function NowPlaying({ open, onClose }: { open: boolean; onClose: () => vo
                 <SkipForward className="size-6 fill-current" />
               </Button>
               <Button variant="ghost" size="icon-lg" onClick={cycleRepeat} aria-label={t(`repeat.${player.repeat}`)}>
-                {player.repeat === "one" ? <Repeat1 className="text-primary" />
-                  : <Repeat className={cn(player.repeat === "all" && "text-primary")} />}
+                {player.repeat === "one" ? <Repeat1 className="text-link" />
+                  : <Repeat className={cn(player.repeat === "all" && "text-link")} />}
               </Button>
             </div>
           </div>

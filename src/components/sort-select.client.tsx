@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { NativeSelect, NativeSelectOption } from "@bloomper/fgv-web-ui/ui/native-select";
 
 /**
  * A choice of order for a list, kept in the address as {@code sort}; the first option is the default and leaves it out.

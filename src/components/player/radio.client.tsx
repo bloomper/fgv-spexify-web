@@ -4,7 +4,7 @@ import { useCallback, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Radio } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@bloomper/fgv-web-ui/ui/button";
 import { radioAction } from "@/components/player/actions.server";
 import { usePlayer } from "@/components/player/player-provider.client";
 import { track as trackEvent } from "@/utils/umami";

@@ -3,12 +3,13 @@ import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { Pencil } from "lucide-react";
 import { AlbumGrid } from "@/components/album/album-grid";
-import { Button } from "@/components/ui/button";
+import { Button } from "@bloomper/fgv-web-ui/ui/button";
 import { getCollection } from "@/lib/catalog/catalog.server";
 import { isEditor } from "@/utils/auth";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
-import { DataEmpty } from "@/components/data-empty";
+import { DataEmpty } from "@bloomper/fgv-web-ui/shell/data-empty";
+import { Page, PageHeader } from "@bloomper/fgv-web-ui/shell/page-header";
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -30,12 +31,8 @@ export default async function CollectionPage({ params }: { params: Promise<{ id:
       notFound();
     }
     return (
-      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight">{collection.title}</h1>
-          {collection.description &&
-            <p className="max-w-prose whitespace-pre-line text-sm text-muted-foreground">{collection.description}</p>}
-        </div>
+      <Page variant="content">
+        <PageHeader title={collection.title} description={collection.description && collection.description}/>
         {isEditor(authz.roles) && (
           <Button variant="ghost" nativeButton={false} render={<Link href={`/manage/collections/${collection.id}`} />}>
             <Pencil />{t("edit")}
@@ -43,7 +40,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ id:
         )}
         {collection.albums.length > 0 ? <AlbumGrid albums={collection.albums} /> :
           <DataEmpty title={t("empty")} description={null} />}
-      </div>
+      </Page>
     );
   });
 }

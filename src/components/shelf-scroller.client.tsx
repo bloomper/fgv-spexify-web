@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRef } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@bloomper/fgv-web-ui/ui/button";
 
 /**
  * A row that scrolls sideways, by swiping or with the arrows beside the shelf's heading on larger screens.

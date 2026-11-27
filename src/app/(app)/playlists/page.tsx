@@ -5,7 +5,8 @@ import { formatDuration } from "@/components/player/lyrics";
 import { getPlaylists } from "@/lib/subsonic.server";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
-import { DataEmpty } from "@/components/data-empty";
+import { DataEmpty } from "@bloomper/fgv-web-ui/shell/data-empty";
+import { Page, PageHeader } from "@bloomper/fgv-web-ui/shell/page-header";
 
 export default async function PlaylistsPage() {
   return withPolicyPage(Policies.app.requireAccess, async () => {
@@ -13,9 +14,8 @@ export default async function PlaylistsPage() {
     const playlists = await getPlaylists().catch(() => null);
 
     return (
-      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
-        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-        <p className="max-w-prose text-sm text-muted-foreground">{t("text")}</p>
+      <Page variant="content">
+        <PageHeader title={t("title")} description={t("text")}/>
         {playlists === null && <p className="text-destructive">{t("unavailable")}</p>}
         {playlists?.length === 0 && <DataEmpty title={t("none")} description={null} />}
         {playlists && playlists.length > 0 && (
@@ -40,7 +40,7 @@ export default async function PlaylistsPage() {
             ))}
           </ul>
         )}
-      </div>
+      </Page>
     );
   });
 }

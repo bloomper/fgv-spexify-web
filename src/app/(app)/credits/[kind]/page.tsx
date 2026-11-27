@@ -6,7 +6,8 @@ import { CREDIT_KINDS, creditHref } from "@/lib/credits";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
 import { CreditTabs } from "../credit-tabs";
-import { DataEmpty } from "@/components/data-empty";
+import { DataEmpty } from "@bloomper/fgv-web-ui/shell/data-empty";
+import { Page, PageHeader } from "@bloomper/fgv-web-ui/shell/page-header";
 
 export default async function CreditKindPage({ params }: { params: Promise<{ kind: string }> }) {
   return withPolicyPage(Policies.app.requireAccess, async () => {
@@ -21,9 +22,8 @@ export default async function CreditKindPage({ params }: { params: Promise<{ kin
     const credits = await getCredits(kind);
 
     return (
-      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
-        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-        <p className="max-w-prose text-sm text-muted-foreground">{t(`text.${segment}`)}</p>
+      <Page variant="content">
+        <PageHeader title={t("title")} description={t(`text.${segment}`)}/>
         <CreditTabs current={segment} />
         {credits.length === 0 ? <DataEmpty title={t("none")} description={null} /> : (
           <ul className="grid gap-x-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -40,7 +40,7 @@ export default async function CreditKindPage({ params }: { params: Promise<{ kin
             ))}
           </ul>
         )}
-      </div>
+      </Page>
     );
   });
 }

@@ -2,8 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Download, Pencil } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@bloomper/fgv-web-ui/ui/badge";
+import { Button } from "@bloomper/fgv-web-ui/ui/button";
 import { CoverImage } from "@/components/album/cover-image.client";
 import { PlayAllButtons, TrackList } from "@/components/album/track-list.client";
 import { toRows } from "@/components/album/to-rows";
@@ -17,7 +17,7 @@ import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
 import { isEditor } from "@/utils/auth";
 import { kindName } from "@/utils/format";
-import { DataEmpty } from "@/components/data-empty";
+import { DataEmpty } from "@bloomper/fgv-web-ui/shell/data-empty";
 import { AlbumBackdrop } from "@/components/album/album-backdrop.client";
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -103,7 +103,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
                   {album.collections.map((collection, i) => (
                     <span key={collection.id}>
                       {i > 0 && ", "}
-                      <Link href={`/collections/${collection.id}`} className="text-primary hover:text-primary/80">{collection.title}</Link>
+                      <Link href={`/collections/${collection.id}`} className="text-link hover:text-link/80">{collection.title}</Link>
                     </span>
                   ))}
                 </p>
@@ -115,7 +115,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
 
                     return (
                       <li key={spex.id}>
-                        <Link href={`/albums?spex=${spex.familyId}`} className="text-primary hover:text-primary/80">
+                        <Link href={`/albums?spex=${spex.familyId}`} className="text-link hover:text-link/80">
                           {t("allFromSpex", { title: spex.title ?? name })}
                         </Link>
                       </li>

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@bloomper/fgv-web-ui/ui/dialog";
 import { usePlayer } from "@/components/player/player-provider.client";
 
 /** Dispatched on window to show the list of keyboard shortcuts. */

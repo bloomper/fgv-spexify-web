@@ -7,6 +7,7 @@ import { withPolicyPage } from "@/utils/route.server";
 import { AlbumEditor } from "./album-editor.client";
 import { RecordHistory } from "@/components/audit/change-log";
 import { auditLink } from "../../audit/links";
+import { Page, PageHeader } from "@bloomper/fgv-web-ui/shell/page-header";
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -28,16 +29,13 @@ export default async function EditAlbumPage({ params }: { params: Promise<{ id: 
     const numbers = await getSpexNumbers(album.spex.map(spex => spex.id));
 
     return (
-      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h1 className="text-2xl font-bold tracking-tight">{album.title}</h1>
-          <Link href={`/albums/${album.id}`}
-                className="text-sm text-primary hover:text-primary/80">{t("viewAsListener")}</Link>
-        </div>
+      <Page variant="content">
+        <PageHeader title={album.title} actions={<Link href={`/albums/${album.id}`}
+                className="text-sm text-link hover:text-link/80">{t("viewAsListener")}</Link>}/>
         <AlbumEditor album={album} kinds={kinds} media={media} numbers={numbers}
                      spexipediaUrl={process.env.SPEXIPEDIA_WEB_URL?.trim().replace(/\/+$/, "") || null} />
         <RecordHistory entityId={album.id} path="/manage/audit" linkOf={auditLink} />
-      </div>
+      </Page>
     );
   });
 }

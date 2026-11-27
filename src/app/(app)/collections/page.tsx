@@ -4,7 +4,8 @@ import { CoverImage } from "@/components/album/cover-image.client";
 import { getCollections } from "@/lib/catalog/catalog.server";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
-import { DataEmpty } from "@/components/data-empty";
+import { DataEmpty } from "@bloomper/fgv-web-ui/shell/data-empty";
+import { Page, PageHeader } from "@bloomper/fgv-web-ui/shell/page-header";
 
 /**
  * Albums gathered in an order of their own, e.g. a spex over the years: each collection as up to four covers.
@@ -15,9 +16,8 @@ export default async function CollectionsPage() {
     const collections = await getCollections();
 
     return (
-      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
-        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-        <p className="max-w-prose text-sm text-muted-foreground">{t("text")}</p>
+      <Page variant="content">
+        <PageHeader title={t("title")} description={t("text")}/>
         {collections.length === 0 ? <DataEmpty title={t("none")} description={null} /> : (
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {collections.map(collection => (
@@ -42,7 +42,7 @@ export default async function CollectionsPage() {
             ))}
           </ul>
         )}
-      </div>
+      </Page>
     );
   });
 }

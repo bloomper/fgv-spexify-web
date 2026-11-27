@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button } from "@bloomper/fgv-web-ui/ui/button";
 import { formatInstant } from "@/utils/format";
 import {
   deleteAlbumAction,
@@ -13,8 +13,8 @@ import {
   trashAlbumAction,
   trashTrackAction,
 } from "@/app/(app)/manage/actions.server";
-import { useDialogs } from "@/components/dialogs.client";
-import { DataEmpty } from "@/components/data-empty";
+import { useDialogs } from "@bloomper/fgv-web-ui/shell/dialogs";
+import { DataEmpty } from "@bloomper/fgv-web-ui/shell/data-empty";
 
 type Item = { id: string; title: string; trashedAt?: string | null; detail?: string; albumId?: string };
 
