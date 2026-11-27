@@ -74,6 +74,7 @@
     "showMenu": "Show menu"
   },
   "AppSwitcher": {
+    "membership": "Membership",
     "heading": "Switch application",
     "spexregister": "Spexregister",
     "revival": "Nyuppsättning",
