@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@bloomper/fgv-web-ui/ui/badge";
 import { CoverImage } from "@/components/album/cover-image.client";
 import { AverageRating } from "@/components/rating.client";
 import { type KindName, kindName } from "@/utils/format";

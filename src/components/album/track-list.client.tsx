@@ -25,15 +25,15 @@ import {
   Shuffle,
   X,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@bloomper/fgv-web-ui/ui/button";
+import { Badge } from "@bloomper/fgv-web-ui/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@bloomper/fgv-web-ui/ui/dropdown-menu";
 import { CoverImage } from "@/components/album/cover-image.client";
 import { playedSince, type PlayerTrack, usePlayer } from "@/components/player/player-provider.client";
 import { formatDuration } from "@/components/player/lyrics";
@@ -49,7 +49,7 @@ import { creditHref, splitCredits } from "@/lib/credits";
 import { AverageRating, RatingInput, RatingStars } from "@/components/rating.client";
 import { cn } from "@/utils/utils";
 import { formatDate } from "@/utils/format";
-import { useDialogs } from "@/components/dialogs.client";
+import { useDialogs } from "@bloomper/fgv-web-ui/shell/dialogs";
 import { track as trackEvent } from "@/utils/umami";
 import { useServerState } from "@/hooks/use-server-state.client";
 import { NumberKindIcon } from "@/components/album/number-kind-icon";
@@ -365,7 +365,7 @@ export function TrackList({
                 {track.spexipediaUrl && (
                   <div className="mt-1">
                     <a href={track.spexipediaUrl} target="_blank" rel="noopener noreferrer"
-                       className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80">
+                       className="inline-flex items-center gap-1 text-xs text-link hover:text-link/80">
                       <BookOpenText className="size-3.5" />{t("inSpexipedia")}
                     </a>
                   </div>
@@ -373,7 +373,7 @@ export function TrackList({
                 {track.sheetMusicUrl && (
                   <div className="mt-1">
                     <a href={track.sheetMusicUrl} target="_blank" rel="noopener noreferrer"
-                       className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80">
+                       className="inline-flex items-center gap-1 text-xs text-link hover:text-link/80">
                       <FileMusic className="size-3.5" />{t("sheetMusicInArchive")}
                     </a>
                   </div>
@@ -384,7 +384,7 @@ export function TrackList({
                       <a key={`${link.videoId}-${link.startSeconds}`}
                          href={`${spexflixUrl}/videos/${link.videoId}?t=${link.startSeconds}`}
                          target="_blank" rel="noopener noreferrer"
-                         className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80">
+                         className="inline-flex items-center gap-1 text-xs text-link hover:text-link/80">
                         <Film className="size-3.5" />{t("watchInSpexflix", { video: link.videoTitle })}
                       </a>
                     ))}

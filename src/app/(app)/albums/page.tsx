@@ -11,7 +11,8 @@ import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
 import { cn } from "@/utils/utils";
 import { kindName } from "@/utils/format";
-import { DataEmpty } from "@/components/data-empty";
+import { DataEmpty } from "@bloomper/fgv-web-ui/shell/data-empty";
+import { Page, PageHeader } from "@bloomper/fgv-web-ui/shell/page-header";
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SORTS: AlbumSort[] = ["YEAR_DESC", "YEAR_ASC", "TITLE", "PUBLISHED", "RATING", "LIKES", "PLAYS"];
@@ -80,10 +81,8 @@ export default async function AlbumsPage({ searchParams }: { searchParams: Promi
     const kinds = (data?.albumKinds ?? []).filter(item => item.albumCount > 0);
 
     return (
-      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-          <div className="flex flex-wrap items-center gap-3">
+      <Page variant="content">
+        <PageHeader title={t("title")} actions={<div className="flex flex-wrap items-center gap-3">
             <Link href={link({ liked: !onlyLiked })} className={cn(chip(onlyLiked), "inline-flex items-center gap-1.5")}
                   aria-pressed={onlyLiked}>
               <Heart className={cn("size-4", onlyLiked && "fill-current")} />{t("onlyLiked")}
@@ -92,12 +91,11 @@ export default async function AlbumsPage({ searchParams }: { searchParams: Promi
               <SortSelect label={t("sortLabel")} value={sortBy}
                           options={SORTS.map(value => ({ value, label: t(`sort.${value}`) }))} />
             </Suspense>
-          </div>
-        </div>
+          </div>}/>
         {spexId && (
           <p className="flex flex-wrap items-baseline gap-x-3 text-sm">
             <span>{t("spexFilter", { title: spexTitle ?? "?" })}</span>
-            <Link href={link({})} className="text-primary hover:text-primary/80">{t("clearSpex")}</Link>
+            <Link href={link({})} className="text-link hover:text-link/80">{t("clearSpex")}</Link>
           </p>
         )}
         <nav aria-label={t("categories")} className="flex flex-wrap gap-2">
@@ -146,7 +144,7 @@ export default async function AlbumsPage({ searchParams }: { searchParams: Promi
         {data && data.albums.length > 0
           ? <AlbumGrid albums={data.albums} />
           : <DataEmpty title={t("none")} description={null} />}
-      </div>
+      </Page>
     );
   });
 }

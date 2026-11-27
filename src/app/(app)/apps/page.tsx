@@ -4,6 +4,7 @@ import { getApps } from "@/lib/account/account.server";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
 import { AppsManager } from "./apps.client";
+import { Page, PageHeader } from "@bloomper/fgv-web-ui/shell/page-header";
 
 export default async function AppsPage() {
   return withPolicyPage(Policies.app.requireAccess, async () => {
@@ -14,15 +15,11 @@ export default async function AppsPage() {
     const serverUrl = (process.env.SUBSONIC_URL || process.env.BETTER_AUTH_URL || "").replace(/\/$/, "");
 
     return (
-      <div className="max-w-3xl flex flex-1 flex-col gap-6 p-4 md:p-8">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-          <p
-            className="text-muted-foreground">{t("intro", { months: data?.settings.appPasswordExpiryMonths ?? 12 })}</p>
-        </div>
+      <Page variant="content" className="max-w-3xl">
+        <PageHeader title={t("title")} description={t("intro", { months: data?.settings.appPasswordExpiryMonths ?? 12 })}/>
         <AppsManager serverUrl={serverUrl} username={data?.me.username ?? ""}
                      passwords={data?.appPasswords ?? []} apiKeys={data?.apiKeys ?? []} />
-      </div>
+      </Page>
     );
   });
 }

@@ -7,21 +7,21 @@ import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import Link from "next/link";
 import { ArrowDown, ArrowUp, ExternalLink, ImageUp, MoreHorizontal, Pencil, Plus, RefreshCw, TextQuote, Trash2, Upload } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@bloomper/fgv-web-ui/ui/button";
+import { Badge } from "@bloomper/fgv-web-ui/ui/badge";
+import { Switch } from "@bloomper/fgv-web-ui/ui/switch";
+import { Input } from "@bloomper/fgv-web-ui/ui/input";
+import { Label } from "@bloomper/fgv-web-ui/ui/label";
+import { Textarea } from "@bloomper/fgv-web-ui/ui/textarea";
+import { Checkbox } from "@bloomper/fgv-web-ui/ui/checkbox";
+import { NativeSelect, NativeSelectOption } from "@bloomper/fgv-web-ui/ui/native-select";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@bloomper/fgv-web-ui/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@bloomper/fgv-web-ui/ui/dropdown-menu";
 import { CoverImage } from "@/components/album/cover-image.client";
 import type { PickedSpex } from "@/components/spex/spex-picker.client";
 import { AlbumForm, type KindOption } from "@/components/album/album-form.client";
@@ -44,8 +44,8 @@ import {
   updateTrackAction,
 } from "@/app/(app)/manage/actions.server";
 import { track as trackEvent } from "@/utils/umami";
-import { useDialogs } from "@/components/dialogs.client";
-import { DataEmpty } from "@/components/data-empty";
+import { useDialogs } from "@bloomper/fgv-web-ui/shell/dialogs";
+import { DataEmpty } from "@bloomper/fgv-web-ui/shell/data-empty";
 
 export type EditorTrack = {
   id: string;
@@ -242,7 +242,7 @@ function TrackDialog({ albumId, track, numbers, onClose, adding = false }: {
               {!track.melody && track.credits.length === 0 && <p className="text-muted-foreground">{t("noCreditsFromNumber")}</p>}
               {track.spexipediaUrl && (
                 <a href={track.spexipediaUrl} target="_blank" rel="noreferrer"
-                   className="inline-flex items-center gap-1 text-primary hover:text-primary/80">
+                   className="inline-flex items-center gap-1 text-link hover:text-link/80">
                   {t("editInSpexipedia")}<ExternalLink className="size-3" />
                 </a>
               )}
@@ -476,7 +476,7 @@ export function AlbumEditor({ album, kinds, media = [], numbers = [], spexipedia
           <Upload className="size-6 text-muted-foreground" />
           <p className="text-sm">{t("dropFiles")}</p>
           <p className="text-xs text-muted-foreground">{t("formats")}</p>
-          <label className="cursor-pointer text-sm text-primary hover:text-primary/80">
+          <label className="cursor-pointer text-sm text-link hover:text-link/80">
             {t("chooseFiles")}
             <input type="file" multiple accept={ACCEPT} className="sr-only"
                    onChange={event => {

@@ -8,6 +8,7 @@ import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
 import { auditLink } from "../../audit/links";
 import { CollectionEditor } from "../collection-editor.client";
+import { Page, PageHeader } from "@bloomper/fgv-web-ui/shell/page-header";
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -26,18 +27,17 @@ export default async function EditCollectionPage({ params }: { params: Promise<{
       notFound();
     }
     return (
-      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">{collection.title}</h1>
-          <Link href={`/collections/${collection.id}`}
-                className="text-sm text-primary hover:text-primary/80">{t("view")}</Link>
-        </div>
+      <Page variant="content">
+        <PageHeader
+          title={collection.title}
+          actions={<Link href={`/collections/${collection.id}`} className="text-sm text-link hover:text-link/80">{t("view")}</Link>}
+        />
         <CollectionEditor collection={{
           id: collection.id, title: collection.title, description: collection.description,
           albumIds: collection.albums.map(album => album.id),
         }} albums={data?.albums ?? []} canDelete={isAdmin(authz.roles)} />
         <RecordHistory entityId={collection.id} path="/manage/audit" linkOf={auditLink} />
-      </div>
+      </Page>
     );
   });
 }

@@ -12,7 +12,8 @@ import { byDecade, byKind } from "@/utils/decades";
 import { formatDate, kindName } from "@/utils/format";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
-import { DataEmpty } from "@/components/data-empty";
+import { DataEmpty } from "@bloomper/fgv-web-ui/shell/data-empty";
+import { Page } from "@bloomper/fgv-web-ui/shell/page-header";
 
 const SHELF = 16;
 const RADIO_SEEDS = 8;
@@ -35,7 +36,7 @@ export default async function HomePage() {
       .slice(0, RADIO_SEEDS);
 
     return (
-      <div className="flex min-w-0 flex-1 flex-col gap-8 p-4 md:p-8">
+      <Page variant="content" className="min-w-0">
         <section className="space-y-2">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
@@ -148,7 +149,7 @@ export default async function HomePage() {
             {home.topAlbums.map(album => <ShelfItem key={album.id}><AlbumCard album={album} /></ShelfItem>)}
           </Shelf>
         )}
-      </div>
+      </Page>
     );
   });
 }

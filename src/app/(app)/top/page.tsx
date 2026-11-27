@@ -12,7 +12,8 @@ import { decadesOf, parseDecade } from "@/utils/decades";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
 import { cn } from "@/utils/utils";
-import { DataEmpty } from "@/components/data-empty";
+import { DataEmpty } from "@bloomper/fgv-web-ui/shell/data-empty";
+import { Page, PageHeader } from "@bloomper/fgv-web-ui/shell/page-header";
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const BY: TopBy[] = ["RATED", "LIKED", "PLAYED"];
@@ -71,17 +72,11 @@ export default async function TopPage({ searchParams }: { searchParams: Promise<
       .map(item => [item.id, value(item) ?? <AverageRating average={item.averageRating} count={item.ratingCount} stars />]));
 
     return (
-      <div className="flex flex-1 flex-col gap-5 p-4 md:p-8">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-            <p className="max-w-3xl text-pretty text-sm text-muted-foreground">{t(`text.${by}`)}</p>
-          </div>
-          <LinkSegments label={t("what")} items={[
+      <Page variant="content">
+        <PageHeader title={t("title")} description={t(`text.${by}`)} actions={<LinkSegments label={t("what")} items={[
             { href: link({ what: "tracks" }), label: t("tracks"), active: what === "tracks" },
             { href: link({ what: "albums" }), label: t("albums"), active: what === "albums" },
-          ]} />
-        </div>
+          ]} />}/>
         <LinkTabs label={t("by")} items={BY.map(item => ({
           href: link({ by: item }), label: t(`byLabel.${item}`), active: by === item,
         }))} />
@@ -113,7 +108,7 @@ export default async function TopPage({ searchParams }: { searchParams: Promise<
                        showAlbum ranked stats={stats} />
           </div>
         ) : <DataEmpty title={t("none")} description={null} />}
-      </div>
+      </Page>
     );
   });
 }

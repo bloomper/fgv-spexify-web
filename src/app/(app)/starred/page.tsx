@@ -6,7 +6,8 @@ import { getTracksByNavidromeIds } from "@/lib/catalog/catalog.server";
 import { getListeningState, getStarredAlbums } from "@/lib/catalog/listening.server";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
-import { DataEmpty } from "@/components/data-empty";
+import { DataEmpty } from "@bloomper/fgv-web-ui/shell/data-empty";
+import { Page, PageHeader } from "@bloomper/fgv-web-ui/shell/page-header";
 
 export default async function StarredPage() {
   return withPolicyPage(Policies.app.requireAccess, async () => {
@@ -19,9 +20,8 @@ export default async function StarredPage() {
     const rows = toRows(tracks, listening.starredPlays);
 
     return (
-      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
-        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-        <p className="max-w-prose text-sm text-muted-foreground">{t("text")}</p>
+      <Page variant="content">
+        <PageHeader title={t("title")} description={t("text")}/>
         {albums.length > 0 && (
           <section className="space-y-3" aria-labelledby="starred-albums">
             <h2 id="starred-albums" className="text-lg font-semibold">{t("albums")}</h2>
@@ -37,7 +37,7 @@ export default async function StarredPage() {
           </section>
         )}
         {albums.length === 0 && rows.length === 0 && <DataEmpty title={t("none")} description={null} />}
-      </div>
+      </Page>
     );
   });
 }

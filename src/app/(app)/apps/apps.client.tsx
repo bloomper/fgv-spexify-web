@@ -5,11 +5,11 @@ import { useId, useState, useTransition } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Copy, KeyRound, Smartphone } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@bloomper/fgv-web-ui/ui/button";
+import { Input } from "@bloomper/fgv-web-ui/ui/input";
+import { Label } from "@bloomper/fgv-web-ui/ui/label";
+import { Badge } from "@bloomper/fgv-web-ui/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@bloomper/fgv-web-ui/ui/alert";
 import {
   createApiKeyAction,
   createAppPasswordAction,
@@ -17,7 +17,7 @@ import {
   revokeAppPasswordAction,
 } from "./actions.server";
 import { track } from "@/utils/umami";
-import { useDialogs } from "@/components/dialogs.client";
+import { useDialogs } from "@bloomper/fgv-web-ui/shell/dialogs";
 
 type Credential = {
   id: string;

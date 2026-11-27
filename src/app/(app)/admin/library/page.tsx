@@ -1,10 +1,11 @@
 import { getTranslations } from "next-intl/server";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@bloomper/fgv-web-ui/ui/badge";
 import { getLibraryStatus } from "@/lib/admin/admin.server";
 import { formatInstant } from "@/utils/format";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
 import { RescanButton } from "../admin-buttons.client";
+import { Page, PageHeader } from "@bloomper/fgv-web-ui/shell/page-header";
 
 export default async function LibraryPage() {
   return withPolicyPage(Policies.admin.requireAdmin, async () => {
@@ -12,9 +13,8 @@ export default async function LibraryPage() {
     const status = await getLibraryStatus();
 
     return (
-      <div className="max-w-2xl flex flex-1 flex-col gap-6 p-4 md:p-8">
-        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("text")}</p>
+      <Page variant="content" className="max-w-2xl">
+        <PageHeader title={t("title")} description={t("text")}/>
         {status && (
           <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 rounded-lg border p-4 text-sm">
             <dt className="text-muted-foreground">{t("navidrome")}</dt>
@@ -33,7 +33,7 @@ export default async function LibraryPage() {
           </dl>
         )}
         <RescanButton />
-      </div>
+      </Page>
     );
   });
 }

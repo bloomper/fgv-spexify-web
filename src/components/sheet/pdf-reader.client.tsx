@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
+import { Button } from "@bloomper/fgv-web-ui/ui/button";
+import { Spinner } from "@bloomper/fgv-web-ui/ui/spinner";
 
 type PdfDocument = {
   numPages: number;

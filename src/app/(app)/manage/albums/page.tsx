@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@bloomper/fgv-web-ui/ui/button";
+import { Badge } from "@bloomper/fgv-web-ui/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@bloomper/fgv-web-ui/ui/table";
 import { getAlbums } from "@/lib/catalog/catalog.server";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
 import { kindName } from "@/utils/format";
+import { Page, PageHeader } from "@bloomper/fgv-web-ui/shell/page-header";
 
 export default async function ManageAlbumsPage() {
   return withPolicyPage(Policies.editor.requireEditor, async () => {
@@ -16,11 +17,8 @@ export default async function ManageAlbumsPage() {
     const data = await getAlbums({ includeUnpublished: true });
 
     return (
-      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-bold tracking-tight">{t("albums")}</h1>
-          <Button nativeButton={false} render={<Link href="/manage/albums/new" />}><Plus />{t("newAlbum")}</Button>
-        </div>
+      <Page variant="content">
+        <PageHeader title={t("albums")} actions={<Button nativeButton={false} render={<Link href="/manage/albums/new" />}><Plus />{t("newAlbum")}</Button>}/>
         <div className="rounded-lg border">
           <Table>
             <TableHeader>
@@ -37,7 +35,7 @@ export default async function ManageAlbumsPage() {
                 <TableRow key={album.id}>
                   <TableCell className="whitespace-normal">
                     <Link href={`/manage/albums/${album.id}`}
-                          className="font-medium hover:text-primary">{album.title}</Link>
+                          className="font-medium hover:text-link">{album.title}</Link>
                     {!album.kind.isDefault &&
                       <span className="ml-2 text-xs text-muted-foreground">{kindName(album.kind, locale)}</span>}
                   </TableCell>
@@ -54,7 +52,7 @@ export default async function ManageAlbumsPage() {
             </TableBody>
           </Table>
         </div>
-      </div>
+      </Page>
     );
   });
 }

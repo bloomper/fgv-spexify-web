@@ -6,10 +6,10 @@ import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Minus, Pause, Play, Plus, RotateCcw, Stamp, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useDialogs } from "@/components/dialogs.client";
+import { Button } from "@bloomper/fgv-web-ui/ui/button";
+import { Input } from "@bloomper/fgv-web-ui/ui/input";
+import { Textarea } from "@bloomper/fgv-web-ui/ui/textarea";
+import { useDialogs } from "@bloomper/fgv-web-ui/shell/dialogs";
 import { usePlayer } from "@/components/player/player-provider.client";
 import { formatDuration } from "@/components/player/lyrics";
 import { lineAt, lrcTime, parseTime, type TimedLine, toLines, toLyrics, withText } from "@/components/player/lrc";
@@ -355,7 +355,7 @@ function Waveform({ peaks, duration, time, lines, current, onSeek }: {
     <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="slider" tabIndex={0}
          aria-label={t("waveform")} aria-valuemin={0} aria-valuemax={Math.round(duration)} aria-valuenow={Math.round(time)}
          aria-valuetext={formatDuration(time)}
-         className="h-20 w-full cursor-pointer rounded-md bg-secondary/50 text-primary"
+         className="h-20 w-full cursor-pointer rounded-md bg-secondary/50 text-link"
          onKeyDown={event => {
            if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
              event.preventDefault();

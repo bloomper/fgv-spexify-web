@@ -3,11 +3,11 @@
 import * as React from "react";
 import { useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { Button } from "@bloomper/fgv-web-ui/ui/button";
+import { Input } from "@bloomper/fgv-web-ui/ui/input";
+import { Label } from "@bloomper/fgv-web-ui/ui/label";
+import { Textarea } from "@bloomper/fgv-web-ui/ui/textarea";
+import { NativeSelect, NativeSelectOption } from "@bloomper/fgv-web-ui/ui/native-select";
 import type { AlbumInput } from "@/gql/graphql";
 import { type PickedSpex, SpexPicker } from "@/components/spex/spex-picker.client";
 import { type KindName, kindName } from "@/utils/format";

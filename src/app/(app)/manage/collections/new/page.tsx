@@ -3,6 +3,7 @@ import { getAlbums } from "@/lib/catalog/catalog.server";
 import { Policies } from "@/utils/policy.server";
 import { withPolicyPage } from "@/utils/route.server";
 import { CollectionEditor } from "../collection-editor.client";
+import { Page, PageHeader } from "@bloomper/fgv-web-ui/shell/page-header";
 
 export default async function NewCollectionPage() {
   return withPolicyPage(Policies.editor.requireEditor, async () => {
@@ -10,10 +11,10 @@ export default async function NewCollectionPage() {
     const data = await getAlbums({ includeUnpublished: true });
 
     return (
-      <div className="flex flex-1 flex-col gap-6 p-4 md:p-8">
-        <h1 className="text-2xl font-bold tracking-tight">{t("new")}</h1>
+      <Page variant="content">
+        <PageHeader title={t("new")}/>
         <CollectionEditor albums={data?.albums ?? []} />
-      </div>
+      </Page>
     );
   });
 }

@@ -5,7 +5,7 @@ import { useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Heart } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@bloomper/fgv-web-ui/ui/button";
 import { RatingInput } from "@/components/rating.client";
 import { rateAction, starAlbumAction } from "@/app/(app)/actions.server";
 import { cn } from "@/utils/utils";

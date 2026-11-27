@@ -37,7 +37,7 @@ export function LyricsView({ track, singers = [], follow = false, large = false 
 
           return (
             <p key={i} className="min-h-[1lh]">
-              {singer && <span className="mr-2 text-sm font-semibold uppercase tracking-wide text-primary">{singer}</span>}
+              {singer && <span className="mr-2 text-sm font-semibold uppercase tracking-wide text-link">{singer}</span>}
               {text}
             </p>
           );
@@ -57,7 +57,7 @@ export function LyricsView({ track, singers = [], follow = false, large = false 
                 i === active && !large && "font-semibold")}
               aria-current={i === active ? "true" : undefined}>
             {singer && singer !== previous && (
-              <div className={cn("font-semibold uppercase tracking-wide text-primary", large ? "text-sm" : "text-xs")}>{singer}</div>
+              <div className={cn("font-semibold uppercase tracking-wide text-link", large ? "text-sm" : "text-xs")}>{singer}</div>
             )}
             <button type="button" className="text-left hover:text-foreground" onClick={() => player.seek(line.time)}>
               {text || "♪"}

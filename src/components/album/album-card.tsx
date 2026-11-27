@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@bloomper/fgv-web-ui/ui/badge";
 import { CoverImage } from "@/components/album/cover-image.client";
 import { AlbumPlayButton } from "@/components/album/album-play-button.client";
 import type { AlbumSummary } from "@/components/album/album-grid";

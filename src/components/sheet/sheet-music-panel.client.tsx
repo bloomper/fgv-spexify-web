@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Download, ExternalLink, FileMusic, FileText, Music } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@bloomper/fgv-web-ui/ui/button";
 import type { TrackStudio } from "@/components/sheet/actions.server";
 import { PdfReader } from "@/components/sheet/pdf-reader.client";
 import { ScoreView } from "@/components/sheet/score-view.client";
@@ -111,7 +111,7 @@ export function SheetMusicPanel({ trackId, studio, onChanged }: {
         )}
         {file.kind === "OTHER" && <p className="text-sm text-muted-foreground">{t("downloadOnly", { role: roleName })}</p>}
         <div className="mt-2">
-          <a href={`${url}?download=true`} className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80">
+          <a href={`${url}?download=true`} className="inline-flex items-center gap-1 text-xs text-link hover:text-link/80">
             <Download className="size-3.5" />{t("download", { name: `${file.title}.${file.extension}` })}
           </a>
         </div>
