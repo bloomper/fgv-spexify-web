@@ -13,16 +13,26 @@ export default async function TrashPage() {
 
     return (
       <Page variant="content">
-        <PageHeader title={t("title")} description={isAdmin(authz.roles) ? t("textAdmin") : t("text")}/>
-        <TrashList admin={isAdmin(authz.roles)}
-                   albums={(trash?.albums ?? []).map(album => ({
-                     id: album.id, title: album.title, trashedAt: album.trashedAt,
-                     detail: [album.year, t("tracks", { count: album.trackCount })].filter(Boolean).join(" · "),
-                   }))}
-                   tracks={(trash?.tracks ?? []).map(track => ({
-                     id: track.id, title: track.title, trashedAt: track.trashedAt,
-                     detail: track.albumTitle, albumId: track.albumId,
-                   }))} />
+        <PageHeader
+          title={t("title")}
+          description={isAdmin(authz.roles) ? t("textAdmin") : t("text")}
+        />
+        <TrashList
+          admin={isAdmin(authz.roles)}
+          albums={(trash?.albums ?? []).map((album) => ({
+            id: album.id,
+            title: album.title,
+            trashedAt: album.trashedAt,
+            detail: [album.year, t("tracks", { count: album.trackCount })].filter(Boolean).join(" · "),
+          }))}
+          tracks={(trash?.tracks ?? []).map((track) => ({
+            id: track.id,
+            title: track.title,
+            trashedAt: track.trashedAt,
+            detail: track.albumTitle,
+            albumId: track.albumId,
+          }))}
+        />
       </Page>
     );
   });

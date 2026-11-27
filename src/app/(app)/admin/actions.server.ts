@@ -23,7 +23,7 @@ import {
 import { withPolicyAction } from "@/utils/route.server";
 import { Policies } from "@/utils/policy.server";
 
-const admin = <T, >(work: () => Promise<T>) => withPolicyAction(Policies.admin.requireAdmin, () => toActionResult(work));
+const admin = <T>(work: () => Promise<T>) => withPolicyAction(Policies.admin.requireAdmin, () => toActionResult(work));
 
 export async function rescanAction(): Promise<ActionResult<null>> {
   return admin(async () => {
@@ -69,14 +69,15 @@ export async function runMaintenanceJobAction(job: MaintenanceJob): Promise<Acti
   });
 }
 
-const kinds = <T, >(work: () => Promise<T>) => admin(async () => {
-  const result = await work();
+const kinds = <T>(work: () => Promise<T>) =>
+  admin(async () => {
+    const result = await work();
 
-  revalidatePath("/admin/kinds");
-  revalidatePath("/admin/media");
-  revalidatePath("/", "layout");
-  return result;
-});
+    revalidatePath("/admin/kinds");
+    revalidatePath("/admin/media");
+    revalidatePath("/", "layout");
+    return result;
+  });
 
 export async function createKindAction(input: AlbumKindInput): Promise<ActionResult<null>> {
   return kinds(async () => {

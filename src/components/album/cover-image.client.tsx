@@ -18,15 +18,24 @@ export function CoverImage({ albumId, title, className }: { albumId: string; tit
 
   if (failed) {
     return (
-      <div className={cn("flex aspect-square items-center justify-center bg-muted text-muted-foreground", className)}
-           role="img" aria-label={title}>
+      <div
+        className={cn("bg-muted text-muted-foreground flex aspect-square items-center justify-center", className)}
+        role="img"
+        aria-label={title}
+      >
         <Disc3 className="size-1/2" />
       </div>
     );
   }
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={`/api/cover/${albumId}`} alt={title} loading="lazy" ref={checkLoaded} onError={() => setFailed(true)}
-         className={cn("aspect-square object-cover", className)} />
+    <img
+      src={`/api/cover/${albumId}`}
+      alt={title}
+      loading="lazy"
+      ref={checkLoaded}
+      onError={() => setFailed(true)}
+      className={cn("aspect-square object-cover", className)}
+    />
   );
 }

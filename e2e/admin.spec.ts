@@ -53,10 +53,12 @@ test.describe("Administration", () => {
     await loginAs("editor");
     for (const path of ["/admin/library", "/admin/users", "/admin/settings"]) {
       await page.goto(path);
-      await expect(page.getByRole("heading", {
-        level: 1,
-        name: /Musikservern|Användare|Inställningar/,
-      })).toHaveCount(0);
+      await expect(
+        page.getByRole("heading", {
+          level: 1,
+          name: /Musikservern|Användare|Inställningar/,
+        })
+      ).toHaveCount(0);
     }
   });
 });

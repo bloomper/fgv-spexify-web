@@ -41,14 +41,16 @@ describe("the score synth", () => {
     synth.subscribe(changes);
     expect(synth.total).toBeCloseTo(4);
     expect(synth.baseBpm).toBe(120);
-    expect(synth.parts.map(part => part.voice.drum)).toEqual([false, true, false]);
+    expect(synth.parts.map((part) => part.voice.drum)).toEqual([false, true, false]);
     synth.play();
     expect(synth.isPlaying).toBe(true);
 
     const context = FakeAudioContext.last!;
 
     // The first notes start at once: the A of the piano and the violin's G, and the drums
-    expect(context.started.filter(start => start.type === "oscillator").map(start => Math.round(start.frequency ?? 0))).toContain(440);
+    expect(
+      context.started.filter((start) => start.type === "oscillator").map((start) => Math.round(start.frequency ?? 0))
+    ).toContain(440);
     context.currentTime = 1.1;
     vi.advanceTimersByTime(50);
     expect(synth.position()).toMatchObject({ m: 0, off: expect.closeTo(0.55, 2) });

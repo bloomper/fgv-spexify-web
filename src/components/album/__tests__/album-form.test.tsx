@@ -41,7 +41,13 @@ describe("AlbumForm", () => {
   it("needs a spex, or no spex marked and a title, before it can be saved, and sends empty fields as null", async () => {
     const onSubmit = vi.fn().mockResolvedValue(true);
 
-    render(<AlbumForm kinds={KINDS} submitLabel="Spara" onSubmit={onSubmit} />);
+    render(
+      <AlbumForm
+        kinds={KINDS}
+        submitLabel="Spara"
+        onSubmit={onSubmit}
+      />
+    );
     expect(screen.getByRole("button", { name: "Spara" })).toBeDisabled();
 
     await userEvent.type(screen.getByLabelText("title"), "  Blandade visor ");
@@ -54,18 +60,34 @@ describe("AlbumForm", () => {
     await userEvent.selectOptions(screen.getByLabelText("kind"), "Samlingsalbum");
     await userEvent.click(screen.getByRole("button", { name: "Spara" }));
 
-    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({
-      spexIds: [], title: "Blandade visor", year: null, kindId: "k-compilation", description: null,
-      catalogueNumber: null, mediumId: null, released: null, recorded: null, conductor: null,
-    }));
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith({
+        spexIds: [],
+        title: "Blandade visor",
+        year: null,
+        kindId: "k-compilation",
+        description: null,
+        catalogueNumber: null,
+        mediumId: null,
+        released: null,
+        recorded: null,
+        conductor: null,
+      })
+    );
   });
 
   it("searches Spexipedia after two letters and picks a spex", async () => {
     const onSubmit = vi.fn().mockResolvedValue(true);
 
-    render(<AlbumForm kinds={KINDS} submitLabel="Spara" onSubmit={onSubmit} />);
+    render(
+      <AlbumForm
+        kinds={KINDS}
+        submitLabel="Spara"
+        onSubmit={onSubmit}
+      />
+    );
     await userEvent.type(screen.getByLabelText("search"), "N");
-    await new Promise(resolve => setTimeout(resolve, 350));
+    await new Promise((resolve) => setTimeout(resolve, 350));
     expect(searchSpexAction).not.toHaveBeenCalled();
 
     await userEvent.type(screen.getByLabelText("search"), "o");
@@ -83,16 +105,32 @@ describe("AlbumForm", () => {
     await userEvent.type(screen.getByLabelText("description"), "Inspelad live");
     await userEvent.click(screen.getByRole("button", { name: "Spara" }));
 
-    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({
-      spexIds: ["7"], title: null, year: 1993, kindId: "k-show", description: "Inspelad live",
-      catalogueNumber: null, mediumId: null, released: null, recorded: null, conductor: null,
-    }));
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith({
+        spexIds: ["7"],
+        title: null,
+        year: 1993,
+        kindId: "k-show",
+        description: "Inspelad live",
+        catalogueNumber: null,
+        mediumId: null,
+        released: null,
+        recorded: null,
+        conductor: null,
+      })
+    );
   });
 
   it("tells when the search fails", async () => {
     searchSpexAction.mockResolvedValue({ ok: false, code: "UNAVAILABLE", message: "Spexipedia svarar inte" });
 
-    render(<AlbumForm kinds={KINDS} submitLabel="Spara" onSubmit={vi.fn()} />);
+    render(
+      <AlbumForm
+        kinds={KINDS}
+        submitLabel="Spara"
+        onSubmit={vi.fn()}
+      />
+    );
     await userEvent.type(screen.getByLabelText("search"), "Ali");
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Spexipedia svarar inte"));
@@ -102,9 +140,20 @@ describe("AlbumForm", () => {
     const onSubmit = vi.fn().mockResolvedValue(true);
 
     searchSpexAction.mockResolvedValue({ ok: true, data: [CLEOPATRA] });
-    render(<AlbumForm kinds={KINDS} submitLabel="Spara" onSubmit={onSubmit} initial={{
-      spex: [NOBEL_REVIVAL], title: "Nobel – live", year: 1992, kindId: "k-studio", description: "Text",
-    }} />);
+    render(
+      <AlbumForm
+        kinds={KINDS}
+        submitLabel="Spara"
+        onSubmit={onSubmit}
+        initial={{
+          spex: [NOBEL_REVIVAL],
+          title: "Nobel – live",
+          year: 1992,
+          kindId: "k-studio",
+          description: "Text",
+        }}
+      />
+    );
 
     expect(screen.getByLabelText("title")).toHaveValue("Nobel – live");
     expect(screen.getByLabelText("year")).toHaveValue("1992");
@@ -126,9 +175,19 @@ describe("AlbumForm", () => {
   });
 
   it("starts with no spex marked for an album without spex", () => {
-    render(<AlbumForm kinds={KINDS} submitLabel="Spara" onSubmit={vi.fn()} initial={{
-      spex: [], title: "Jubileum", year: 2023, kindId: "k-compilation",
-    }} />);
+    render(
+      <AlbumForm
+        kinds={KINDS}
+        submitLabel="Spara"
+        onSubmit={vi.fn()}
+        initial={{
+          spex: [],
+          title: "Jubileum",
+          year: 2023,
+          kindId: "k-compilation",
+        }}
+      />
+    );
 
     expect(screen.getByRole("checkbox", { name: "none" })).toBeChecked();
     expect(screen.getByRole("button", { name: "Spara" })).toBeEnabled();

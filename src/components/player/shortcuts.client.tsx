@@ -28,14 +28,25 @@ export function ownsKeys(target: EventTarget | null, key: string): boolean {
   if (!(target instanceof Element)) {
     return false;
   }
-  if (target.closest("input:not([type=range]):not([type=checkbox]):not([type=radio]), textarea, select, [contenteditable=''], [contenteditable='true']")) {
+  if (
+    target.closest(
+      "input:not([type=range]):not([type=checkbox]):not([type=radio]), textarea, select, [contenteditable=''], [contenteditable='true']"
+    )
+  ) {
     return true;
   }
-  if (key === " " && target.closest("button, a, summary, [role='button'], [role='checkbox'], [role='switch'], [role='radio']")) {
+  if (
+    key === " " &&
+    target.closest("button, a, summary, [role='button'], [role='checkbox'], [role='switch'], [role='radio']")
+  ) {
     return true;
   }
-  return (key === " " || key.startsWith("Arrow"))
-    && target.closest("input[type=range], [role='slider'], [role='menu'], [role='menuitem'], [role='listbox'], [role='option'], [role='radiogroup'], [role='tablist']") !== null;
+  return (
+    (key === " " || key.startsWith("Arrow")) &&
+    target.closest(
+      "input[type=range], [role='slider'], [role='menu'], [role='menuitem'], [role='listbox'], [role='option'], [role='radiogroup'], [role='tablist']"
+    ) !== null
+  );
 }
 
 /**
@@ -56,7 +67,13 @@ export function PlayerShortcuts() {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || ownsKeys(event.target, event.key)) {
+      if (
+        event.defaultPrevented ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        ownsKeys(event.target, event.key)
+      ) {
         return;
       }
 
@@ -124,18 +141,26 @@ export function PlayerShortcuts() {
   }, [player]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={setOpen}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
         <dl className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 text-sm">
-          {SHORTCUTS.map(shortcut => (
+          {SHORTCUTS.map((shortcut) => (
             <React.Fragment key={shortcut.action}>
               <dt className="flex flex-wrap gap-1">
-                {shortcut.keys.map(key => (
-                  <kbd key={key} className="rounded border bg-muted px-1.5 py-0.5 font-mono text-xs">{key}</kbd>
+                {shortcut.keys.map((key) => (
+                  <kbd
+                    key={key}
+                    className="bg-muted rounded border px-1.5 py-0.5 font-mono text-xs"
+                  >
+                    {key}
+                  </kbd>
                 ))}
               </dt>
               <dd>{t(shortcut.action)}</dd>

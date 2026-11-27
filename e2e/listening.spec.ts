@@ -2,7 +2,10 @@ import { uuidOf } from "./constants";
 import { expect, test } from "./fixtures";
 
 test.describe("Listening", () => {
-  test("an empty search explains itself, a too short word is pointed out at the field, and searching keeps the page", async ({ page, loginAs }) => {
+  test("an empty search explains itself, a too short word is pointed out at the field, and searching keeps the page", async ({
+    page,
+    loginAs,
+  }) => {
     await loginAs("listener");
     await page.goto("/search");
     await expect(page.getByText("Vad letar du efter?")).toBeVisible();
@@ -15,7 +18,9 @@ test.describe("Listening", () => {
     await expect(page.getByText("Vad letar du efter?")).toHaveCount(0);
 
     // The search navigates client side: the document stays
-    await page.evaluate(() => { (window as unknown as { marker: number }).marker = 42; });
+    await page.evaluate(() => {
+      (window as unknown as { marker: number }).marker = 42;
+    });
     await page.getByLabel("Sökord").fill("duett");
     await page.getByRole("button", { name: "Sök", exact: true }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Sökresultat för ”duett”" })).toBeVisible();
@@ -53,7 +58,7 @@ test.describe("Listening", () => {
 
   test("shows a like made elsewhere on pages visited before, without reloading", async ({ page, loginAs, mock }) => {
     await loginAs("listener");
-    const sidebar = page.locator("[data-slot=\"sidebar\"]:visible");
+    const sidebar = page.locator('[data-slot="sidebar"]:visible');
     // Next keeps visited pages alive but hidden, with the same buttons
     const button = (name: string) => page.getByRole("button", { name, exact: true }).filter({ visible: true });
 
@@ -107,9 +112,9 @@ test.describe("Editing", () => {
   });
 
   test("creates an album about an original and its revival, shown together, and one about no spex", async ({
-                                                                                                             page,
-                                                                                                             loginAs,
-                                                                                                           }) => {
+    page,
+    loginAs,
+  }) => {
     await loginAs("editor");
     await page.goto("/manage/albums/new");
     await page.getByLabel("Sök spex på titel eller år").fill("Nob");
@@ -118,7 +123,9 @@ test.describe("Editing", () => {
     await expect(page.getByRole("button", { name: /Nobel 2026/ }).filter({ hasText: "vald" })).toBeDisabled();
     await page.getByRole("button", { name: /Nobel 1975/ }).click();
     await page.getByRole("button", { name: "Gör Nobel 1975 till huvudspex" }).click();
-    await expect(page.getByRole("list", { name: "Valda spex" }).getByRole("listitem").first()).toContainText("Huvudspex");
+    await expect(page.getByRole("list", { name: "Valda spex" }).getByRole("listitem").first()).toContainText(
+      "Huvudspex"
+    );
     await page.getByLabel("Titel").fill("Nobel genom tiderna");
     await page.getByRole("button", { name: "Skapa" }).click();
     await expect(page).toHaveURL(/\/manage\/albums\/[0-9a-f-]{36}$/);
@@ -144,10 +151,10 @@ test.describe("Editing", () => {
 
 test.describe("What the listener played", () => {
   test("the start page shows recently and most played albums, and the album how often each track was played", async ({
-                                                                                                                       page,
-                                                                                                                       loginAs,
-                                                                                                                       mock,
-                                                                                                                     }) => {
+    page,
+    loginAs,
+    mock,
+  }) => {
     await mock.plays({
       "al-1": { playCount: 5, played: "2026-10-31T18:00:00Z" },
       [`nd-${uuidOf(11)}`]: { playCount: 3, played: "2026-10-31T18:00:00Z" },
@@ -166,7 +173,9 @@ test.describe("What the listener played", () => {
 
     await expect(ouvertyr.getByText("Spelad 3 gånger")).toBeVisible();
     await expect(ouvertyr.getByText("2026-10-31")).toBeVisible();
-    await expect(page.getByRole("listitem").filter({ hasText: "Kärleksduetten" }).getByText("Inte spelad")).toBeVisible();
+    await expect(
+      page.getByRole("listitem").filter({ hasText: "Kärleksduetten" }).getByText("Inte spelad")
+    ).toBeVisible();
   });
 
   test("without plays the start page has no played rows", async ({ page, loginAs }) => {
@@ -215,35 +224,55 @@ test.describe("Ratings and liked albums", () => {
     await loginAs("listener");
     await page.goto(`/albums/${uuidOf(1)}`);
 
-    await page.getByRole("radiogroup", { name: "Ditt betyg för albumet" }).getByRole("radio", { name: "4 stjärnor" }).click();
+    await page
+      .getByRole("radiogroup", { name: "Ditt betyg för albumet" })
+      .getByRole("radio", { name: "4 stjärnor" })
+      .click();
     await expect.poll(async () => (await mock.state()).ratings["al-1"]).toBe(4);
 
     // The stars are in the track's row, beside everyone's average
-    await page.getByRole("listitem").filter({ hasText: "Ouvertyr" }).getByRole("radiogroup", { name: "Betyg för Ouvertyr" })
-      .getByRole("radio", { name: "5 stjärnor" }).click();
+    await page
+      .getByRole("listitem")
+      .filter({ hasText: "Ouvertyr" })
+      .getByRole("radiogroup", { name: "Betyg för Ouvertyr" })
+      .getByRole("radio", { name: "5 stjärnor" })
+      .click();
     await expect.poll(async () => (await mock.state()).ratings[`nd-${uuidOf(11)}`]).toBe(5);
-    await expect(page.getByRole("listitem").filter({ hasText: "Ouvertyr" }).getByRole("img", { name: /Snittbetyg 5,0 av 5 från 1 betyg/ }).first())
-      .toBeVisible();
+    await expect(
+      page
+        .getByRole("listitem")
+        .filter({ hasText: "Ouvertyr" })
+        .getByRole("img", { name: /Snittbetyg 5,0 av 5 från 1 betyg/ })
+        .first()
+    ).toBeVisible();
 
     await page.goto("/");
     const highest = page.getByRole("region", { name: "Högst betyg av dig" });
 
     await expect(highest.getByRole("link", { name: /Nobel/ })).toBeVisible();
     await expect(highest.getByRole("img", { name: "Betyg: 4 stjärnor" })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Topplistan: högst betyg" }).getByRole("link", { name: /Nobel/ })).toBeVisible();
+    await expect(
+      page.getByRole("region", { name: "Topplistan: högst betyg" }).getByRole("link", { name: /Nobel/ })
+    ).toBeVisible();
 
     await page.goto(`/albums/${uuidOf(1)}`);
-    await expect(page.getByRole("radiogroup", { name: "Ditt betyg för albumet" }).getByRole("radio", { name: "4 stjärnor" }))
-      .toHaveAttribute("aria-checked", "true");
-    await expect(page.getByRole("listitem").filter({ hasText: "Ouvertyr" }).getByRole("radio", { name: "5 stjärnor" }))
-      .toHaveAttribute("aria-checked", "true");
+    await expect(
+      page.getByRole("radiogroup", { name: "Ditt betyg för albumet" }).getByRole("radio", { name: "4 stjärnor" })
+    ).toHaveAttribute("aria-checked", "true");
+    await expect(
+      page.getByRole("listitem").filter({ hasText: "Ouvertyr" }).getByRole("radio", { name: "5 stjärnor" })
+    ).toHaveAttribute("aria-checked", "true");
   });
 
   test("lists everyone's favourites on the top list, by rating, likes or plays", async ({ page, loginAs, mock }) => {
     await loginAs("listener");
     await page.goto(`/albums/${uuidOf(1)}`);
-    await page.getByRole("listitem").filter({ hasText: "Kärleksduetten" }).getByRole("radiogroup", { name: "Betyg för Kärleksduetten" })
-      .getByRole("radio", { name: "3 stjärnor" }).click();
+    await page
+      .getByRole("listitem")
+      .filter({ hasText: "Kärleksduetten" })
+      .getByRole("radiogroup", { name: "Betyg för Kärleksduetten" })
+      .getByRole("radio", { name: "3 stjärnor" })
+      .click();
     await expect.poll(async () => (await mock.state()).ratings[`nd-${uuidOf(12)}`]).toBe(3);
 
     await page.getByRole("link", { name: "Topplistan", exact: true }).first().click();
@@ -307,7 +336,8 @@ test.describe("The play queue", () => {
     await page.goto(`/albums/${uuidOf(1)}`);
     await page.getByRole("button", { name: "Spela Kärleksduetten" }).click();
 
-    await expect.poll(async () => (await mock.state()).playQueue)
+    await expect
+      .poll(async () => (await mock.state()).playQueue)
       .toMatchObject({ ids: [`nd-${uuidOf(11)}`, `nd-${uuidOf(12)}`], current: `nd-${uuidOf(12)}` });
   });
 });
@@ -339,7 +369,9 @@ test.describe("Playing more", () => {
     await expect(player.getByRole("button", { name: "Slå på ljudet" })).toBeVisible();
     await page.reload();
     await page.getByRole("button", { name: "Spela allt" }).click();
-    await expect(page.getByRole("region", { name: "Spelare" }).getByRole("button", { name: "Slå på ljudet" })).toBeVisible();
+    await expect(
+      page.getByRole("region", { name: "Spelare" }).getByRole("button", { name: "Slå på ljudet" })
+    ).toBeVisible();
 
     await page.keyboard.press("?");
     await expect(page.getByRole("dialog", { name: "Kortkommandon" })).toBeVisible();
@@ -347,7 +379,9 @@ test.describe("Playing more", () => {
 
     await page.getByRole("region", { name: "Spelare" }).getByRole("button", { name: "Uppspelning" }).click();
     await page.getByRole("menuitemradio", { name: "Per album" }).click();
-    await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("spexify.player") ?? "{}").replayGain)).toBe("album");
+    await expect
+      .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("spexify.player") ?? "{}").replayGain))
+      .toBe("album");
   });
 
   test("starts radio from a track and browses credits", async ({ page }) => {

@@ -105,7 +105,12 @@ function CreditLinks({ value, kind }: { value: string; kind: "PERFORMER" | "MELO
   return names.map((name, i) => (
     <React.Fragment key={name}>
       {i > 0 && ", "}
-      <Link href={creditHref(kind, name)} className="hover:text-foreground">{name}</Link>
+      <Link
+        href={creditHref(kind, name)}
+        className="hover:text-foreground"
+      >
+        {name}
+      </Link>
     </React.Fragment>
   ));
 }
@@ -118,17 +123,42 @@ function TrackSubtitle({ track, showAlbum }: { track: TrackRow; showAlbum?: bool
   const parts: React.ReactNode[] = [];
 
   if (showAlbum) {
-    parts.push(<Link key="album" href={`/albums/${track.albumId}`}
-                     className="hover:text-foreground">{track.albumTitle}</Link>);
+    parts.push(
+      <Link
+        key="album"
+        href={`/albums/${track.albumId}`}
+        className="hover:text-foreground"
+      >
+        {track.albumTitle}
+      </Link>
+    );
   }
   if (track.performers) {
-    parts.push(<CreditLinks key="performers" value={track.performers} kind="PERFORMER" />);
+    parts.push(
+      <CreditLinks
+        key="performers"
+        value={track.performers}
+        kind="PERFORMER"
+      />
+    );
   }
   if (track.melody) {
-    parts.push(<React.Fragment key="melody">{t("melodyLabel")} <CreditLinks value={track.melody}
-                                                                            kind="MELODY" /></React.Fragment>);
+    parts.push(
+      <React.Fragment key="melody">
+        {t("melodyLabel")}{" "}
+        <CreditLinks
+          value={track.melody}
+          kind="MELODY"
+        />
+      </React.Fragment>
+    );
   }
-  return parts.map((part, i) => <React.Fragment key={i}>{i > 0 && " · "}{part}</React.Fragment>);
+  return parts.map((part, i) => (
+    <React.Fragment key={i}>
+      {i > 0 && " · "}
+      {part}
+    </React.Fragment>
+  ));
 }
 
 /** How many playlists the track menu lists; the rest are chosen in a dialog that can be searched. */
@@ -140,27 +170,29 @@ const MENU_PLAYLISTS = 5;
  * place of its number.
  */
 export function TrackList({
-                            tracks,
-                            starred: initialStarred,
-                            playlists,
-                            spexflixUrl,
-                            showAlbum,
-                            ranked,
-                            stats,
-                            playlistId,
-                          }: Props) {
+  tracks,
+  starred: initialStarred,
+  playlists,
+  spexflixUrl,
+  showAlbum,
+  ranked,
+  stats,
+  playlistId,
+}: Props) {
   const t = useTranslations("Album");
   const locale = useLocale();
   const player = usePlayer();
   const radio = useRadio();
   const { prompt, choose } = useDialogs();
-  const [starred, setStarred] = useServerState(new Set(initialStarred), ids => [...ids].sort().join());
+  const [starred, setStarred] = useServerState(new Set(initialStarred), (ids) => [...ids].sort().join());
   const [ratings, setRatings] = useServerState<Record<string, number>>(
-    Object.fromEntries(tracks.map(track => [track.id, track.rating ?? 0])), JSON.stringify);
+    Object.fromEntries(tracks.map((track) => [track.id, track.rating ?? 0])),
+    JSON.stringify
+  );
   const ratingOf = (track: TrackRow) => ratings[track.id] ?? track.rating ?? 0;
   const [, startTransition] = useTransition();
-  const playable = tracks.filter(track => !track.fileMissing);
-  const discs = new Set(tracks.map(track => track.discNumber)).size > 1;
+  const playable = tracks.filter((track) => !track.fileMissing);
+  const discs = new Set(tracks.map((track) => track.discNumber)).size > 1;
 
   // Plays this session reported count at once, until Navidrome's own numbers include them
   const playsOf = (track: TrackRow) => {
@@ -177,7 +209,7 @@ export function TrackList({
       return;
     }
 
-    const ids = tracks.map(track => track.navidromeId!);
+    const ids = tracks.map((track) => track.navidromeId!);
     const [moved] = ids.splice(from, 1);
 
     ids.splice(to, 0, moved);
@@ -198,7 +230,7 @@ export function TrackList({
     const id = track.navidromeId;
     const next = !starred.has(id);
 
-    setStarred(current => {
+    setStarred((current) => {
       const copy = new Set(current);
 
       if (next) {
@@ -214,7 +246,7 @@ export function TrackList({
       if (result.ok) {
         trackEvent("track-star", { starred: next });
       } else {
-        setStarred(current => {
+        setStarred((current) => {
           const copy = new Set(current);
 
           if (next) {
@@ -237,14 +269,14 @@ export function TrackList({
     const previous = ratingOf(track);
     const id = track.navidromeId;
 
-    setRatings(current => ({ ...current, [track.id]: rating }));
+    setRatings((current) => ({ ...current, [track.id]: rating }));
     startTransition(async () => {
       const result = await rateAction(id, rating);
 
       if (result.ok) {
         trackEvent("track-rate", { rating });
       } else {
-        setRatings(current => ({ ...current, [track.id]: previous }));
+        setRatings((current) => ({ ...current, [track.id]: previous }));
         toast.error(t("rateFailed"));
       }
     });
@@ -255,12 +287,14 @@ export function TrackList({
       return;
     }
 
-    const name = playlistId ? null : await prompt({
-      title: t("newPlaylistTitle"),
-      label: t("playlistName"),
-      confirmLabel: t("createPlaylist"),
-      maxLength: 100,
-    });
+    const name = playlistId
+      ? null
+      : await prompt({
+          title: t("newPlaylistTitle"),
+          label: t("playlistName"),
+          confirmLabel: t("createPlaylist"),
+          maxLength: 100,
+        });
 
     if (!playlistId && !name) {
       return;
@@ -280,7 +314,7 @@ export function TrackList({
   const chooseAndAdd = async (track: TrackRow) => {
     const playlistId = await choose({
       title: t("chooseTitle", { title: track.title }),
-      items: playlists.map(playlist => ({ id: playlist.id, label: playlist.name })),
+      items: playlists.map((playlist) => ({ id: playlist.id, label: playlist.name })),
       createLabel: t("newPlaylist"),
     });
 
@@ -300,144 +334,244 @@ export function TrackList({
         return (
           <React.Fragment key={track.id}>
             {newDisc && (
-              <li className="bg-muted/50 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+              <li className="bg-muted/50 text-muted-foreground px-3 py-1.5 text-xs font-medium">
                 {t("disc", { number: track.discNumber })}
               </li>
             )}
-            <li className={cn("group/track flex items-center gap-2 px-2 py-2 hover:bg-muted/50 sm:gap-3 sm:px-3",
-              isCurrent && "bg-accent hover:bg-accent")}>
+            <li
+              className={cn(
+                "group/track hover:bg-muted/50 flex items-center gap-2 px-2 py-2 sm:gap-3 sm:px-3",
+                isCurrent && "bg-accent hover:bg-accent"
+              )}
+            >
               {ranked && (
-                <span className="w-6 shrink-0 text-right text-sm font-semibold tabular-nums text-muted-foreground">
+                <span className="text-muted-foreground w-6 shrink-0 text-right text-sm font-semibold tabular-nums">
                   {i + 1}
                 </span>
               )}
               {showAlbum ? (
-                <Button variant="ghost" size="icon" className="relative size-10 shrink-0 overflow-hidden p-0"
-                        disabled={track.fileMissing}
-                        aria-label={isCurrent && player.playing ? t("pause", { title: track.title }) : t("play", { title: track.title })}
-                        onClick={() => isCurrent ? player.toggle() : player.playQueue(playable, playIndex)}>
-                  <CoverImage albumId={track.albumId} title="" className="size-10 rounded" />
-                  <span className={cn("absolute inset-0 flex items-center justify-center rounded bg-black/50 text-white",
-                    isCurrent ? "flex" : "hidden group-hover/track:flex group-focus-within/track:flex")}
-                        data-testid="hover-play">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative size-10 shrink-0 overflow-hidden p-0"
+                  disabled={track.fileMissing}
+                  aria-label={
+                    isCurrent && player.playing ? t("pause", { title: track.title }) : t("play", { title: track.title })
+                  }
+                  onClick={() => (isCurrent ? player.toggle() : player.playQueue(playable, playIndex))}
+                >
+                  <CoverImage
+                    albumId={track.albumId}
+                    title=""
+                    className="size-10 rounded"
+                  />
+                  <span
+                    className={cn(
+                      "absolute inset-0 flex items-center justify-center rounded bg-black/50 text-white",
+                      isCurrent ? "flex" : "hidden group-focus-within/track:flex group-hover/track:flex"
+                    )}
+                    data-testid="hover-play"
+                  >
                     {isCurrent && player.playing ? <Pause /> : <Play />}
                   </span>
                 </Button>
               ) : (
-              <Button variant="ghost" size="icon" className="size-10 shrink-0" disabled={track.fileMissing}
-                      aria-label={isCurrent && player.playing ? t("pause", { title: track.title }) : t("play", { title: track.title })}
-                      onClick={() => isCurrent ? player.toggle() : player.playQueue(playable, playIndex)}>
-                {isCurrent && player.playing ? <Pause /> : isCurrent || track.fileMissing ? (
-                  isCurrent ? <Play /> :
-                    <span className="text-sm tabular-nums text-muted-foreground">{track.trackNumber}</span>
-                ) : (
-                  <>
-                                        <span
-                                          className="text-sm tabular-nums text-muted-foreground group-hover/track:hidden group-focus-within/track:hidden">
-                                            {track.trackNumber}
-                                        </span>
-                    <Play className="hidden group-hover/track:block group-focus-within/track:block"
-                          data-testid="hover-play" />
-                  </>
-                )}
-              </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-10 shrink-0"
+                  disabled={track.fileMissing}
+                  aria-label={
+                    isCurrent && player.playing ? t("pause", { title: track.title }) : t("play", { title: track.title })
+                  }
+                  onClick={() => (isCurrent ? player.toggle() : player.playQueue(playable, playIndex))}
+                >
+                  {isCurrent && player.playing ? (
+                    <Pause />
+                  ) : isCurrent || track.fileMissing ? (
+                    isCurrent ? (
+                      <Play />
+                    ) : (
+                      <span className="text-muted-foreground text-sm tabular-nums">{track.trackNumber}</span>
+                    )
+                  ) : (
+                    <>
+                      <span className="text-muted-foreground text-sm tabular-nums group-focus-within/track:hidden group-hover/track:hidden">
+                        {track.trackNumber}
+                      </span>
+                      <Play
+                        className="hidden group-focus-within/track:block group-hover/track:block"
+                        data-testid="hover-play"
+                      />
+                    </>
+                  )}
+                </Button>
               )}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  {track.numberKind && <NumberKindIcon kind={track.numberKind} locale={locale} />}
+                  {track.numberKind && (
+                    <NumberKindIcon
+                      kind={track.numberKind}
+                      locale={locale}
+                    />
+                  )}
                   <span className="truncate text-sm font-medium">{track.title}</span>
                   {!track.listed && <Badge variant="outline">{t("unpublished")}</Badge>}
                   {track.fileMissing && <Badge variant="destructive">{t("fileMissing")}</Badge>}
                 </div>
-                <div className="truncate text-xs text-muted-foreground">
-                  <TrackSubtitle track={track} showAlbum={showAlbum} />
+                <div className="text-muted-foreground truncate text-xs">
+                  <TrackSubtitle
+                    track={track}
+                    showAlbum={showAlbum}
+                  />
                 </div>
                 {track.navidromeId && track.rating === undefined && (
-                  <AverageRating average={track.averageRating} count={track.ratingCount}
-                                 className="hidden sm:inline-flex" />
+                  <AverageRating
+                    average={track.averageRating}
+                    count={track.ratingCount}
+                    className="hidden sm:inline-flex"
+                  />
                 )}
                 {track.navidromeId && (
                   <div className="flex items-center gap-2 sm:hidden">
                     <RatingStars value={ratingOf(track)} />
-                    <AverageRating average={track.averageRating} count={track.ratingCount} />
+                    <AverageRating
+                      average={track.averageRating}
+                      count={track.ratingCount}
+                    />
                   </div>
                 )}
                 {track.spexipediaUrl && (
                   <div className="mt-1">
-                    <a href={track.spexipediaUrl} target="_blank" rel="noopener noreferrer"
-                       className="inline-flex items-center gap-1 text-xs text-link hover:text-link/80">
-                      <BookOpenText className="size-3.5" />{t("inSpexipedia")}
+                    <a
+                      href={track.spexipediaUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-link hover:text-link/80 inline-flex items-center gap-1 text-xs"
+                    >
+                      <BookOpenText className="size-3.5" />
+                      {t("inSpexipedia")}
                     </a>
                   </div>
                 )}
                 {track.sheetMusicUrl && (
                   <div className="mt-1">
-                    <a href={track.sheetMusicUrl} target="_blank" rel="noopener noreferrer"
-                       className="inline-flex items-center gap-1 text-xs text-link hover:text-link/80">
-                      <FileMusic className="size-3.5" />{t("sheetMusicInArchive")}
+                    <a
+                      href={track.sheetMusicUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-link hover:text-link/80 inline-flex items-center gap-1 text-xs"
+                    >
+                      <FileMusic className="size-3.5" />
+                      {t("sheetMusicInArchive")}
                     </a>
                   </div>
                 )}
                 {spexflixUrl && track.videoLinks && track.videoLinks.length > 0 && (
                   <div className="mt-1 flex flex-wrap gap-2">
-                    {track.videoLinks.map(link => (
-                      <a key={`${link.videoId}-${link.startSeconds}`}
-                         href={`${spexflixUrl}/videos/${link.videoId}?t=${link.startSeconds}`}
-                         target="_blank" rel="noopener noreferrer"
-                         className="inline-flex items-center gap-1 text-xs text-link hover:text-link/80">
-                        <Film className="size-3.5" />{t("watchInSpexflix", { video: link.videoTitle })}
+                    {track.videoLinks.map((link) => (
+                      <a
+                        key={`${link.videoId}-${link.startSeconds}`}
+                        href={`${spexflixUrl}/videos/${link.videoId}?t=${link.startSeconds}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-link hover:text-link/80 inline-flex items-center gap-1 text-xs"
+                      >
+                        <Film className="size-3.5" />
+                        {t("watchInSpexflix", { video: link.videoTitle })}
                       </a>
                     ))}
                   </div>
                 )}
               </div>
               {track.navidromeId && (
-                <Button variant="ghost" size="icon" className="shrink-0" onClick={() => toggleStar(track)}
-                        aria-pressed={starred.has(track.navidromeId)}
-                        aria-label={starred.has(track.navidromeId) ? t("unstar", { title: track.title }) : t("star", { title: track.title })}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => toggleStar(track)}
+                  aria-pressed={starred.has(track.navidromeId)}
+                  aria-label={
+                    starred.has(track.navidromeId)
+                      ? t("unstar", { title: track.title })
+                      : t("star", { title: track.title })
+                  }
+                >
                   <Heart className={cn(starred.has(track.navidromeId) && "fill-current text-rose-500")} />
                 </Button>
               )}
               {track.navidromeId && track.rating !== undefined && (
                 <span className="hidden shrink-0 flex-col items-end gap-0.5 sm:flex">
-                                    <RatingInput value={ratingOf(track)} onChange={rating => rate(track, rating)}
-                                                 label={t("rate", { title: track.title })} />
-                                    <AverageRating average={track.averageRating} count={track.ratingCount} />
-                                </span>
+                  <RatingInput
+                    value={ratingOf(track)}
+                    onChange={(rating) => rate(track, rating)}
+                    label={t("rate", { title: track.title })}
+                  />
+                  <AverageRating
+                    average={track.averageRating}
+                    count={track.ratingCount}
+                  />
+                </span>
               )}
               {stats && (
-                <span className="w-24 shrink-0 text-right text-xs tabular-nums text-muted-foreground">{stats[track.id]}</span>
+                <span className="text-muted-foreground w-24 shrink-0 text-right text-xs tabular-nums">
+                  {stats[track.id]}
+                </span>
               )}
               {/* A top list says everyone's number; the user's own count beside it would read as a contradiction */}
               {playCount !== undefined && !stats && (
-                <span className="hidden w-28 shrink-0 text-right text-xs tabular-nums text-muted-foreground lg:block"
-                      title={played ? t("lastPlayed", { date: formatDate(played) ?? "" }) : undefined}>
-                                    {playCount > 0 ? (
-                                      <>
-                                        <span className="block">{t("plays", { count: playCount })}</span>
-                                        {played && <span className="block">{formatDate(played)}</span>}
-                                      </>
-                                    ) : <span className="block">{t("neverPlayed")}</span>}
-                                </span>
+                <span
+                  className="text-muted-foreground hidden w-28 shrink-0 text-right text-xs tabular-nums lg:block"
+                  title={played ? t("lastPlayed", { date: formatDate(played) ?? "" }) : undefined}
+                >
+                  {playCount > 0 ? (
+                    <>
+                      <span className="block">{t("plays", { count: playCount })}</span>
+                      {played && <span className="block">{formatDate(played)}</span>}
+                    </>
+                  ) : (
+                    <span className="block">{t("neverPlayed")}</span>
+                  )}
+                </span>
               )}
-              <span className="hidden w-12 shrink-0 text-right text-xs tabular-nums text-muted-foreground sm:block">
-                                {formatDuration(track.durationMs / 1000)}
-                            </span>
+              <span className="text-muted-foreground hidden w-12 shrink-0 text-right text-xs tabular-nums sm:block">
+                {formatDuration(track.durationMs / 1000)}
+              </span>
               <DropdownMenu>
-                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="shrink-0"
-                                                     aria-label={t("more", { title: track.title })} />}>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0"
+                      aria-label={t("more", { title: track.title })}
+                    />
+                  }
+                >
                   <MoreHorizontal />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => player.playNext([track])} disabled={track.fileMissing}>
-                    <ListStart />{t("playNext")}
+                  <DropdownMenuItem
+                    onClick={() => player.playNext([track])}
+                    disabled={track.fileMissing}
+                  >
+                    <ListStart />
+                    {t("playNext")}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => player.enqueue([track])} disabled={track.fileMissing}>
-                    <ListEnd />{t("addToQueue")}
+                  <DropdownMenuItem
+                    onClick={() => player.enqueue([track])}
+                    disabled={track.fileMissing}
+                  >
+                    <ListEnd />
+                    {t("addToQueue")}
                   </DropdownMenuItem>
                   {track.listed && !track.fileMissing && (
-                    <DropdownMenuItem onClick={() => radio.start({ trackId: track.id })} disabled={radio.pending}>
-                      <Radio />{t("startRadio")}
+                    <DropdownMenuItem
+                      onClick={() => radio.start({ trackId: track.id })}
+                      disabled={radio.pending}
+                    >
+                      <Radio />
+                      {t("startRadio")}
                     </DropdownMenuItem>
                   )}
                   {track.navidromeId && (
@@ -445,50 +579,74 @@ export function TrackList({
                       <DropdownMenuSeparator className="sm:hidden" />
                       <div className="flex items-center justify-between gap-3 px-2 py-1 text-sm sm:hidden">
                         <span>{t("rateTrack")}</span>
-                        <RatingInput value={ratingOf(track)} onChange={rating => rate(track, rating)}
-                                     label={t("rate", { title: track.title })} />
+                        <RatingInput
+                          value={ratingOf(track)}
+                          onChange={(rating) => rate(track, rating)}
+                          label={t("rate", { title: track.title })}
+                        />
                       </div>
                       <DropdownMenuSeparator />
-                      {playlists.slice(0, MENU_PLAYLISTS).map(playlist => (
-                        <DropdownMenuItem key={playlist.id} onClick={() => void addTo(track, playlist.id)}>
-                          <ListPlus />{t("addToPlaylist", { name: playlist.name })}
+                      {playlists.slice(0, MENU_PLAYLISTS).map((playlist) => (
+                        <DropdownMenuItem
+                          key={playlist.id}
+                          onClick={() => void addTo(track, playlist.id)}
+                        >
+                          <ListPlus />
+                          {t("addToPlaylist", { name: playlist.name })}
                         </DropdownMenuItem>
                       ))}
                       {playlists.length > MENU_PLAYLISTS && (
                         <DropdownMenuItem onClick={() => void chooseAndAdd(track)}>
-                          <ListPlus />{t("morePlaylists")}
+                          <ListPlus />
+                          {t("morePlaylists")}
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuItem onClick={() => void addTo(track, null)}>
-                        <ListPlus />{t("newPlaylist")}
+                        <ListPlus />
+                        {t("newPlaylist")}
                       </DropdownMenuItem>
                     </>
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    render={<a href={`/api/download/track/${track.id}`} download data-umami-event="track-download" />}
-                    disabled={track.fileMissing}>
-                    <Download />{t("download")}
+                    render={
+                      <a
+                        href={`/api/download/track/${track.id}`}
+                        download
+                        data-umami-event="track-download"
+                      />
+                    }
+                    disabled={track.fileMissing}
+                  >
+                    <Download />
+                    {t("download")}
                   </DropdownMenuItem>
                   {playlistId && (
-                    <DropdownMenuItem onClick={() => startTransition(async () => {
-                      const result = await removeFromPlaylistAction(playlistId, i);
+                    <DropdownMenuItem
+                      onClick={() =>
+                        startTransition(async () => {
+                          const result = await removeFromPlaylistAction(playlistId, i);
 
-                      if (!result.ok) {
-                        toast.error(result.message);
+                          if (!result.ok) {
+                            toast.error(result.message);
+                          }
+                        })
                       }
-                    })}>
-                      <X />{t("removeFromPlaylist")}
+                    >
+                      <X />
+                      {t("removeFromPlaylist")}
                     </DropdownMenuItem>
                   )}
                   {playlistId && i > 0 && (
                     <DropdownMenuItem onClick={() => moveInPlaylist(i, i - 1)}>
-                      <ArrowUp />{t("moveUp")}
+                      <ArrowUp />
+                      {t("moveUp")}
                     </DropdownMenuItem>
                   )}
                   {playlistId && i < tracks.length - 1 && (
                     <DropdownMenuItem onClick={() => moveInPlaylist(i, i + 1)}>
-                      <ArrowDown />{t("moveDown")}
+                      <ArrowDown />
+                      {t("moveDown")}
                     </DropdownMenuItem>
                   )}
                   {showAlbum && (
@@ -499,31 +657,66 @@ export function TrackList({
                   {(track.melody || track.performers) && <DropdownMenuSeparator />}
                   {track.melody && (
                     <DropdownMenuItem render={<Link href={creditHref("MELODY", track.melody.trim())} />}>
-                      <Music />{t("goToMelody")}
+                      <Music />
+                      {t("goToMelody")}
                     </DropdownMenuItem>
                   )}
-                  {track.performers && splitCredits(track.performers).slice(0, 3).map(name => (
-                    <DropdownMenuItem key={name} render={<Link href={creditHref("PERFORMER", name)} />}>
-                      <MicVocal />{t("goToCredit", { name })}
-                    </DropdownMenuItem>
-                  ))}
+                  {track.performers &&
+                    splitCredits(track.performers)
+                      .slice(0, 3)
+                      .map((name) => (
+                        <DropdownMenuItem
+                          key={name}
+                          render={<Link href={creditHref("PERFORMER", name)} />}
+                        >
+                          <MicVocal />
+                          {t("goToCredit", { name })}
+                        </DropdownMenuItem>
+                      ))}
                   {track.spexipediaUrl && (
-                    <DropdownMenuItem render={<a href={track.spexipediaUrl} target="_blank" rel="noopener noreferrer" />}>
-                      <BookOpenText />{t("inSpexipedia")}
+                    <DropdownMenuItem
+                      render={
+                        <a
+                          href={track.spexipediaUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        />
+                      }
+                    >
+                      <BookOpenText />
+                      {t("inSpexipedia")}
                     </DropdownMenuItem>
                   )}
                   {track.sheetMusicUrl && (
-                    <DropdownMenuItem render={<a href={track.sheetMusicUrl} target="_blank" rel="noopener noreferrer" />}>
-                      <FileMusic />{t("sheetMusicInArchive")}
+                    <DropdownMenuItem
+                      render={
+                        <a
+                          href={track.sheetMusicUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        />
+                      }
+                    >
+                      <FileMusic />
+                      {t("sheetMusicInArchive")}
                     </DropdownMenuItem>
                   )}
-                  {spexflixUrl && track.videoLinks?.map(link => (
-                    <DropdownMenuItem key={`${link.videoId}-${link.startSeconds}`}
-                                      render={<a href={`${spexflixUrl}/videos/${link.videoId}?t=${link.startSeconds}`}
-                                                 target="_blank" rel="noopener noreferrer" />}>
-                      <Film />{t("watchInSpexflix", { video: link.videoTitle })}
-                    </DropdownMenuItem>
-                  ))}
+                  {spexflixUrl &&
+                    track.videoLinks?.map((link) => (
+                      <DropdownMenuItem
+                        key={`${link.videoId}-${link.startSeconds}`}
+                        render={
+                          <a
+                            href={`${spexflixUrl}/videos/${link.videoId}?t=${link.startSeconds}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          />
+                        }
+                      >
+                        <Film />
+                        {t("watchInSpexflix", { video: link.videoTitle })}
+                      </DropdownMenuItem>
+                    ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </li>
@@ -538,23 +731,43 @@ export function PlayAllButtons({ tracks, radioAlbumId }: { tracks: TrackRow[]; r
   const t = useTranslations("Album");
   const player = usePlayer();
   const radio = useRadio();
-  const playable = tracks.filter(track => !track.fileMissing);
+  const playable = tracks.filter((track) => !track.fileMissing);
 
   return (
     <div className="flex flex-wrap gap-2">
-      <Button size="lg" className="rounded-full px-6" onClick={() => player.playQueue(playable, 0)} disabled={playable.length === 0}>
-        <Play className="fill-current" />{t("playAll")}
+      <Button
+        size="lg"
+        className="rounded-full px-6"
+        onClick={() => player.playQueue(playable, 0)}
+        disabled={playable.length === 0}
+      >
+        <Play className="fill-current" />
+        {t("playAll")}
       </Button>
-      <Button size="lg" variant="outline" className="rounded-full" onClick={() => {
-        player.setShuffle(true);
-        player.playQueue(playable, Math.floor(Math.random() * playable.length));
-      }} disabled={playable.length === 0}>
-        <Shuffle />{t("shuffle")}
+      <Button
+        size="lg"
+        variant="outline"
+        className="rounded-full"
+        onClick={() => {
+          player.setShuffle(true);
+          player.playQueue(playable, Math.floor(Math.random() * playable.length));
+        }}
+        disabled={playable.length === 0}
+      >
+        <Shuffle />
+        {t("shuffle")}
       </Button>
       {radioAlbumId && (
-        <Button size="lg" variant="outline" className="rounded-full" onClick={() => radio.start({ albumId: radioAlbumId })} disabled={radio.pending}
-                title={t("albumRadioHint")}>
-          <Radio />{t("albumRadio")}
+        <Button
+          size="lg"
+          variant="outline"
+          className="rounded-full"
+          onClick={() => radio.start({ albumId: radioAlbumId })}
+          disabled={radio.pending}
+          title={t("albumRadioHint")}
+        >
+          <Radio />
+          {t("albumRadio")}
         </Button>
       )}
     </div>

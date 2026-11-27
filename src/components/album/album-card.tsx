@@ -16,11 +16,17 @@ export function AlbumCard({ album, label }: { album: AlbumSummary; label?: React
 
   return (
     <div className="group/card relative">
-      <Link href={`/albums/${album.id}`}
-            className="block rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        <CoverImage albumId={album.id} title={album.title} className="w-full rounded-md bg-muted shadow-md" />
-        <div className="mt-2 line-clamp-2 text-sm font-semibold leading-tight">{album.title}</div>
-        <div className="mt-0.5 truncate text-xs text-muted-foreground">
+      <Link
+        href={`/albums/${album.id}`}
+        className="focus-visible:ring-ring block rounded-md outline-none focus-visible:ring-2"
+      >
+        <CoverImage
+          albumId={album.id}
+          title={album.title}
+          className="bg-muted w-full rounded-md shadow-md"
+        />
+        <div className="mt-2 line-clamp-2 text-sm leading-tight font-semibold">{album.title}</div>
+        <div className="text-muted-foreground mt-0.5 truncate text-xs">
           {label ?? [album.year, album.spex?.[0]?.categoryName].filter(Boolean).join(" · ")}
         </div>
         {(!album.kind.isDefault || album.spex?.[0]?.revival) && (
@@ -31,8 +37,12 @@ export function AlbumCard({ album, label }: { album: AlbumSummary; label?: React
         )}
       </Link>
       {album.trackCount > 0 && (
-        <div className="absolute inset-x-0 top-0 aspect-square pointer-events-none">
-          <AlbumPlayButton albumId={album.id} title={album.title} className="pointer-events-auto absolute right-2 bottom-2" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 aspect-square">
+          <AlbumPlayButton
+            albumId={album.id}
+            title={album.title}
+            className="pointer-events-auto absolute right-2 bottom-2"
+          />
         </div>
       )}
     </div>

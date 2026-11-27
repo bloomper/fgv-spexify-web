@@ -10,7 +10,10 @@ type PdfDocument = {
   numPages: number;
   getPage: (n: number) => Promise<{
     getViewport: (options: { scale: number }) => { width: number; height: number };
-    render: (options: { canvasContext: CanvasRenderingContext2D; viewport: unknown; canvas: HTMLCanvasElement }) => { promise: Promise<void>; cancel: () => void };
+    render: (options: { canvasContext: CanvasRenderingContext2D; viewport: unknown; canvas: HTMLCanvasElement }) => {
+      promise: Promise<void>;
+      cancel: () => void;
+    };
   }>;
 };
 
@@ -21,7 +24,7 @@ let pdfjs: Promise<{ getDocument: (source: { data: ArrayBuffer }) => PdfLoadingT
 
 /** pdf.js, loaded the first time a score is read; its worker is served from this origin. */
 function loadPdfJs() {
-  pdfjs ??= import("pdfjs-dist").then(module => {
+  pdfjs ??= import("pdfjs-dist").then((module) => {
     module.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
     return module as unknown as { getDocument: (source: { data: ArrayBuffer }) => PdfLoadingTask };
   });
@@ -133,27 +136,73 @@ export function PdfReader({ url, title }: { url: string; title: string }) {
   return (
     <div className="flex min-h-0 flex-col gap-2">
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" disabled={page <= 1} onClick={() => setPage(page - 1)} aria-label={t("previousPage")}>
+        <Button
+          variant="ghost"
+          size="icon"
+          disabled={page <= 1}
+          onClick={() => setPage(page - 1)}
+          aria-label={t("previousPage")}
+        >
           <ChevronLeft />
         </Button>
-        <span className="min-w-20 text-center text-sm tabular-nums" aria-live="polite">
+        <span
+          className="min-w-20 text-center text-sm tabular-nums"
+          aria-live="polite"
+        >
           {pages > 0 ? t("page", { page, pages }) : ""}
         </span>
-        <Button variant="ghost" size="icon" disabled={page >= pages} onClick={() => setPage(page + 1)} aria-label={t("nextPage")}>
+        <Button
+          variant="ghost"
+          size="icon"
+          disabled={page >= pages}
+          onClick={() => setPage(page + 1)}
+          aria-label={t("nextPage")}
+        >
           <ChevronRight />
         </Button>
         <div className="flex-1" />
-        <Button variant="ghost" size="icon" disabled={zoom <= 0.5} onClick={() => setZoom(Math.max(0.5, zoom - 0.25))} aria-label={t("zoomOut")}>
+        <Button
+          variant="ghost"
+          size="icon"
+          disabled={zoom <= 0.5}
+          onClick={() => setZoom(Math.max(0.5, zoom - 0.25))}
+          aria-label={t("zoomOut")}
+        >
           <ZoomOut />
         </Button>
-        <Button variant="ghost" size="icon" disabled={zoom >= 3} onClick={() => setZoom(Math.min(3, zoom + 0.25))} aria-label={t("zoomIn")}>
+        <Button
+          variant="ghost"
+          size="icon"
+          disabled={zoom >= 3}
+          onClick={() => setZoom(Math.min(3, zoom + 0.25))}
+          aria-label={t("zoomIn")}
+        >
           <ZoomIn />
         </Button>
       </div>
-      <div ref={box} className="min-h-0 overflow-auto rounded-md bg-white">
-        {state === "loading" && <div className="flex justify-center p-8"><Spinner /></div>}
-        {state === "error" && <p role="alert" className="p-4 text-sm text-destructive">{t("couldNotLoad")}</p>}
-        <canvas ref={canvas} aria-label={t("pageOf", { title, page })} role="img" className={state === "ready" ? "block" : "hidden"} />
+      <div
+        ref={box}
+        className="min-h-0 overflow-auto rounded-md bg-white"
+      >
+        {state === "loading" && (
+          <div className="flex justify-center p-8">
+            <Spinner />
+          </div>
+        )}
+        {state === "error" && (
+          <p
+            role="alert"
+            className="text-destructive p-4 text-sm"
+          >
+            {t("couldNotLoad")}
+          </p>
+        )}
+        <canvas
+          ref={canvas}
+          aria-label={t("pageOf", { title, page })}
+          role="img"
+          className={state === "ready" ? "block" : "hidden"}
+        />
       </div>
     </div>
   );

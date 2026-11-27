@@ -17,19 +17,33 @@ describe("AlbumListening", () => {
   });
 
   it("stars and rates the album in Navidrome", async () => {
-    render(<AlbumListening navidromeId="al-1" starred={false} rating={0} />);
+    render(
+      <AlbumListening
+        navidromeId="al-1"
+        starred={false}
+        rating={0}
+      />
+    );
 
     await userEvent.click(screen.getByRole("button", { name: "starAlbum" }));
     expect(actions.starAlbumAction).toHaveBeenCalledWith("al-1", true);
     expect(await screen.findByRole("button", { name: "unstarAlbum" })).toHaveAttribute("aria-pressed", "true");
 
-    await userEvent.click(within(screen.getByRole("radiogroup", { name: "rateAlbum" })).getByRole("radio", { name: /"count":3/ }));
+    await userEvent.click(
+      within(screen.getByRole("radiogroup", { name: "rateAlbum" })).getByRole("radio", { name: /"count":3/ })
+    );
     expect(actions.rateAction).toHaveBeenCalledWith("al-1", 3);
   });
 
   it("takes the star back when it cannot be saved", async () => {
     actions.starAlbumAction.mockResolvedValue({ ok: false, message: "nej" });
-    render(<AlbumListening navidromeId="al-1" starred rating={2} />);
+    render(
+      <AlbumListening
+        navidromeId="al-1"
+        starred
+        rating={2}
+      />
+    );
 
     await userEvent.click(screen.getByRole("button", { name: "unstarAlbum" }));
 

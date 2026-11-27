@@ -30,7 +30,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
     }
 
     const [tracks, listening] = await Promise.all([
-      getTracksByNavidromeIds(playlist.entry.map(entry => entry.id)),
+      getTracksByNavidromeIds(playlist.entry.map((entry) => entry.id)),
       getListeningState(),
     ]);
     // Positions are the playlist's own, so removing and moving are offered only to the owner, and only when every
@@ -48,14 +48,30 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
         />
         <div className="flex flex-wrap gap-2">
           <PlayAllButtons tracks={rows} />
-          {editable && <PlaylistActions id={id} name={playlist.name} comment={playlist.comment ?? ""}
-                                        isPublic={playlist.public === true} />}
+          {editable && (
+            <PlaylistActions
+              id={id}
+              name={playlist.name}
+              comment={playlist.comment ?? ""}
+              isPublic={playlist.public === true}
+            />
+          )}
         </div>
         {rows.length > 0 ? (
-          <TrackList tracks={rows} starred={listening.starred} playlists={listening.playlists}
-                     spexflixUrl={null} showAlbum
-                     playlistId={editable && rows.length === playlist.entry.length ? id : undefined} />
-        ) : <DataEmpty title={t("empty")} description={null} />}
+          <TrackList
+            tracks={rows}
+            starred={listening.starred}
+            playlists={listening.playlists}
+            spexflixUrl={null}
+            showAlbum
+            playlistId={editable && rows.length === playlist.entry.length ? id : undefined}
+          />
+        ) : (
+          <DataEmpty
+            title={t("empty")}
+            description={null}
+          />
+        )}
       </Page>
     );
   });

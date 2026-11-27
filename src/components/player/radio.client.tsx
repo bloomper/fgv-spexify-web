@@ -17,18 +17,21 @@ export function useRadio() {
   const player = usePlayer();
   const [pending, startTransition] = useTransition();
 
-  const start = useCallback((seed: { trackId?: string; albumId?: string }) => {
-    startTransition(async () => {
-      const tracks = await radioAction(seed);
+  const start = useCallback(
+    (seed: { trackId?: string; albumId?: string }) => {
+      startTransition(async () => {
+        const tracks = await radioAction(seed);
 
-      if (!tracks || tracks.length === 0) {
-        toast.error(t(tracks ? "radioEmpty" : "radioFailed"));
-        return;
-      }
-      player.playQueue(tracks, 0);
-      trackEvent("radio-start", { seed: seed.trackId ? "track" : seed.albumId ? "album" : "random" });
-    });
-  }, [player, t]);
+        if (!tracks || tracks.length === 0) {
+          toast.error(t(tracks ? "radioEmpty" : "radioFailed"));
+          return;
+        }
+        player.playQueue(tracks, 0);
+        trackEvent("radio-start", { seed: seed.trackId ? "track" : seed.albumId ? "album" : "random" });
+      });
+    },
+    [player, t]
+  );
 
   return { start, pending };
 }
@@ -41,8 +44,13 @@ export function RandomRadioButton() {
   const radio = useRadio();
 
   return (
-    <Button variant="outline" onClick={() => radio.start({})} disabled={radio.pending}>
-      <Radio />{t("randomRadio")}
+    <Button
+      variant="outline"
+      onClick={() => radio.start({})}
+      disabled={radio.pending}
+    >
+      <Radio />
+      {t("randomRadio")}
     </Button>
   );
 }

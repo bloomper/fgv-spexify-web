@@ -21,19 +21,42 @@ export async function scrobbleAction(navidromeId: string, submission: boolean): 
 }
 
 type TrackLike = {
-  id: string; title: string; albumId: string; albumTitle: string; performers?: string | null; durationMs: number;
-  navidromeId?: string | null; lyrics?: string | null; lyricsSynced: boolean; replayGain?: PlayerTrack["replayGain"];
-  melody?: string | null; lyricsAuthor?: string | null; arranger?: string | null; spexipediaUrl?: string | null;
-  numberTitle?: string | null; numberKind?: PlayerTrack["numberKind"];
+  id: string;
+  title: string;
+  albumId: string;
+  albumTitle: string;
+  performers?: string | null;
+  durationMs: number;
+  navidromeId?: string | null;
+  lyrics?: string | null;
+  lyricsSynced: boolean;
+  replayGain?: PlayerTrack["replayGain"];
+  melody?: string | null;
+  lyricsAuthor?: string | null;
+  arranger?: string | null;
+  spexipediaUrl?: string | null;
+  numberTitle?: string | null;
+  numberKind?: PlayerTrack["numberKind"];
 };
 
 function toPlayerTrack(track: TrackLike): PlayerTrack {
   return {
-    id: track.id, title: track.title, albumId: track.albumId, albumTitle: track.albumTitle,
-    performers: track.performers, durationMs: track.durationMs, navidromeId: track.navidromeId,
-    lyrics: track.lyrics, lyricsSynced: track.lyricsSynced, replayGain: track.replayGain,
-    melody: track.melody, lyricsAuthor: track.lyricsAuthor, arranger: track.arranger,
-    spexipediaUrl: track.spexipediaUrl, numberTitle: track.numberTitle, numberKind: track.numberKind,
+    id: track.id,
+    title: track.title,
+    albumId: track.albumId,
+    albumTitle: track.albumTitle,
+    performers: track.performers,
+    durationMs: track.durationMs,
+    navidromeId: track.navidromeId,
+    lyrics: track.lyrics,
+    lyricsSynced: track.lyricsSynced,
+    replayGain: track.replayGain,
+    melody: track.melody,
+    lyricsAuthor: track.lyricsAuthor,
+    arranger: track.arranger,
+    spexipediaUrl: track.spexipediaUrl,
+    numberTitle: track.numberTitle,
+    numberKind: track.numberKind,
   };
 }
 
@@ -46,7 +69,7 @@ export async function albumTracksAction(albumId: string): Promise<PlayerTrack[] 
     try {
       const album = await getAlbum(albumId);
 
-      return (album?.tracks ?? []).filter(track => track.listed && !track.fileMissing).map(toPlayerTrack);
+      return (album?.tracks ?? []).filter((track) => track.listed && !track.fileMissing).map(toPlayerTrack);
     } catch {
       return null;
     }
@@ -60,7 +83,7 @@ export async function albumTracksAction(albumId: string): Promise<PlayerTrack[] 
 export async function radioAction(seed: { trackId?: string; albumId?: string }): Promise<PlayerTrack[] | null> {
   return withPolicyAction(Policies.app.requireAccess, async () => {
     try {
-      return (await getRadio(seed, 50)).filter(track => !track.fileMissing).map(toPlayerTrack);
+      return (await getRadio(seed, 50)).filter((track) => !track.fileMissing).map(toPlayerTrack);
     } catch {
       return null;
     }
@@ -88,7 +111,10 @@ export async function loadPlayQueueAction(): Promise<SavedQueue | null> {
         return null;
       }
 
-      const index = Math.max(0, tracks.findIndex(track => track.navidromeId === saved.current));
+      const index = Math.max(
+        0,
+        tracks.findIndex((track) => track.navidromeId === saved.current)
+      );
       const atCurrent = tracks[index]?.navidromeId === saved.current;
 
       return {
@@ -105,7 +131,11 @@ export async function loadPlayQueueAction(): Promise<SavedQueue | null> {
 /**
  * Saves the play queue in Navidrome, so the user's apps and other browsers can continue from it. Failures are ignored.
  */
-export async function savePlayQueueAction(navidromeIds: string[], current: string | null, positionMs: number): Promise<void> {
+export async function savePlayQueueAction(
+  navidromeIds: string[],
+  current: string | null,
+  positionMs: number
+): Promise<void> {
   await withPolicyAction(Policies.app.requireAccess, async () => {
     try {
       await savePlayQueue(navidromeIds.slice(0, 1000), current, positionMs);

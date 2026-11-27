@@ -17,10 +17,12 @@ const get = () => new NextRequest("http://spexify.test/api/x");
 describe("the media routes", () => {
   beforeEach(() => {
     apiFetch.mockReset();
-    apiFetch.mockResolvedValue(new Response("x", {
-      status: 200,
-      headers: { "content-type": "application/octet-stream" },
-    }));
+    apiFetch.mockResolvedValue(
+      new Response("x", {
+        status: 200,
+        headers: { "content-type": "application/octet-stream" },
+      })
+    );
   });
 
   it.each([
@@ -28,10 +30,12 @@ describe("the media routes", () => {
     ["a track download", trackDownload, "/api/tracks/01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e/download/link"],
     ["an album download", albumDownload, "/api/albums/01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e/download/link"],
   ])("redirects %s to a signed link from the server", async (_, route, path) => {
-    apiFetch.mockResolvedValue(Response.json({
-      url: "https://api.spexify.test/media/1/sig/x",
-      expiresAt: "2026-11-04T18:00:00Z",
-    }));
+    apiFetch.mockResolvedValue(
+      Response.json({
+        url: "https://api.spexify.test/media/1/sig/x",
+        expiresAt: "2026-11-04T18:00:00Z",
+      })
+    );
 
     const response = await route(get(), params("01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e"));
 
@@ -63,7 +67,7 @@ describe("the media routes", () => {
     expect(response.headers.get("content-security-policy")).toContain("sandbox");
   });
 
-  it.each([audio, trackDownload, albumDownload, cover, poster])("refuses an id that is not a number", async route => {
+  it.each([audio, trackDownload, albumDownload, cover, poster])("refuses an id that is not a number", async (route) => {
     const response = await route(get(), params("../01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e"));
 
     expect(response.status).toBe(400);
@@ -96,17 +100,28 @@ describe("POST /api/cover-upload/[id]", () => {
   it("forwards the form to the server", async () => {
     apiFetch.mockResolvedValue(new Response("{}", { status: 200 }));
 
-    const response = await coverUpload(upload({ origin: "http://spexify.test" }), params("01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e"));
+    const response = await coverUpload(
+      upload({ origin: "http://spexify.test" }),
+      params("01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e")
+    );
 
-    expect(apiFetch).toHaveBeenCalledWith("/api/albums/01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e/cover", expect.objectContaining({ method: "POST" }));
+    expect(apiFetch).toHaveBeenCalledWith(
+      "/api/albums/01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e/cover",
+      expect.objectContaining({ method: "POST" })
+    );
     expect(await response.json()).toEqual({ ok: true });
   });
 
   it("passes the server's refusal on with its code and message", async () => {
-    apiFetch.mockResolvedValue(new Response(JSON.stringify({
-      code: "BAD_REQUEST",
-      message: "Inte en bild",
-    }), { status: 400 }));
+    apiFetch.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          code: "BAD_REQUEST",
+          message: "Inte en bild",
+        }),
+        { status: 400 }
+      )
+    );
 
     const response = await coverUpload(upload(), params("01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e"));
 
@@ -115,7 +130,10 @@ describe("POST /api/cover-upload/[id]", () => {
   });
 
   it("refuses another site and a bad id", async () => {
-    expect((await coverUpload(upload({ origin: "https://evil.test" }), params("01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e"))).status).toBe(403);
+    expect(
+      (await coverUpload(upload({ origin: "https://evil.test" }), params("01933f2a-7c3e-7b1a-9d2e-4f5a6b7c8d9e")))
+        .status
+    ).toBe(403);
     expect((await coverUpload(upload(), params("x"))).status).toBe(400);
     expect(apiFetch).not.toHaveBeenCalled();
   });

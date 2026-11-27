@@ -7,7 +7,7 @@ let logins = 0;
 
 /** A documentation address (RFC 5737) per login: 192.0.2.1, 192.0.2.2, … */
 function nextClientIp() {
-  logins = logins % 254 + 1;
+  logins = (logins % 254) + 1;
   return `192.0.2.${logins}`;
 }
 
@@ -15,23 +15,29 @@ export const test = base.extend<{
   resetBackend: void;
   noNativeDialogs: void;
   loginAs: (persona: Persona) => Promise<void>;
-  mock: Mock
+  mock: Mock;
 }>({
-  resetBackend: [async ({ request }, provide) => {
-    await request.post(`${MOCK_URL}/__reset`);
-    await provide();
-  }, { auto: true }],
+  resetBackend: [
+    async ({ request }, provide) => {
+      await request.post(`${MOCK_URL}/__reset`);
+      await provide();
+    },
+    { auto: true },
+  ],
   // The application asks in its own dialogs; a native confirm or prompt fails the test
-  noNativeDialogs: [async ({ page }, provide) => {
-    const native: string[] = [];
+  noNativeDialogs: [
+    async ({ page }, provide) => {
+      const native: string[] = [];
 
-    page.on("dialog", dialog => {
-      native.push(`${dialog.type()}: ${dialog.message()}`);
-      void dialog.dismiss();
-    });
-    await provide();
-    expect(native, "native dialogs").toEqual([]);
-  }, { auto: true }],
+      page.on("dialog", (dialog) => {
+        native.push(`${dialog.type()}: ${dialog.message()}`);
+        void dialog.dismiss();
+      });
+      await provide();
+      expect(native, "native dialogs").toEqual([]);
+    },
+    { auto: true },
+  ],
   loginAs: async ({ page, request }, provide) => {
     await provide(async (persona: Persona) => {
       expect((await request.post(`${MOCK_URL}/__persona`, { data: { persona } })).status(), "persona set").toBe(204);
@@ -47,7 +53,7 @@ export const test = base.extend<{
       }
       await page.context().clearCookies();
       await page.goto("/api/auth/login");
-      await page.waitForURL(url => !url.pathname.startsWith("/api/auth"));
+      await page.waitForURL((url) => !url.pathname.startsWith("/api/auth"));
       await page.getByRole("button", { name: "Jag förstår" }).click();
       await consentStored(page);
     });
@@ -94,7 +100,7 @@ type MockState = {
     trackNumber: number;
     published: boolean;
     listed: boolean;
-    trashedAt: string | null
+    trashedAt: string | null;
   }[];
   albums: { id: string; title: string; published: boolean; hasCover: boolean; trashedAt: string | null }[];
 };
@@ -119,7 +125,9 @@ type Mock = {
  * over the bottom right corner where sheets have their buttons.
  */
 export async function consentStored(page: Page) {
-  await expect.poll(async () => (await page.context().cookies()).some(cookie => cookie.name === "c15t-notice")).toBe(true);
+  await expect
+    .poll(async () => (await page.context().cookies()).some((cookie) => cookie.name === "c15t-notice"))
+    .toBe(true);
 }
 
 /**
@@ -127,10 +135,10 @@ export async function consentStored(page: Page) {
  * browser's change event fires before React listens.
  */
 export async function hydrated(page: Page, selector: string) {
-  await page.waitForFunction(css => {
+  await page.waitForFunction((css) => {
     const element = document.querySelector(css);
 
-    return element !== null && Object.keys(element).some(key => key.startsWith("__reactProps"));
+    return element !== null && Object.keys(element).some((key) => key.startsWith("__reactProps"));
   }, selector);
 }
 

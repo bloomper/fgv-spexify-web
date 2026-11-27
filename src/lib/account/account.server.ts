@@ -28,7 +28,8 @@ const ApiKeyRevokeMutation = graphql(`
 `);
 
 export const getApps = () => runQuery(AppsQuery, {});
-export const appPasswordCreate = async (name: string) => (await runMutation(AppPasswordCreateMutation, { name }))?.appPasswordCreate;
+export const appPasswordCreate = async (name: string) =>
+  (await runMutation(AppPasswordCreateMutation, { name }))?.appPasswordCreate;
 export const appPasswordRevoke = (id: string) => runMutation(AppPasswordRevokeMutation, { id });
 export const apiKeyCreate = async (name: string) => (await runMutation(ApiKeyCreateMutation, { name }))?.apiKeyCreate;
 export const apiKeyRevoke = (id: string) => runMutation(ApiKeyRevokeMutation, { id });

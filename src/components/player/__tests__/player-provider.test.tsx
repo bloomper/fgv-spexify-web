@@ -15,8 +15,14 @@ const savePlayQueueAction = vi.hoisted(() => vi.fn());
 
 vi.mock("@/components/player/actions.server", () => ({ scrobbleAction, loadPlayQueueAction, savePlayQueueAction }));
 
-const track = (id: string, navidromeId: string | null = `nd-${id}`): PlayerTrack =>
-  ({ id, title: `Låt ${id}`, albumId: "1", albumTitle: "Nobel", durationMs: 60_000, navidromeId });
+const track = (id: string, navidromeId: string | null = `nd-${id}`): PlayerTrack => ({
+  id,
+  title: `Låt ${id}`,
+  albumId: "1",
+  albumTitle: "Nobel",
+  durationMs: 60_000,
+  navidromeId,
+});
 const TRACKS = [track("1"), track("2"), track("3", null)];
 
 // The element that plays; the other one holds the preloaded next track
@@ -38,11 +44,11 @@ describe("PlayerProvider", () => {
     loadPlayQueueAction.mockReset().mockResolvedValue(null);
     savePlayQueueAction.mockReset().mockResolvedValue(undefined);
     localStorage.clear();
-    vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(function(this: HTMLMediaElement) {
+    vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(function (this: HTMLMediaElement) {
       this.dispatchEvent(new Event("play"));
       return Promise.resolve();
     });
-    vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(function(this: HTMLMediaElement) {
+    vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(function (this: HTMLMediaElement) {
       this.dispatchEvent(new Event("pause"));
     });
   });
@@ -149,7 +155,7 @@ describe("PlayerProvider", () => {
     act(() => result.current.enqueue([track("9")]));
     expect(result.current.current?.id).toBe("9");
     act(() => result.current.enqueue([track("10")]));
-    expect(result.current.queue.map(t => t.id)).toEqual(["9", "10"]);
+    expect(result.current.queue.map((t) => t.id)).toEqual(["9", "10"]);
     act(() => result.current.jump(1));
     expect(result.current.current?.id).toBe("10");
     act(() => result.current.jump(5));
@@ -165,7 +171,7 @@ describe("PlayerProvider", () => {
     expect(result.current.current?.id).toBe("9");
     act(() => result.current.enqueue([track("10")]));
     act(() => result.current.playNext([track("11"), track("12")]));
-    expect(result.current.queue.map(t => t.id)).toEqual(["9", "11", "12", "10"]);
+    expect(result.current.queue.map((t) => t.id)).toEqual(["9", "11", "12", "10"]);
     expect(result.current.current?.id).toBe("9");
   });
 
@@ -177,7 +183,7 @@ describe("PlayerProvider", () => {
 
     expect(result.current.shuffle).toBe(true);
     expect(result.current.current?.id).toBe("2");
-    expect(result.current.queue.map(t => t.id).sort()).toEqual(["1", "2", "3"]);
+    expect(result.current.queue.map((t) => t.id).sort()).toEqual(["1", "2", "3"]);
   });
 
   it("toggles pause and play", () => {
@@ -204,7 +210,7 @@ describe("PlayerProvider", () => {
     });
 
     expect(scrobbleAction).toHaveBeenCalledWith("nd-1", true);
-    expect(scrobbleAction.mock.calls.filter(call => call[1] === true)).toHaveLength(1);
+    expect(scrobbleAction.mock.calls.filter((call) => call[1] === true)).toHaveLength(1);
     expect(result.current.time).toBe(31);
   });
 
@@ -229,7 +235,7 @@ describe("PlayerProvider", () => {
   it("keeps what the user started while the saved queue was on its way", async () => {
     let answer: (value: unknown) => void = () => undefined;
 
-    loadPlayQueueAction.mockReturnValue(new Promise(resolve => answer = resolve));
+    loadPlayQueueAction.mockReturnValue(new Promise((resolve) => (answer = resolve)));
     const { result } = render();
 
     act(() => result.current.playQueue(TRACKS, 0));
@@ -278,11 +284,11 @@ describe("PlayerProvider", () => {
 
     act(() => result.current.playQueue([track("1"), track("2"), track("4"), track("5")], 1));
     act(() => result.current.move(3, 0));
-    expect(result.current.queue.map(t => t.id)).toEqual(["5", "1", "2", "4"]);
+    expect(result.current.queue.map((t) => t.id)).toEqual(["5", "1", "2", "4"]);
     expect(result.current.current?.id).toBe("2");
 
     act(() => result.current.remove(0));
-    expect(result.current.queue.map(t => t.id)).toEqual(["1", "2", "4"]);
+    expect(result.current.queue.map((t) => t.id)).toEqual(["1", "2", "4"]);
     expect(result.current.current?.id).toBe("2");
 
     act(() => result.current.remove(1));

@@ -21,15 +21,28 @@ export function ShelfScroller({ label, children }: { label: string; children: Re
   return (
     <div className="relative">
       <div className="absolute -top-11 right-0 hidden gap-1 md:flex">
-        <Button variant="ghost" size="icon-sm" onClick={() => scroll(-1)} aria-label={t("scrollBack", { shelf: label })}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => scroll(-1)}
+          aria-label={t("scrollBack", { shelf: label })}
+        >
           <ChevronLeft />
         </Button>
-        <Button variant="ghost" size="icon-sm" onClick={() => scroll(1)} aria-label={t("scrollOn", { shelf: label })}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => scroll(1)}
+          aria-label={t("scrollOn", { shelf: label })}
+        >
           <ChevronRight />
         </Button>
       </div>
-      <ul ref={list} aria-label={label}
-          className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] md:-mx-8 md:scroll-px-8 md:px-8 [&::-webkit-scrollbar]:hidden">
+      <ul
+        ref={list}
+        aria-label={label}
+        className="-mx-4 flex snap-x snap-mandatory scroll-px-4 [scrollbar-width:none] gap-4 overflow-x-auto px-4 pb-2 md:-mx-8 md:scroll-px-8 md:px-8 [&::-webkit-scrollbar]:hidden"
+      >
         {children}
       </ul>
     </div>

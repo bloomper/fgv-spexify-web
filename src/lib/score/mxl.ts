@@ -20,7 +20,7 @@ export async function scoreText(bytes: ArrayBuffer): Promise<string> {
     root = xml.querySelector("rootfile")?.getAttribute("full-path") ?? null;
   }
   if (!root || !entries.has(root)) {
-    root = [...entries.keys()].find(name => !name.startsWith("META-INF/") && /\.(xml|musicxml)$/i.test(name)) ?? null;
+    root = [...entries.keys()].find((name) => !name.startsWith("META-INF/") && /\.(xml|musicxml)$/i.test(name)) ?? null;
   }
   if (!root) {
     throw new Error("No score in the compressed MusicXML");

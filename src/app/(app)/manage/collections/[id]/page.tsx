@@ -30,13 +30,30 @@ export default async function EditCollectionPage({ params }: { params: Promise<{
       <Page variant="content">
         <PageHeader
           title={collection.title}
-          actions={<Link href={`/collections/${collection.id}`} className="text-sm text-link hover:text-link/80">{t("view")}</Link>}
+          actions={
+            <Link
+              href={`/collections/${collection.id}`}
+              className="text-link hover:text-link/80 text-sm"
+            >
+              {t("view")}
+            </Link>
+          }
         />
-        <CollectionEditor collection={{
-          id: collection.id, title: collection.title, description: collection.description,
-          albumIds: collection.albums.map(album => album.id),
-        }} albums={data?.albums ?? []} canDelete={isAdmin(authz.roles)} />
-        <RecordHistory entityId={collection.id} path="/manage/audit" linkOf={auditLink} />
+        <CollectionEditor
+          collection={{
+            id: collection.id,
+            title: collection.title,
+            description: collection.description,
+            albumIds: collection.albums.map((album) => album.id),
+          }}
+          albums={data?.albums ?? []}
+          canDelete={isAdmin(authz.roles)}
+        />
+        <RecordHistory
+          entityId={collection.id}
+          path="/manage/audit"
+          linkOf={auditLink}
+        />
       </Page>
     );
   });

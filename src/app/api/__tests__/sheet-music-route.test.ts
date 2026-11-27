@@ -17,7 +17,10 @@ describe("the sheet music route", () => {
   });
 
   it("passes a file of the track's sheet music on, sandboxed", async () => {
-    const response = await GET(new NextRequest(`http://spexify.test/api/sheet-music/${TRACK}/${FILE}`), params(TRACK, FILE));
+    const response = await GET(
+      new NextRequest(`http://spexify.test/api/sheet-music/${TRACK}/${FILE}`),
+      params(TRACK, FILE)
+    );
 
     expect(apiFetch.mock.calls[0][0]).toBe(`/api/tracks/${TRACK}/sheet-music/${FILE}`);
     expect(response.status).toBe(200);
@@ -26,7 +29,10 @@ describe("the sheet music route", () => {
   });
 
   it("asks for an attachment when downloading", async () => {
-    await GET(new NextRequest(`http://spexify.test/api/sheet-music/${TRACK}/${FILE}?download=true`), params(TRACK, FILE));
+    await GET(
+      new NextRequest(`http://spexify.test/api/sheet-music/${TRACK}/${FILE}?download=true`),
+      params(TRACK, FILE)
+    );
 
     expect(apiFetch.mock.calls[0][0]).toBe(`/api/tracks/${TRACK}/sheet-music/${FILE}?download=true`);
   });

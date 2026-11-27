@@ -20,7 +20,10 @@ test.describe("Collections and the top list", () => {
     await expect(page.getByText("1 album")).toBeVisible();
   });
 
-  test("the top list ranks by tabs, switches between songs and albums and says each number", async ({ page, loginAs }) => {
+  test("the top list ranks by tabs, switches between songs and albums and says each number", async ({
+    page,
+    loginAs,
+  }) => {
     await loginAs("listener");
     // Something liked, as the mock starts with nobody having done anything
     await page.goto(`/albums/${uuidOf(1)}`);
@@ -35,7 +38,9 @@ test.describe("Collections and the top list", () => {
     await expect(page).toHaveURL(/by=LIKED/);
     await expect(page.getByRole("listitem").filter({ hasText: "Ouvertyr" })).toContainText("1 gillar");
     // Songs from many albums show the album's cover and title, not a track number
-    await expect(page.getByRole("listitem").filter({ hasText: "Ouvertyr" }).getByRole("link", { name: "Nobel" })).toBeVisible();
+    await expect(
+      page.getByRole("listitem").filter({ hasText: "Ouvertyr" }).getByRole("link", { name: "Nobel" })
+    ).toBeVisible();
 
     await page.getByRole("navigation", { name: "Visa" }).getByRole("link", { name: "Album" }).click();
     await expect(page).toHaveURL(/what=albums/);

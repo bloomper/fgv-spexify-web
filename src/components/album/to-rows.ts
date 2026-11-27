@@ -32,7 +32,7 @@ type TrackLike = {
  * Tracks as the track list shows them, with the user's play counts from Navidrome when given.
  */
 export function toRows(tracks: TrackLike[], plays: Plays = {}): TrackRow[] {
-  return tracks.map(track => ({
+  return tracks.map((track) => ({
     id: track.id,
     title: track.title,
     albumId: track.albumId,
@@ -57,7 +57,7 @@ export function toRows(tracks: TrackLike[], plays: Plays = {}): TrackRow[] {
     numberKind: track.numberKind,
     playCount: track.navidromeId ? plays[track.navidromeId]?.playCount : undefined,
     played: track.navidromeId ? plays[track.navidromeId]?.played : undefined,
-    rating: track.navidromeId ? plays[track.navidromeId]?.rating ?? 0 : undefined,
+    rating: track.navidromeId ? (plays[track.navidromeId]?.rating ?? 0) : undefined,
     averageRating: track.averageRating,
     ratingCount: track.ratingCount,
   }));

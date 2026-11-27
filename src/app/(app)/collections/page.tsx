@@ -17,26 +17,48 @@ export default async function CollectionsPage() {
 
     return (
       <Page variant="content">
-        <PageHeader title={t("title")} description={t("text")}/>
-        {collections.length === 0 ? <DataEmpty title={t("none")} description={null} /> : (
+        <PageHeader
+          title={t("title")}
+          description={t("text")}
+        />
+        {collections.length === 0 ? (
+          <DataEmpty
+            title={t("none")}
+            description={null}
+          />
+        ) : (
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-            {collections.map(collection => (
+            {collections.map((collection) => (
               <li key={collection.id}>
-                <Link href={`/collections/${collection.id}`}
-                      className="group block rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                  <div className="relative grid aspect-square grid-cols-2 overflow-hidden rounded-lg bg-muted shadow-sm transition-transform group-hover:scale-[1.02]">
-                    {collection.albums.length === 1
-                      ? <CoverImage albumId={collection.albums[0].id} title={collection.title} className="col-span-2 size-full" />
-                      : collection.albums.slice(0, 4).map(album => (
-                        <CoverImage key={album.id} albumId={album.id} title="" className="size-full" />
-                      ))}
+                <Link
+                  href={`/collections/${collection.id}`}
+                  className="group focus-visible:ring-ring block rounded-lg outline-none focus-visible:ring-2"
+                >
+                  <div className="bg-muted relative grid aspect-square grid-cols-2 overflow-hidden rounded-lg shadow-sm transition-transform group-hover:scale-[1.02]">
+                    {collection.albums.length === 1 ? (
+                      <CoverImage
+                        albumId={collection.albums[0].id}
+                        title={collection.title}
+                        className="col-span-2 size-full"
+                      />
+                    ) : (
+                      collection.albums.slice(0, 4).map((album) => (
+                        <CoverImage
+                          key={album.id}
+                          albumId={album.id}
+                          title=""
+                          className="size-full"
+                        />
+                      ))
+                    )}
                     <span className="absolute right-2 bottom-2 rounded bg-black/75 px-1.5 py-0.5 text-xs text-white">
                       {t("albums", { count: collection.albums.length })}
                     </span>
                   </div>
-                  <div className="mt-2 text-sm font-medium leading-tight">{collection.title}</div>
-                  {collection.description &&
-                    <p className="line-clamp-2 text-xs text-muted-foreground">{collection.description}</p>}
+                  <div className="mt-2 text-sm leading-tight font-medium">{collection.title}</div>
+                  {collection.description && (
+                    <p className="text-muted-foreground line-clamp-2 text-xs">{collection.description}</p>
+                  )}
                 </Link>
               </li>
             ))}

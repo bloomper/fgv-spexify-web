@@ -2,7 +2,16 @@ import "server-only";
 
 import { graphql } from "@/gql";
 import { runMutation, runQuery } from "@/lib/graphql.server";
-import type { AlbumFilter, AlbumInput, AlbumKindInput, AlbumMediumInput, CollectionInput, CreditKind, TopBy, TrackInput } from "@/gql/graphql";
+import type {
+  AlbumFilter,
+  AlbumInput,
+  AlbumKindInput,
+  AlbumMediumInput,
+  CollectionInput,
+  CreditKind,
+  TopBy,
+  TrackInput,
+} from "@/gql/graphql";
 
 export const KindFieldsFragment = graphql(`
     fragment KindFields on AlbumKind { id nameSv nameEn isDefault }
@@ -146,8 +155,12 @@ const CollectionQuery = graphql(`
     }
 `);
 
-const CollectionCreateMutation = graphql(`mutation CollectionCreate($input: CollectionInput!) { collectionCreate(input: $input) { id } }`);
-const CollectionUpdateMutation = graphql(`mutation CollectionUpdate($id: ID!, $input: CollectionInput!) { collectionUpdate(id: $id, input: $input) { id } }`);
+const CollectionCreateMutation = graphql(
+  `mutation CollectionCreate($input: CollectionInput!) { collectionCreate(input: $input) { id } }`
+);
+const CollectionUpdateMutation = graphql(
+  `mutation CollectionUpdate($id: ID!, $input: CollectionInput!) { collectionUpdate(id: $id, input: $input) { id } }`
+);
 const CollectionDeleteMutation = graphql(`mutation CollectionDelete($id: ID!) { collectionDelete(id: $id) }`);
 
 const AlbumMediaQuery = graphql(`
@@ -213,7 +226,6 @@ const TracksByNavidromeIdsQuery = graphql(`
         }
     }
 `);
-
 
 const AlbumCreateMutation = graphql(`
     mutation AlbumCreate($input: AlbumInput!) { albumCreate(input: $input) { id } }
@@ -319,8 +331,10 @@ export async function getAlbums(filter: AlbumFilter) {
  * The albums of the spex and, for originals, their revivals, oldest first, each album once.
  */
 export async function getAlbumsOfSpex(spexIds: string[]) {
-  const lists = await Promise.all([...new Set(spexIds)].map(spexId => runQuery(SpexAlbumsQuery, { filter: { spexId } })));
-  const albums = new Map(lists.flatMap(list => list?.albums ?? []).map(album => [album.id, album]));
+  const lists = await Promise.all(
+    [...new Set(spexIds)].map((spexId) => runQuery(SpexAlbumsQuery, { filter: { spexId } }))
+  );
+  const albums = new Map(lists.flatMap((list) => list?.albums ?? []).map((album) => [album.id, album]));
 
   return [...albums.values()].sort((a, b) => (a.year ?? 0) - (b.year ?? 0) || a.title.localeCompare(b.title));
 }
@@ -358,7 +372,8 @@ export async function getAlbumMedia() {
 }
 
 export const albumMediumCreate = (input: AlbumMediumInput) => runMutation(AlbumMediumCreateMutation, { input });
-export const albumMediumUpdate = (id: string, input: AlbumMediumInput) => runMutation(AlbumMediumUpdateMutation, { id, input });
+export const albumMediumUpdate = (id: string, input: AlbumMediumInput) =>
+  runMutation(AlbumMediumUpdateMutation, { id, input });
 export const albumMediaReorder = (ids: string[]) => runMutation(AlbumMediaReorderMutation, { ids });
 export const albumMediumDelete = (id: string) => runMutation(AlbumMediumDeleteMutation, { id });
 export const trackAdd = (albumId: string, input: TrackInput) => runMutation(TrackAddMutation, { albumId, input });
@@ -369,7 +384,7 @@ export async function getAlbumKinds() {
 }
 
 export async function getAlbumsByNavidromeIds(ids: string[]) {
-  return ids.length === 0 ? [] : (await runQuery(AlbumsByNavidromeIdsQuery, { ids }))?.albumsByNavidromeIds ?? [];
+  return ids.length === 0 ? [] : ((await runQuery(AlbumsByNavidromeIdsQuery, { ids }))?.albumsByNavidromeIds ?? []);
 }
 
 export async function searchSpex(q: string) {
@@ -377,7 +392,7 @@ export async function searchSpex(q: string) {
 }
 
 export async function getTracksByNavidromeIds(ids: string[]) {
-  return ids.length === 0 ? [] : (await runQuery(TracksByNavidromeIdsQuery, { ids }))?.tracksByNavidromeIds ?? [];
+  return ids.length === 0 ? [] : ((await runQuery(TracksByNavidromeIdsQuery, { ids }))?.tracksByNavidromeIds ?? []);
 }
 
 export async function getCredits(kind: CreditKind) {
@@ -389,58 +404,70 @@ export async function getCreditTracks(kind: CreditKind, name: string) {
 }
 
 export async function getRadio(seed: { trackId?: string; albumId?: string }, limit = 50) {
-  return (await runQuery(RadioQuery, {
-    trackId: seed.trackId ?? null,
-    albumId: seed.albumId ?? null,
-    limit,
-  }))?.radio ?? [];
+  return (
+    (
+      await runQuery(RadioQuery, {
+        trackId: seed.trackId ?? null,
+        albumId: seed.albumId ?? null,
+        limit,
+      })
+    )?.radio ?? []
+  );
 }
 
-export const albumCreate = async (input: AlbumInput) => (await runMutation(AlbumCreateMutation, { input }))?.albumCreate;
+export const albumCreate = async (input: AlbumInput) =>
+  (await runMutation(AlbumCreateMutation, { input }))?.albumCreate;
 export const albumUpdate = (id: string, input: AlbumInput) => runMutation(AlbumUpdateMutation, { id, input });
 export const albumPublish = (id: string, published: boolean) => runMutation(AlbumPublishMutation, { id, published });
 export const albumTrash = (id: string) => runMutation(AlbumTrashMutation, { id });
 export const albumRestore = (id: string) => runMutation(AlbumRestoreMutation, { id });
 export const albumDelete = (id: string) => runMutation(AlbumDeleteMutation, { id });
 export const albumCoverRemove = (id: string) => runMutation(AlbumCoverRemoveMutation, { id });
-export const tracksReorder = (albumId: string, trackIds: string[]) => runMutation(TracksReorderMutation, {
-  albumId,
-  trackIds,
-});
-export const trackCreate = (albumId: string, uploadId: string) => runMutation(TrackCreateMutation, {
-  albumId,
-  uploadId,
-});
+export const tracksReorder = (albumId: string, trackIds: string[]) =>
+  runMutation(TracksReorderMutation, {
+    albumId,
+    trackIds,
+  });
+export const trackCreate = (albumId: string, uploadId: string) =>
+  runMutation(TrackCreateMutation, {
+    albumId,
+    uploadId,
+  });
 export const trackUpdate = (id: string, input: TrackInput) => runMutation(TrackUpdateMutation, { id, input });
-export const trackSetNumber = (id: string, numberId: string | null) => runMutation(TrackSetNumberMutation, { id, numberId });
+export const trackSetNumber = (id: string, numberId: string | null) =>
+  runMutation(TrackSetNumberMutation, { id, numberId });
 
 /**
  * The numbers in Spexipedia of the spex, for linking tracks; empty when Spexipedia cannot be reached.
  */
 export async function getSpexNumbers(spexIds: string[]) {
-  const lists = await Promise.all(spexIds.map(async spexId => {
-    try {
-      return (await runQuery(SpexNumbersQuery, { spexId }))?.spexNumbers ?? [];
-    } catch {
-      return [];
-    }
-  }));
+  const lists = await Promise.all(
+    spexIds.map(async (spexId) => {
+      try {
+        return (await runQuery(SpexNumbersQuery, { spexId }))?.spexNumbers ?? [];
+      } catch {
+        return [];
+      }
+    })
+  );
 
   return lists.flat();
 }
-export const trackReplaceAudio = (id: string, uploadId: string) => runMutation(TrackReplaceAudioMutation, {
-  id,
-  uploadId,
-});
+export const trackReplaceAudio = (id: string, uploadId: string) =>
+  runMutation(TrackReplaceAudioMutation, {
+    id,
+    uploadId,
+  });
 export const trackPublish = (id: string, published: boolean) => runMutation(TrackPublishMutation, { id, published });
 export const trackTrash = (id: string) => runMutation(TrackTrashMutation, { id });
 export const trackRestore = (id: string) => runMutation(TrackRestoreMutation, { id });
 export const trackDelete = (id: string) => runMutation(TrackDeleteMutation, { id });
 
 export const albumKindCreate = (input: AlbumKindInput) => runMutation(AlbumKindCreateMutation, { input });
-export const albumKindUpdate = (id: string, input: AlbumKindInput) => runMutation(AlbumKindUpdateMutation, {
-  id,
-  input,
-});
+export const albumKindUpdate = (id: string, input: AlbumKindInput) =>
+  runMutation(AlbumKindUpdateMutation, {
+    id,
+    input,
+  });
 export const albumKindsReorder = (ids: string[]) => runMutation(AlbumKindsReorderMutation, { ids });
 export const albumKindDelete = (id: string) => runMutation(AlbumKindDeleteMutation, { id });

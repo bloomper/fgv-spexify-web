@@ -53,8 +53,9 @@ function changed(albumId?: string) {
 
 type LyricsState = Awaited<ReturnType<typeof trackLyricsUpdate>>;
 
-const editor = <T, >(work: () => Promise<T>) => withPolicyAction(Policies.editor.requireEditor, () => toActionResult(work));
-const admin = <T, >(work: () => Promise<T>) => withPolicyAction(Policies.admin.requireAdmin, () => toActionResult(work));
+const editor = <T>(work: () => Promise<T>) =>
+  withPolicyAction(Policies.editor.requireEditor, () => toActionResult(work));
+const admin = <T>(work: () => Promise<T>) => withPolicyAction(Policies.admin.requireAdmin, () => toActionResult(work));
 
 export async function searchSpexAction(q: string) {
   return editor(async () => searchSpex(q.slice(0, 100)));
@@ -179,7 +180,11 @@ export async function updateTrackAction(albumId: string, id: string, input: Trac
   });
 }
 
-export async function setTrackNumberAction(albumId: string, id: string, numberId: string | null): Promise<ActionResult<null>> {
+export async function setTrackNumberAction(
+  albumId: string,
+  id: string,
+  numberId: string | null
+): Promise<ActionResult<null>> {
   requireId(id);
   if (numberId !== null) {
     requireId(numberId);
@@ -236,7 +241,7 @@ function collectionsChanged(id?: string) {
 }
 
 function checkCollection(input: CollectionInput) {
-  if (!input.albumIds.every(id => ID.test(String(id)))) {
+  if (!input.albumIds.every((id) => ID.test(String(id)))) {
     throw new Error("Invalid id");
   }
 }
@@ -270,8 +275,13 @@ export async function deleteCollectionAction(id: string): Promise<ActionResult<n
   });
 }
 
-export async function saveLyricsAction(albumId: string, trackId: string, lyrics: string | null, synced: boolean,
-                                       baseRevisionId: string | null): Promise<ActionResult<LyricsState | undefined>> {
+export async function saveLyricsAction(
+  albumId: string,
+  trackId: string,
+  lyrics: string | null,
+  synced: boolean,
+  baseRevisionId: string | null
+): Promise<ActionResult<LyricsState | undefined>> {
   requireId(albumId);
   requireId(trackId);
   return editor(async () => {
@@ -282,7 +292,11 @@ export async function saveLyricsAction(albumId: string, trackId: string, lyrics:
   });
 }
 
-export async function restoreLyricsAction(albumId: string, trackId: string, revisionId: string): Promise<ActionResult<LyricsState | undefined>> {
+export async function restoreLyricsAction(
+  albumId: string,
+  trackId: string,
+  revisionId: string
+): Promise<ActionResult<LyricsState | undefined>> {
   requireId(albumId);
   requireId(trackId);
   return editor(async () => {

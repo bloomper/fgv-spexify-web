@@ -9,9 +9,19 @@ vi.mock("@/components/player/player-provider.client", () => ({ usePlayer: () => 
 describe("PlayerShortcuts", () => {
   beforeEach(() => {
     player.state = {
-      current: { id: "1" }, time: 30, duration: 120, volume: 0.5, shuffle: false,
-      toggle: vi.fn(), seek: vi.fn(), next: vi.fn(), previous: vi.fn(), setVolume: vi.fn(), toggleMute: vi.fn(),
-      setShuffle: vi.fn(), cycleRepeat: vi.fn(),
+      current: { id: "1" },
+      time: 30,
+      duration: 120,
+      volume: 0.5,
+      shuffle: false,
+      toggle: vi.fn(),
+      seek: vi.fn(),
+      next: vi.fn(),
+      previous: vi.fn(),
+      setVolume: vi.fn(),
+      toggleMute: vi.fn(),
+      setShuffle: vi.fn(),
+      cycleRepeat: vi.fn(),
     };
   });
 

@@ -1,9 +1,25 @@
 import { describe, expect, it } from "vitest";
 import { fileLabel, firstFile } from "@/components/sheet/sheet-music-panel.client";
 
-const file = (id: string, kind: "PDF" | "MUSIC_XML" | "MIDI" | "OTHER", extra: Partial<Parameters<typeof fileLabel>[0]> = {}) => ({
-  id, title: "Partitur", name: "Partitur.pdf", extension: "pdf", contentType: "application/pdf", size: 1, pages: 1, roleSv: "Partitur",
-  roleEn: "Score", instrumentsSv: [], instrumentsEn: [], desk: null, kind, ...extra,
+const file = (
+  id: string,
+  kind: "PDF" | "MUSIC_XML" | "MIDI" | "OTHER",
+  extra: Partial<Parameters<typeof fileLabel>[0]> = {}
+) => ({
+  id,
+  title: "Partitur",
+  name: "Partitur.pdf",
+  extension: "pdf",
+  contentType: "application/pdf",
+  size: 1,
+  pages: 1,
+  roleSv: "Partitur",
+  roleEn: "Score",
+  instrumentsSv: [],
+  instrumentsEn: [],
+  desk: null,
+  kind,
+  ...extra,
 });
 
 describe("the sheet music panel", () => {
@@ -15,7 +31,12 @@ describe("the sheet music panel", () => {
   });
 
   it("names a part by its instruments and desk", () => {
-    const part = file("a", "PDF", { title: "Stämma", instrumentsSv: ["Trumpet"], instrumentsEn: ["Trumpet"], desk: "1–2" });
+    const part = file("a", "PDF", {
+      title: "Stämma",
+      instrumentsSv: ["Trumpet"],
+      instrumentsEn: ["Trumpet"],
+      desk: "1–2",
+    });
 
     expect(fileLabel(part, "sv")).toBe("Stämma (Trumpet 1–2)");
     expect(fileLabel(file("b", "PDF"), "en")).toBe("Partitur");

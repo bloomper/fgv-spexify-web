@@ -25,16 +25,20 @@ export async function getListeningState(): Promise<{
     getStarredAll().catch(() => ({ songs: [], albums: [] })),
     // Others' public playlists can be listened to but not added to
     // The ones changed most recently first: menus show only the first few
-    getPlaylists().then(list => list.filter(playlist => !playlist.readonly)
-      .sort((a, b) => (b.changed ?? "").localeCompare(a.changed ?? ""))
-      .map(playlist => ({ id: playlist.id, name: playlist.name })))
+    getPlaylists()
+      .then((list) =>
+        list
+          .filter((playlist) => !playlist.readonly)
+          .sort((a, b) => (b.changed ?? "").localeCompare(a.changed ?? ""))
+          .map((playlist) => ({ id: playlist.id, name: playlist.name }))
+      )
       .catch(() => []),
   ]);
 
   return {
-    starred: starred.songs.map(song => song.id),
+    starred: starred.songs.map((song) => song.id),
     starredPlays: playsOf(starred.songs),
-    starredAlbums: starred.albums.map(album => album.id),
+    starredAlbums: starred.albums.map((album) => album.id),
     playlists,
   };
 }
@@ -46,13 +50,13 @@ export async function getListeningState(): Promise<{
 export async function getAlbumListening(navidromeAlbumId: string | null | undefined): Promise<{
   plays: Plays;
   rating: number;
-  starred: boolean
+  starred: boolean;
 } | null> {
   if (!navidromeAlbumId) {
     return null;
   }
   return getAlbumWithSongs(navidromeAlbumId)
-    .then(album => ({ plays: playsOf(album.songs), rating: album.rating, starred: album.starred }))
+    .then((album) => ({ plays: playsOf(album.songs), rating: album.rating, starred: album.starred }))
     .catch(() => null);
 }
 
@@ -73,23 +77,30 @@ export async function getPlayedAlbums(size = 12) {
     getAlbumList("frequent", size).catch(() => []),
     getAlbumList("highest", size).catch(() => []),
   ]);
-  const albums = await getAlbumsByNavidromeIds([...new Set([...recent, ...frequent, ...highest].map(album => album.id))]).catch(() => []);
-  const byId = new Map(albums.map(album => [album.navidromeId, album]));
-  const join = (list: typeof recent) => list.flatMap(played => {
-    const album = byId.get(played.id);
+  const albums = await getAlbumsByNavidromeIds([
+    ...new Set([...recent, ...frequent, ...highest].map((album) => album.id)),
+  ]).catch(() => []);
+  const byId = new Map(albums.map((album) => [album.navidromeId, album]));
+  const join = (list: typeof recent) =>
+    list.flatMap((played) => {
+      const album = byId.get(played.id);
 
-    return album ? [{
-      ...album,
-      playCount: played.playCount ?? 0,
-      played: played.played ?? null,
-      rating: played.userRating ?? 0,
-    }] : [];
-  });
+      return album
+        ? [
+            {
+              ...album,
+              playCount: played.playCount ?? 0,
+              played: played.played ?? null,
+              rating: played.userRating ?? 0,
+            },
+          ]
+        : [];
+    });
 
   return {
     recent: join(recent),
-    frequent: join(frequent).filter(album => album.playCount > 0),
-    highest: join(highest).filter(album => album.rating > 0),
+    frequent: join(frequent).filter((album) => album.playCount > 0),
+    highest: join(highest).filter((album) => album.rating > 0),
   };
 }
 

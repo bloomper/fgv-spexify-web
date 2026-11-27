@@ -11,9 +11,9 @@ export function toLines(lyrics: string | null | undefined, synced: boolean): Tim
     return [];
   }
   if (synced) {
-    return parseLrc(lyrics).map(line => ({ time: line.time, text: line.text }));
+    return parseLrc(lyrics).map((line) => ({ time: line.time, text: line.text }));
   }
-  return lyrics.split(/\r?\n/).map(text => ({ time: null, text }));
+  return lyrics.split(/\r?\n/).map((text) => ({ time: null, text }));
 }
 
 /** A time as LRC writes it: mm:ss.cc. */
@@ -39,18 +39,27 @@ export function parseTime(value: string): number | null {
  * The lines as lyrics: LRC when every line with text has a time, the lines in time order; else plain text.
  */
 export function toLyrics(lines: TimedLine[]): { lyrics: string | null; synced: boolean } {
-  const kept = lines.filter(line => line.time !== null || line.text.trim() !== "");
+  const kept = lines.filter((line) => line.time !== null || line.text.trim() !== "");
 
   if (kept.length === 0) {
     return { lyrics: null, synced: false };
   }
-  if (kept.every(line => line.time !== null)) {
+  if (kept.every((line) => line.time !== null)) {
     return {
-      lyrics: [...kept].sort((a, b) => (a.time as number) - (b.time as number)).map(line => `[${lrcTime(line.time as number)}]${line.text}`).join("\n"),
+      lyrics: [...kept]
+        .sort((a, b) => (a.time as number) - (b.time as number))
+        .map((line) => `[${lrcTime(line.time as number)}]${line.text}`)
+        .join("\n"),
       synced: true,
     };
   }
-  return { lyrics: lines.map(line => line.text).join("\n").trim(), synced: false };
+  return {
+    lyrics: lines
+      .map((line) => line.text)
+      .join("\n")
+      .trim(),
+    synced: false,
+  };
 }
 
 /**

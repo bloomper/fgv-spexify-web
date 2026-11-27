@@ -35,55 +35,75 @@ export function PlaylistActions({ id, name, comment, isPublic }: Props) {
 
   return (
     <>
-      <Button variant="outline" disabled={pending} onClick={async () => {
-        const value = await prompt({
-          title: t("rename"),
-          label: t("name"),
-          confirmLabel: t("save"),
-          maxLength: 100,
-          defaultValue: name,
-        });
+      <Button
+        variant="outline"
+        disabled={pending}
+        onClick={async () => {
+          const value = await prompt({
+            title: t("rename"),
+            label: t("name"),
+            confirmLabel: t("save"),
+            maxLength: 100,
+            defaultValue: name,
+          });
 
-        if (value && value.trim() !== name) {
-          update({ name: value }, t("renamed"));
-        }
-      }}>
-        <Pencil />{t("rename")}
-      </Button>
-      <Button variant="outline" disabled={pending} onClick={async () => {
-        const value = await prompt({
-          title: t("describe"),
-          label: t("description"),
-          confirmLabel: t("save"),
-          maxLength: 500,
-          defaultValue: comment,
-        });
-
-        if (value !== null && value !== undefined && value.trim() !== comment) {
-          update({ comment: value }, t("described"));
-        }
-      }}>
-        <MessageSquareText />{t("describe")}
-      </Button>
-      <Button variant="outline" disabled={pending} aria-pressed={isPublic}
-              onClick={() => update({ public: !isPublic }, isPublic ? t("madePrivate") : t("madePublic"))}>
-        {isPublic ? <Lock /> : <Globe />}{isPublic ? t("makePrivate") : t("makePublic")}
-      </Button>
-      <Button variant="outline" disabled={pending} onClick={async () => {
-        if (!await confirm({ title: t("confirmDelete"), confirmLabel: t("delete"), destructive: true })) {
-          return;
-        }
-        startTransition(async () => {
-          const result = await deletePlaylistAction(id);
-
-          if (result.ok) {
-            router.push("/playlists");
-          } else {
-            toast.error(result.message);
+          if (value && value.trim() !== name) {
+            update({ name: value }, t("renamed"));
           }
-        });
-      }}>
-        <Trash2 />{t("delete")}
+        }}
+      >
+        <Pencil />
+        {t("rename")}
+      </Button>
+      <Button
+        variant="outline"
+        disabled={pending}
+        onClick={async () => {
+          const value = await prompt({
+            title: t("describe"),
+            label: t("description"),
+            confirmLabel: t("save"),
+            maxLength: 500,
+            defaultValue: comment,
+          });
+
+          if (value !== null && value !== undefined && value.trim() !== comment) {
+            update({ comment: value }, t("described"));
+          }
+        }}
+      >
+        <MessageSquareText />
+        {t("describe")}
+      </Button>
+      <Button
+        variant="outline"
+        disabled={pending}
+        aria-pressed={isPublic}
+        onClick={() => update({ public: !isPublic }, isPublic ? t("madePrivate") : t("madePublic"))}
+      >
+        {isPublic ? <Lock /> : <Globe />}
+        {isPublic ? t("makePrivate") : t("makePublic")}
+      </Button>
+      <Button
+        variant="outline"
+        disabled={pending}
+        onClick={async () => {
+          if (!(await confirm({ title: t("confirmDelete"), confirmLabel: t("delete"), destructive: true }))) {
+            return;
+          }
+          startTransition(async () => {
+            const result = await deletePlaylistAction(id);
+
+            if (result.ok) {
+              router.push("/playlists");
+            } else {
+              toast.error(result.message);
+            }
+          });
+        }}
+      >
+        <Trash2 />
+        {t("delete")}
       </Button>
     </>
   );

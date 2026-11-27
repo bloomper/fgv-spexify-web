@@ -18,20 +18,29 @@ export function AlbumPlayButton({ albumId, title, className }: { albumId: string
   const [pending, startTransition] = useTransition();
 
   return (
-    <button type="button" disabled={pending} aria-label={t("playAlbum", { title })} title={t("playAlbum", { title })}
-            onClick={() => startTransition(async () => {
-              const tracks = await albumTracksAction(albumId);
+    <button
+      type="button"
+      disabled={pending}
+      aria-label={t("playAlbum", { title })}
+      title={t("playAlbum", { title })}
+      onClick={() =>
+        startTransition(async () => {
+          const tracks = await albumTracksAction(albumId);
 
-              if (!tracks || tracks.length === 0) {
-                toast.error(t(tracks ? "noTracks" : "playFailed"));
-                return;
-              }
-              player.playQueue(tracks, 0);
-            })}
-            className={cn("flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition",
-              "hover:scale-105 active:scale-95 disabled:opacity-60",
-              "[@media(hover:hover)]:translate-y-1 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/card:translate-y-0 [@media(hover:hover)]:group-hover/card:opacity-100 focus-visible:translate-y-0 focus-visible:opacity-100",
-              className)}>
+          if (!tracks || tracks.length === 0) {
+            toast.error(t(tracks ? "noTracks" : "playFailed"));
+            return;
+          }
+          player.playQueue(tracks, 0);
+        })
+      }
+      className={cn(
+        "bg-primary text-primary-foreground flex size-11 items-center justify-center rounded-full shadow-lg transition",
+        "hover:scale-105 active:scale-95 disabled:opacity-60",
+        "focus-visible:translate-y-0 focus-visible:opacity-100 [@media(hover:hover)]:translate-y-1 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/card:translate-y-0 [@media(hover:hover)]:group-hover/card:opacity-100",
+        className
+      )}
+    >
       <Play className="size-5 fill-current" />
     </button>
   );

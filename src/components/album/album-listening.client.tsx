@@ -16,7 +16,11 @@ import { useServerState } from "@/hooks/use-server-state.client";
  * Whether the user likes an album (starred, in Navidrome's terms) and their rating of it, which live in Navidrome. Both change at once and go back when they cannot be
  * saved.
  */
-export function AlbumListening({ navidromeId, starred: initialStarred, rating: initialRating }: {
+export function AlbumListening({
+  navidromeId,
+  starred: initialStarred,
+  rating: initialRating,
+}: {
   navidromeId: string;
   starred: boolean;
   rating: number;
@@ -60,11 +64,19 @@ export function AlbumListening({ navidromeId, starred: initialStarred, rating: i
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <Button variant="outline" onClick={toggleStar} aria-pressed={starred}>
+      <Button
+        variant="outline"
+        onClick={toggleStar}
+        aria-pressed={starred}
+      >
         <Heart className={cn(starred && "fill-current text-rose-500")} />
         {starred ? t("unstarAlbum") : t("starAlbum")}
       </Button>
-      <RatingInput value={rating} onChange={rate} label={t("rateAlbum")} />
+      <RatingInput
+        value={rating}
+        onChange={rate}
+        label={t("rateAlbum")}
+      />
     </div>
   );
 }

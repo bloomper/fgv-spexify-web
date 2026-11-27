@@ -15,26 +15,37 @@ export default async function PlaylistsPage() {
 
     return (
       <Page variant="content">
-        <PageHeader title={t("title")} description={t("text")}/>
+        <PageHeader
+          title={t("title")}
+          description={t("text")}
+        />
         {playlists === null && <p className="text-destructive">{t("unavailable")}</p>}
-        {playlists?.length === 0 && <DataEmpty title={t("none")} description={null} />}
+        {playlists?.length === 0 && (
+          <DataEmpty
+            title={t("none")}
+            description={null}
+          />
+        )}
         {playlists && playlists.length > 0 && (
           <ul className="divide-y rounded-lg border">
-            {playlists.map(playlist => (
+            {playlists.map((playlist) => (
               <li key={playlist.id}>
-                <Link href={`/playlists/${playlist.id}`} className="flex items-center gap-3 px-3 py-3 hover:bg-accent">
-                  <ListMusic className="size-5 text-muted-foreground" />
+                <Link
+                  href={`/playlists/${playlist.id}`}
+                  className="hover:bg-accent flex items-center gap-3 px-3 py-3"
+                >
+                  <ListMusic className="text-muted-foreground size-5" />
                   <span className="min-w-0 flex-1">
-                                        <span className="block truncate font-medium">{playlist.name}</span>
+                    <span className="block truncate font-medium">{playlist.name}</span>
                     {(playlist.public || playlist.readonly) && (
-                      <span className="block truncate text-xs text-muted-foreground">
-                                                {playlist.readonly && playlist.owner ? t("by", { owner: playlist.owner }) : t("public")}
-                                            </span>
+                      <span className="text-muted-foreground block truncate text-xs">
+                        {playlist.readonly && playlist.owner ? t("by", { owner: playlist.owner }) : t("public")}
+                      </span>
                     )}
-                                    </span>
-                  <span className="text-sm text-muted-foreground">
-                                        {t("songs", { count: playlist.songCount })} · {formatDuration(playlist.duration)}
-                                    </span>
+                  </span>
+                  <span className="text-muted-foreground text-sm">
+                    {t("songs", { count: playlist.songCount })} · {formatDuration(playlist.duration)}
+                  </span>
                 </Link>
               </li>
             ))}

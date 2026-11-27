@@ -9,6 +9,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params;
 
   return ID.test(id)
-    ? streamFromApi(request, `/api/albums/${id}/poster`, { "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox" })
+    ? streamFromApi(request, `/api/albums/${id}/poster`, {
+        "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+      })
     : invalid();
 }

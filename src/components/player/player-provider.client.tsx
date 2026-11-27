@@ -110,7 +110,10 @@ function loadSettings(): Settings {
     return {
       volume: typeof stored?.volume === "number" ? Math.min(1, Math.max(0, stored.volume)) : DEFAULT_SETTINGS.volume,
       muted: stored?.muted === true,
-      replayGain: stored?.replayGain === "off" || stored?.replayGain === "album" ? stored.replayGain : DEFAULT_SETTINGS.replayGain,
+      replayGain:
+        stored?.replayGain === "off" || stored?.replayGain === "album"
+          ? stored.replayGain
+          : DEFAULT_SETTINGS.replayGain,
     };
   } catch {
     return DEFAULT_SETTINGS;
@@ -128,7 +131,7 @@ export function gainFactor(gain: ReplayGain | null | undefined, mode: ReplayGain
 
   const album = mode === "album" && gain.albumGain != null;
   const db = album ? gain.albumGain! : gain.trackGain;
-  const peak = album ? gain.albumPeak ?? gain.trackPeak : gain.trackPeak;
+  const peak = album ? (gain.albumPeak ?? gain.trackPeak) : gain.trackPeak;
   const factor = Math.pow(10, db / 20);
 
   return Math.min(1, factor, peak > 0 ? 1 / peak : 1);
@@ -160,10 +163,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const active = useRef(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const preloaded = useRef<string | null>(null);
-  const playingElement = useCallback(() => active.current === 0 ? first.current : second.current, []);
-  const standby = useCallback(() => active.current === 0 ? second.current : first.current, []);
+  const playingElement = useCallback(() => (active.current === 0 ? first.current : second.current), []);
+  const standby = useCallback(() => (active.current === 0 ? second.current : first.current), []);
   // Read from the browser at once: nothing the server renders depends on them, as the player bar shows only once a track is loaded
-  const [settings, setSettings] = useState<Settings>(() => typeof window === "undefined" ? DEFAULT_SETTINGS : loadSettings());
+  const [settings, setSettings] = useState<Settings>(() =>
+    typeof window === "undefined" ? DEFAULT_SETTINGS : loadSettings()
+  );
   const [plays, setPlays] = useState<SessionPlays>({});
   const [queue, setQueue] = useState<PlayerTrack[]>([]);
   const [index, setIndex] = useState(0);
@@ -197,86 +202,101 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     element.volume = muted ? 0 : volume * gainFactor(track?.replayGain, replayGain);
   }, []);
 
-  const load = useCallback((track: PlayerTrack | undefined, autoplay: boolean) => {
-    const previous = playingElement();
-    const next = standby();
+  const load = useCallback(
+    (track: PlayerTrack | undefined, autoplay: boolean) => {
+      const previous = playingElement();
+      const next = standby();
 
-    if (!previous || !track) {
-      return;
-    }
-
-    let element = previous;
-
-    if (next && preloaded.current === track.id && next.readyState > 0) {
-      // The next track is already loaded in the other element: switch to it
-      previous.pause();
-      previous.removeAttribute("src");
-      previous.load();
-      active.current = 1 - active.current;
-      setActiveIndex(active.current);
-      element = next;
-      element.currentTime = 0;
-    } else {
-      element.src = `/api/audio/${track.id}`;
-    }
-    preloaded.current = null;
-    renewed.current = null;
-    applyVolume(element, track);
-    setFailed(false);
-    setTime(0);
-    // A preloaded track told its length while it waited, when nobody listened to it yet
-    setDuration(element.readyState > 0 && Number.isFinite(element.duration) ? element.duration : 0);
-    scrobbled.current = null;
-    if (autoplay) {
-      void element.play().catch(() => setPlaying(false));
-      if (track.navidromeId) {
-        void scrobbleAction(track.navidromeId, false);
+      if (!previous || !track) {
+        return;
       }
-    }
-  }, [applyVolume, playingElement, standby]);
 
-  const playQueue = useCallback((tracks: PlayerTrack[], start = 0) => {
-    if (tracks.length === 0) {
-      return;
-    }
+      let element = previous;
 
-    const ordered = shuffle ? shuffled(tracks, start) : tracks;
-    const first = shuffle ? 0 : start;
-
-    setQueue(ordered);
-    setIndex(first);
-    load(ordered[first], true);
-  }, [load, shuffle]);
-
-  const enqueue = useCallback((tracks: PlayerTrack[]) => {
-    setQueue(existing => {
-      if (existing.length === 0) {
-        load(tracks[0], true);
+      if (next && preloaded.current === track.id && next.readyState > 0) {
+        // The next track is already loaded in the other element: switch to it
+        previous.pause();
+        previous.removeAttribute("src");
+        previous.load();
+        active.current = 1 - active.current;
+        setActiveIndex(active.current);
+        element = next;
+        element.currentTime = 0;
+      } else {
+        element.src = `/api/audio/${track.id}`;
       }
-      return [...existing, ...tracks];
-    });
-  }, [load]);
-
-  const playNext = useCallback((tracks: PlayerTrack[]) => {
-    if (tracks.length === 0) {
-      return;
-    }
-    setQueue(existing => {
-      if (existing.length === 0) {
-        load(tracks[0], true);
-        return [...tracks];
+      preloaded.current = null;
+      renewed.current = null;
+      applyVolume(element, track);
+      setFailed(false);
+      setTime(0);
+      // A preloaded track told its length while it waited, when nobody listened to it yet
+      setDuration(element.readyState > 0 && Number.isFinite(element.duration) ? element.duration : 0);
+      scrobbled.current = null;
+      if (autoplay) {
+        void element.play().catch(() => setPlaying(false));
+        if (track.navidromeId) {
+          void scrobbleAction(track.navidromeId, false);
+        }
       }
-      return [...existing.slice(0, index + 1), ...tracks, ...existing.slice(index + 1)];
-    });
-  }, [index, load]);
+    },
+    [applyVolume, playingElement, standby]
+  );
 
-  const jump = useCallback((target: number) => {
-    if (target < 0 || target >= queue.length) {
-      return;
-    }
-    setIndex(target);
-    load(queue[target], true);
-  }, [load, queue]);
+  const playQueue = useCallback(
+    (tracks: PlayerTrack[], start = 0) => {
+      if (tracks.length === 0) {
+        return;
+      }
+
+      const ordered = shuffle ? shuffled(tracks, start) : tracks;
+      const first = shuffle ? 0 : start;
+
+      setQueue(ordered);
+      setIndex(first);
+      load(ordered[first], true);
+    },
+    [load, shuffle]
+  );
+
+  const enqueue = useCallback(
+    (tracks: PlayerTrack[]) => {
+      setQueue((existing) => {
+        if (existing.length === 0) {
+          load(tracks[0], true);
+        }
+        return [...existing, ...tracks];
+      });
+    },
+    [load]
+  );
+
+  const playNext = useCallback(
+    (tracks: PlayerTrack[]) => {
+      if (tracks.length === 0) {
+        return;
+      }
+      setQueue((existing) => {
+        if (existing.length === 0) {
+          load(tracks[0], true);
+          return [...tracks];
+        }
+        return [...existing.slice(0, index + 1), ...tracks, ...existing.slice(index + 1)];
+      });
+    },
+    [index, load]
+  );
+
+  const jump = useCallback(
+    (target: number) => {
+      if (target < 0 || target >= queue.length) {
+        return;
+      }
+      setIndex(target);
+      load(queue[target], true);
+    },
+    [load, queue]
+  );
 
   const next = useCallback(() => {
     if (index + 1 < queue.length) {
@@ -309,9 +329,13 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
       setFailed(false);
       element.load();
-      element.addEventListener("loadedmetadata", () => {
-        element.currentTime = position;
-      }, { once: true });
+      element.addEventListener(
+        "loadedmetadata",
+        () => {
+          element.currentTime = position;
+        },
+        { once: true }
+      );
       void element.play().catch(() => setPlaying(false));
     } else if (element.paused) {
       void element.play().catch(() => setPlaying(false));
@@ -320,23 +344,29 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
   }, [playingElement, current, failed]);
 
-  const seek = useCallback((target: number) => {
-    const element = playingElement();
+  const seek = useCallback(
+    (target: number) => {
+      const element = playingElement();
 
-    if (element) {
-      element.currentTime = target;
-    }
-  }, [playingElement]);
+      if (element) {
+        element.currentTime = target;
+      }
+    },
+    [playingElement]
+  );
 
-  const setShuffle = useCallback((value: boolean) => {
-    setShuffleState(value);
-    if (value && queue.length > 1) {
-      const reordered = shuffled(queue, index);
+  const setShuffle = useCallback(
+    (value: boolean) => {
+      setShuffleState(value);
+      if (value && queue.length > 1) {
+        const reordered = shuffled(queue, index);
 
-      setQueue(reordered);
-      setIndex(0);
-    }
-  }, [index, queue]);
+        setQueue(reordered);
+        setIndex(0);
+      }
+    },
+    [index, queue]
+  );
 
   const stop = useCallback(() => {
     for (const element of [first.current, second.current]) {
@@ -361,58 +391,64 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
   }, [stop]);
 
-  const remove = useCallback((target: number) => {
-    if (target < 0 || target >= queue.length) {
-      return;
-    }
+  const remove = useCallback(
+    (target: number) => {
+      if (target < 0 || target >= queue.length) {
+        return;
+      }
 
-    const rest = queue.filter((_, i) => i !== target);
+      const rest = queue.filter((_, i) => i !== target);
 
-    if (rest.length === 0) {
-      clear();
-      return;
-    }
-    setQueue(rest);
-    if (target < index) {
-      setIndex(index - 1);
-    } else if (target === index) {
-      // The track after the removed one takes its place, playing if the removed one played
-      const replacement = Math.min(index, rest.length - 1);
+      if (rest.length === 0) {
+        clear();
+        return;
+      }
+      setQueue(rest);
+      if (target < index) {
+        setIndex(index - 1);
+      } else if (target === index) {
+        // The track after the removed one takes its place, playing if the removed one played
+        const replacement = Math.min(index, rest.length - 1);
 
-      setIndex(replacement);
-      load(rest[replacement], playing);
-    }
-  }, [clear, index, load, playing, queue]);
+        setIndex(replacement);
+        load(rest[replacement], playing);
+      }
+    },
+    [clear, index, load, playing, queue]
+  );
 
-  const move = useCallback((from: number, to: number) => {
-    if (from === to || from < 0 || to < 0 || from >= queue.length || to >= queue.length) {
-      return;
-    }
+  const move = useCallback(
+    (from: number, to: number) => {
+      if (from === to || from < 0 || to < 0 || from >= queue.length || to >= queue.length) {
+        return;
+      }
 
-    const reordered = [...queue];
-    const [moved] = reordered.splice(from, 1);
+      const reordered = [...queue];
+      const [moved] = reordered.splice(from, 1);
 
-    reordered.splice(to, 0, moved);
-    setQueue(reordered);
-    if (from === index) {
-      setIndex(to);
-    } else if (from < index && to >= index) {
-      setIndex(index - 1);
-    } else if (from > index && to <= index) {
-      setIndex(index + 1);
-    }
-  }, [index, queue]);
+      reordered.splice(to, 0, moved);
+      setQueue(reordered);
+      if (from === index) {
+        setIndex(to);
+      } else if (from < index && to >= index) {
+        setIndex(index - 1);
+      } else if (from > index && to <= index) {
+        setIndex(index + 1);
+      }
+    },
+    [index, queue]
+  );
 
   const setVolume = useCallback((volume: number) => {
-    setSettings(current => ({ ...current, volume: Math.min(1, Math.max(0, volume)), muted: false }));
+    setSettings((current) => ({ ...current, volume: Math.min(1, Math.max(0, volume)), muted: false }));
   }, []);
 
   const toggleMute = useCallback(() => {
-    setSettings(current => ({ ...current, muted: !current.muted }));
+    setSettings((current) => ({ ...current, muted: !current.muted }));
   }, []);
 
   const setReplayGain = useCallback((replayGain: ReplayGainMode) => {
-    setSettings(current => ({ ...current, replayGain }));
+    setSettings((current) => ({ ...current, replayGain }));
   }, []);
 
   useEffect(() => {
@@ -429,7 +465,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }, [activeIndex, applyVolume, playingElement, current, settings]);
 
   // Loads the track after the current one into the other element, once the current one has had a head start
-  const upcoming = repeat === "one" ? undefined : queue[index + 1] ?? (repeat === "all" && queue.length > 1 ? queue[0] : undefined);
+  const upcoming =
+    repeat === "one" ? undefined : (queue[index + 1] ?? (repeat === "all" && queue.length > 1 ? queue[0] : undefined));
 
   useEffect(() => {
     if (!upcoming || !playing) {
@@ -452,118 +489,139 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }, [playing, standby, upcoming]);
 
   const cycleRepeat = useCallback(() => {
-    setRepeat(value => value === "off" ? "all" : value === "all" ? "one" : "off");
+    setRepeat((value) => (value === "off" ? "all" : value === "all" ? "one" : "off"));
   }, []);
 
   // Both elements are listened to all the time, and only the playing one counts: when a track ends, the next one
   // starts in the other element at once, and its play event must not be missed while React catches up
-  const listen = useCallback((element: HTMLAudioElement) => {
-    const ifPlaying = (handler: () => void) => () => {
-      if (element === playingElement()) {
-        handler();
-      }
-    };
-    const onTime = () => {
-      setTime(element.currentTime);
-      if (current?.navidromeId && scrobbled.current !== current.id && element.duration > 0
-        && element.currentTime > Math.min(element.duration / 2, 240)) {
-        const navidromeId = current.navidromeId;
+  const listen = useCallback(
+    (element: HTMLAudioElement) => {
+      const ifPlaying = (handler: () => void) => () => {
+        if (element === playingElement()) {
+          handler();
+        }
+      };
+      const onTime = () => {
+        setTime(element.currentTime);
+        if (
+          current?.navidromeId &&
+          scrobbled.current !== current.id &&
+          element.duration > 0 &&
+          element.currentTime > Math.min(element.duration / 2, 240)
+        ) {
+          const navidromeId = current.navidromeId;
 
-        scrobbled.current = current.id;
-        void scrobbleAction(navidromeId, true);
-        setPlays(existing => ({
-          ...existing,
-          [navidromeId]: { count: (existing[navidromeId]?.count ?? 0) + 1, at: new Date().toISOString() },
-        }));
-      }
-    };
-    const onEnded = () => {
-      if (repeat === "one") {
-        element.currentTime = 0;
-        void element.play();
-      } else {
-        next();
-      }
-    };
-    const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
-    const onDuration = () => setDuration(Number.isFinite(element.duration) ? element.duration : 0);
-    const onError = () => {
-      const position = element.currentTime;
+          scrobbled.current = current.id;
+          void scrobbleAction(navidromeId, true);
+          setPlays((existing) => ({
+            ...existing,
+            [navidromeId]: { count: (existing[navidromeId]?.count ?? 0) + 1, at: new Date().toISOString() },
+          }));
+        }
+      };
+      const onEnded = () => {
+        if (repeat === "one") {
+          element.currentTime = 0;
+          void element.play();
+        } else {
+          next();
+        }
+      };
+      const onPlay = () => setPlaying(true);
+      const onPause = () => setPlaying(false);
+      const onDuration = () => setDuration(Number.isFinite(element.duration) ? element.duration : 0);
+      const onError = () => {
+        const position = element.currentTime;
 
-      // The signed link may have run out during a long pause: ask for a new one once and carry on where it was
-      if (current && renewed.current !== current.id && position > 0) {
-        renewed.current = current.id;
-        element.src = `/api/audio/${current.id}`;
-        element.addEventListener("loadedmetadata", () => {
-          element.currentTime = position;
-          void element.play().catch(() => setPlaying(false));
-        }, { once: true });
-        return;
-      }
-      setFailed(true);
-      setPlaying(false);
-    };
+        // The signed link may have run out during a long pause: ask for a new one once and carry on where it was
+        if (current && renewed.current !== current.id && position > 0) {
+          renewed.current = current.id;
+          element.src = `/api/audio/${current.id}`;
+          element.addEventListener(
+            "loadedmetadata",
+            () => {
+              element.currentTime = position;
+              void element.play().catch(() => setPlaying(false));
+            },
+            { once: true }
+          );
+          return;
+        }
+        setFailed(true);
+        setPlaying(false);
+      };
 
-    const handlers: [string, () => void][] = [
-      ["timeupdate", ifPlaying(onTime)],
-      ["ended", ifPlaying(onEnded)],
-      ["play", ifPlaying(onPlay)],
-      ["pause", ifPlaying(onPause)],
-      ["durationchange", ifPlaying(onDuration)],
-      ["error", ifPlaying(onError)],
-    ];
+      const handlers: [string, () => void][] = [
+        ["timeupdate", ifPlaying(onTime)],
+        ["ended", ifPlaying(onEnded)],
+        ["play", ifPlaying(onPlay)],
+        ["pause", ifPlaying(onPause)],
+        ["durationchange", ifPlaying(onDuration)],
+        ["error", ifPlaying(onError)],
+      ];
 
-    handlers.forEach(([type, handler]) => element.addEventListener(type, handler));
-    return () => handlers.forEach(([type, handler]) => element.removeEventListener(type, handler));
-  }, [current, next, playingElement, repeat]);
+      handlers.forEach(([type, handler]) => element.addEventListener(type, handler));
+      return () => handlers.forEach(([type, handler]) => element.removeEventListener(type, handler));
+    },
+    [current, next, playingElement, repeat]
+  );
 
   useEffect(() => {
     const elements = [first.current, second.current].filter((element): element is HTMLAudioElement => element !== null);
     const cleanups = elements.map(listen);
 
-    return () => cleanups.forEach(cleanup => cleanup());
+    return () => cleanups.forEach((cleanup) => cleanup());
   }, [listen]);
 
   useEffect(() => {
     let cancelled = false;
 
-    loadPlayQueueAction().then(saved => {
-      if (cancelled) {
-        return;
-      }
-      // The user may have started something while the saved queue was on its way
-      if (queueRef.current.length > 0 || !saved || saved.tracks.length === 0) {
-        return;
-      }
+    loadPlayQueueAction()
+      .then((saved) => {
+        if (cancelled) {
+          return;
+        }
+        // The user may have started something while the saved queue was on its way
+        if (queueRef.current.length > 0 || !saved || saved.tracks.length === 0) {
+          return;
+        }
 
-      const element = playingElement();
+        const element = playingElement();
 
-      setQueue(saved.tracks);
-      setIndex(saved.index);
-      load(saved.tracks[saved.index], false);
-      if (element && saved.positionSeconds > 0) {
-        element.addEventListener("loadedmetadata", () => {
-          element.currentTime = saved.positionSeconds;
-        }, { once: true });
-        setTime(saved.positionSeconds);
-      }
-    }).catch(() => undefined).finally(() => {
-      restored.current = true;
-    });
+        setQueue(saved.tracks);
+        setIndex(saved.index);
+        load(saved.tracks[saved.index], false);
+        if (element && saved.positionSeconds > 0) {
+          element.addEventListener(
+            "loadedmetadata",
+            () => {
+              element.currentTime = saved.positionSeconds;
+            },
+            { once: true }
+          );
+          setTime(saved.positionSeconds);
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        restored.current = true;
+      });
     return () => {
       cancelled = true;
     };
   }, [load, playingElement]);
 
   const save = useCallback(() => {
-    const withIds = queue.filter(track => track.navidromeId);
+    const withIds = queue.filter((track) => track.navidromeId);
 
     if (!restored.current || withIds.length === 0) {
       return;
     }
-    void savePlayQueueAction(withIds.map(track => track.navidromeId!), current?.navidromeId ?? null,
-      (playingElement()?.currentTime ?? 0) * 1000).catch(() => undefined);
+    void savePlayQueueAction(
+      withIds.map((track) => track.navidromeId!),
+      current?.navidromeId ?? null,
+      (playingElement()?.currentTime ?? 0) * 1000
+    ).catch(() => undefined);
   }, [playingElement, current, queue]);
 
   useEffect(() => {
@@ -598,50 +656,94 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     navigator.mediaSession.setActionHandler("pause", toggle);
     navigator.mediaSession.setActionHandler("nexttrack", next);
     navigator.mediaSession.setActionHandler("previoustrack", previous);
-    navigator.mediaSession.setActionHandler("seekto", details => details.seekTime !== undefined && seek(details.seekTime));
+    navigator.mediaSession.setActionHandler(
+      "seekto",
+      (details) => details.seekTime !== undefined && seek(details.seekTime)
+    );
   }, [current, next, previous, seek, toggle]);
 
   const position = useCallback(() => playingElement()?.currentTime ?? 0, [playingElement]);
 
-  const value = useMemo<PlayerState>(() => ({
-    queue,
-    index,
-    current,
-    playing,
-    failed,
-    time,
-    duration,
-    shuffle,
-    repeat,
-    playQueue,
-    enqueue,
-    playNext,
-    toggle,
-    next,
-    previous,
-    seek,
-    jump,
-    setShuffle,
-    cycleRepeat,
-    volume: settings.volume,
-    muted: settings.muted,
-    setVolume,
-    toggleMute,
-    replayGain: settings.replayGain,
-    setReplayGain,
-    remove,
-    move,
-    clear,
-    plays,
-    position,
-  }), [queue, index, current, playing, failed, time, duration, shuffle, repeat, playQueue, enqueue, playNext, toggle, next, previous,
-    seek, jump, setShuffle, cycleRepeat, settings, setVolume, toggleMute, setReplayGain, remove, move, clear, plays, position]);
+  const value = useMemo<PlayerState>(
+    () => ({
+      queue,
+      index,
+      current,
+      playing,
+      failed,
+      time,
+      duration,
+      shuffle,
+      repeat,
+      playQueue,
+      enqueue,
+      playNext,
+      toggle,
+      next,
+      previous,
+      seek,
+      jump,
+      setShuffle,
+      cycleRepeat,
+      volume: settings.volume,
+      muted: settings.muted,
+      setVolume,
+      toggleMute,
+      replayGain: settings.replayGain,
+      setReplayGain,
+      remove,
+      move,
+      clear,
+      plays,
+      position,
+    }),
+    [
+      queue,
+      index,
+      current,
+      playing,
+      failed,
+      time,
+      duration,
+      shuffle,
+      repeat,
+      playQueue,
+      enqueue,
+      playNext,
+      toggle,
+      next,
+      previous,
+      seek,
+      jump,
+      setShuffle,
+      cycleRepeat,
+      settings,
+      setVolume,
+      toggleMute,
+      setReplayGain,
+      remove,
+      move,
+      clear,
+      plays,
+      position,
+    ]
+  );
 
   return (
     <PlayerContext.Provider value={value}>
       {children}
-      <audio ref={first} preload="metadata" className="hidden" data-testid="audio-0" />
-      <audio ref={second} preload="none" className="hidden" data-testid="audio-1" />
+      <audio
+        ref={first}
+        preload="metadata"
+        className="hidden"
+        data-testid="audio-0"
+      />
+      <audio
+        ref={second}
+        preload="none"
+        className="hidden"
+        data-testid="audio-1"
+      />
     </PlayerContext.Provider>
   );
 }

@@ -14,9 +14,15 @@ export default async function MediaPage() {
     const media = await getAlbumMedia();
 
     return (
-      <Page variant="content" className="max-w-3xl">
-        <PageHeader title={t("title")} description={t("text")}/>
-        <MediaEditor media={media.map(medium => ({ ...medium, isDefault: false }))} />
+      <Page
+        variant="content"
+        className="max-w-3xl"
+      >
+        <PageHeader
+          title={t("title")}
+          description={t("text")}
+        />
+        <MediaEditor media={media.map((medium) => ({ ...medium, isDefault: false }))} />
       </Page>
     );
   });

@@ -6,7 +6,19 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import Link from "next/link";
-import { ArrowDown, ArrowUp, ExternalLink, ImageUp, MoreHorizontal, Pencil, Plus, RefreshCw, TextQuote, Trash2, Upload } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ExternalLink,
+  ImageUp,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  RefreshCw,
+  TextQuote,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import { Button } from "@bloomper/fgv-web-ui/ui/button";
 import { Badge } from "@bloomper/fgv-web-ui/ui/badge";
 import { Switch } from "@bloomper/fgv-web-ui/ui/switch";
@@ -101,33 +113,43 @@ type UploadState = {
   name: string;
   progress: number;
   state: "uploading" | "processing" | "done" | "failed";
-  message?: string
+  message?: string;
 };
 
 function useAction() {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
-  const run = (work: () => Promise<{
-    ok: boolean;
-    message?: string
-  }>, success?: string) => startTransition(async () => {
-    const result = await work();
+  const run = (
+    work: () => Promise<{
+      ok: boolean;
+      message?: string;
+    }>,
+    success?: string
+  ) =>
+    startTransition(async () => {
+      const result = await work();
 
-    if (result.ok) {
-      if (success) {
-        toast.success(success);
+      if (result.ok) {
+        if (success) {
+          toast.success(success);
+        }
+        router.refresh();
+      } else {
+        toast.error(result.message ?? "Error");
       }
-      router.refresh();
-    } else {
-      toast.error(result.message ?? "Error");
-    }
-  });
+    });
 
   return { pending, run };
 }
 
-function TrackDialog({ albumId, track, numbers, onClose, adding = false }: {
+function TrackDialog({
+  albumId,
+  track,
+  numbers,
+  onClose,
+  adding = false,
+}: {
   albumId: string;
   track: EditorTrack;
   numbers: SpexNumber[];
@@ -154,125 +176,221 @@ function TrackDialog({ albumId, track, numbers, onClose, adding = false }: {
   });
   const field = (key: keyof TrackInput) => ({
     value: String(input[key] ?? ""),
-    onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setInput({
-      ...input,
-      [key]: event.target.value,
-    }),
+    onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setInput({
+        ...input,
+        [key]: event.target.value,
+      }),
   });
 
   return (
-    <Dialog open onOpenChange={open => !open && onClose()}>
+    <Dialog
+      open
+      onOpenChange={(open) => !open && onClose()}
+    >
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader><DialogTitle>{adding ? t("addTrack") : t("editTrack")}</DialogTitle></DialogHeader>
-        <form id="track-form" className="space-y-3" onSubmit={event => {
-          event.preventDefault();
-          run(async () => {
-            const values = { ...input, discNumber: Number(input.discNumber), trackNumber: Number(input.trackNumber) };
+        <DialogHeader>
+          <DialogTitle>{adding ? t("addTrack") : t("editTrack")}</DialogTitle>
+        </DialogHeader>
+        <form
+          id="track-form"
+          className="space-y-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            run(async () => {
+              const values = { ...input, discNumber: Number(input.discNumber), trackNumber: Number(input.trackNumber) };
 
-            if (adding) {
-              const added = await addTrackAction(albumId, values);
+              if (adding) {
+                const added = await addTrackAction(albumId, values);
 
-              if (added.ok) {
-                onClose();
+                if (added.ok) {
+                  onClose();
+                }
+                return added;
               }
-              return added;
-            }
 
-            const result = await updateTrackAction(albumId, track.id, values);
+              const result = await updateTrackAction(albumId, track.id, values);
 
-            if (!result.ok) {
+              if (!result.ok) {
+                return result;
+              }
+              if (numberId !== (track.numberId ?? "")) {
+                const linked = await setTrackNumberAction(albumId, track.id, numberId || null);
+
+                if (!linked.ok) {
+                  return linked;
+                }
+              }
+              onClose();
               return result;
-            }
-            if (numberId !== (track.numberId ?? "")) {
-              const linked = await setTrackNumberAction(albumId, track.id, numberId || null);
-
-              if (!linked.ok) {
-                return linked;
-              }
-            }
-            onClose();
-            return result;
-          }, t("saved"));
-        }}>
+            }, t("saved"));
+          }}
+        >
           <div className="grid grid-cols-[4rem_5rem_5rem_1fr] gap-3">
-            <div className="space-y-1"><Label htmlFor="side">{t("side")}</Label><Input id="side" maxLength={10}
-                                                                                     placeholder="A" {...field("side")} />
+            <div className="space-y-1">
+              <Label htmlFor="side">{t("side")}</Label>
+              <Input
+                id="side"
+                maxLength={10}
+                placeholder="A"
+                {...field("side")}
+              />
             </div>
-            <div className="space-y-1"><Label htmlFor="disc">{t("disc")}</Label><Input id="disc" type="number"
-                                                                                       min={1} {...field("discNumber")} />
+            <div className="space-y-1">
+              <Label htmlFor="disc">{t("disc")}</Label>
+              <Input
+                id="disc"
+                type="number"
+                min={1}
+                {...field("discNumber")}
+              />
             </div>
-            <div className="space-y-1"><Label htmlFor="number">{t("number")}</Label><Input id="number" type="number"
-                                                                                           min={1} {...field("trackNumber")} />
+            <div className="space-y-1">
+              <Label htmlFor="number">{t("number")}</Label>
+              <Input
+                id="number"
+                type="number"
+                min={1}
+                {...field("trackNumber")}
+              />
             </div>
-            <div className="space-y-1"><Label htmlFor="track-title">{t("title")}</Label><Input id="track-title" required
-                                                                                               maxLength={255} {...field("title")} />
+            <div className="space-y-1">
+              <Label htmlFor="track-title">{t("title")}</Label>
+              <Input
+                id="track-title"
+                required
+                maxLength={255}
+                {...field("title")}
+              />
             </div>
           </div>
           {!adding && (numbers.length > 0 || track.numberId) && (
             <div className="space-y-1">
               <Label htmlFor="spexipedia-number">{t("spexipediaNumber")}</Label>
-              <NativeSelect id="spexipedia-number" className="w-full" value={numberId}
-                            onChange={event => setNumberId(event.target.value)}>
+              <NativeSelect
+                id="spexipedia-number"
+                className="w-full"
+                value={numberId}
+                onChange={(event) => setNumberId(event.target.value)}
+              >
                 <NativeSelectOption value="">{t("noSpexipediaNumber")}</NativeSelectOption>
-                {track.numberId && !numbers.some(number => number.id === track.numberId) && (
+                {track.numberId && !numbers.some((number) => number.id === track.numberId) && (
                   <NativeSelectOption value={track.numberId}>{t("otherSpexipediaNumber")}</NativeSelectOption>
                 )}
-                {numbers.map(number => (
-                  <NativeSelectOption key={number.id} value={number.id}>
+                {numbers.map((number) => (
+                  <NativeSelectOption
+                    key={number.id}
+                    value={number.id}
+                  >
                     {t("numberOption", { act: number.act, position: number.position, title: number.title })}
                   </NativeSelectOption>
                 ))}
               </NativeSelect>
-              <p className="text-xs text-muted-foreground">{t("spexipediaNumberHelp")}</p>
+              <p className="text-muted-foreground text-xs">{t("spexipediaNumberHelp")}</p>
             </div>
           )}
-          <div className="space-y-1"><Label htmlFor="performers">{t("performers")}</Label><Input id="performers"
-                                                                                                 maxLength={1000} {...field("performers")} />
+          <div className="space-y-1">
+            <Label htmlFor="performers">{t("performers")}</Label>
+            <Input
+              id="performers"
+              maxLength={1000}
+              {...field("performers")}
+            />
           </div>
           {fromNumber ? (
             // The number's melody and credits are Spexipedia's (fgv-infra-deploy docs/data-ownership.md)
-            <div className="space-y-1 rounded-md border bg-muted/40 p-3 text-sm">
+            <div className="bg-muted/40 space-y-1 rounded-md border p-3 text-sm">
               <p className="font-medium">{t("creditsFromNumber")}</p>
-              {track.melody && <p><span className="text-muted-foreground">{t("melody")}:</span> {track.melody}</p>}
+              {track.melody && (
+                <p>
+                  <span className="text-muted-foreground">{t("melody")}:</span> {track.melody}
+                </p>
+              )}
               {track.credits.map((credit, i) => (
                 <p key={`${credit.kindId}-${i}`}>
-                  <span className="text-muted-foreground">{locale === "en" ? credit.kindNameEn : credit.kindNameSv}:</span> {credit.name}
+                  <span className="text-muted-foreground">
+                    {locale === "en" ? credit.kindNameEn : credit.kindNameSv}:
+                  </span>{" "}
+                  {credit.name}
                 </p>
               ))}
-              {!track.melody && track.credits.length === 0 && <p className="text-muted-foreground">{t("noCreditsFromNumber")}</p>}
+              {!track.melody && track.credits.length === 0 && (
+                <p className="text-muted-foreground">{t("noCreditsFromNumber")}</p>
+              )}
               {track.spexipediaUrl && (
-                <a href={track.spexipediaUrl} target="_blank" rel="noreferrer"
-                   className="inline-flex items-center gap-1 text-link hover:text-link/80">
-                  {t("editInSpexipedia")}<ExternalLink className="size-3" />
+                <a
+                  href={track.spexipediaUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-link hover:text-link/80 inline-flex items-center gap-1"
+                >
+                  {t("editInSpexipedia")}
+                  <ExternalLink className="size-3" />
                 </a>
               )}
             </div>
           ) : (
             <>
-              <div className="space-y-1"><Label htmlFor="melody">{t("melody")}</Label><Input id="melody" maxLength={500}
-                                                                                             placeholder={t("melodyPlaceholder")} {...field("melody")} />
+              <div className="space-y-1">
+                <Label htmlFor="melody">{t("melody")}</Label>
+                <Input
+                  id="melody"
+                  maxLength={500}
+                  placeholder={t("melodyPlaceholder")}
+                  {...field("melody")}
+                />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1"><Label htmlFor="lyrics-author">{t("lyricsAuthor")}</Label><Input
-                  id="lyrics-author" maxLength={255} {...field("lyricsAuthor")} /></div>
-                <div className="space-y-1"><Label htmlFor="arranger">{t("arranger")}</Label><Input id="arranger"
-                                                                                                   maxLength={255} {...field("arranger")} />
+                <div className="space-y-1">
+                  <Label htmlFor="lyrics-author">{t("lyricsAuthor")}</Label>
+                  <Input
+                    id="lyrics-author"
+                    maxLength={255}
+                    {...field("lyricsAuthor")}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="arranger">{t("arranger")}</Label>
+                  <Input
+                    id="arranger"
+                    maxLength={255}
+                    {...field("arranger")}
+                  />
                 </div>
               </div>
             </>
           )}
-          <div className="space-y-1"><Label htmlFor="lyrics">{t("lyrics")}</Label><Textarea id="lyrics" rows={8}
-                                                                                            className="font-mono text-sm" {...field("lyrics")} />
+          <div className="space-y-1">
+            <Label htmlFor="lyrics">{t("lyrics")}</Label>
+            <Textarea
+              id="lyrics"
+              rows={8}
+              className="font-mono text-sm"
+              {...field("lyrics")}
+            />
           </div>
           <label className="flex items-center gap-2 text-sm">
-            <Checkbox checked={input.lyricsSynced}
-                      onCheckedChange={checked => setInput({ ...input, lyricsSynced: checked === true })} />
+            <Checkbox
+              checked={input.lyricsSynced}
+              onCheckedChange={(checked) => setInput({ ...input, lyricsSynced: checked === true })}
+            />
             {t("lyricsSynced")}
           </label>
         </form>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>{t("cancel")}</Button>
-          <Button type="submit" form="track-form" disabled={pending}>{t("save")}</Button>
+          <Button
+            variant="outline"
+            onClick={onClose}
+          >
+            {t("cancel")}
+          </Button>
+          <Button
+            type="submit"
+            form="track-form"
+            disabled={pending}
+          >
+            {t("save")}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -283,12 +401,18 @@ function TrackDialog({ albumId, track, numbers, onClose, adding = false }: {
  * Editing an album: its fields, cover, publishing, and its tracks, which are uploaded here, edited, reordered,
  * published one by one and moved to the trash.
  */
-export function AlbumEditor({ album, kinds, media = [], numbers = [], spexipediaUrl }: {
+export function AlbumEditor({
+  album,
+  kinds,
+  media = [],
+  numbers = [],
+  spexipediaUrl,
+}: {
   album: EditorAlbum;
   spexipediaUrl?: string | null;
   kinds: KindOption[];
   media?: KindOption[];
-  numbers?: SpexNumber[]
+  numbers?: SpexNumber[];
 }) {
   const t = useTranslations("Manage");
   const { confirm } = useDialogs();
@@ -304,21 +428,24 @@ export function AlbumEditor({ album, kinds, media = [], numbers = [], spexipedia
   const coverInput = useRef<HTMLInputElement>(null);
 
   const update = (index: number, change: Partial<UploadState>) =>
-    setUploads(current => current.map((item, i) => i === index ? { ...item, ...change } : item));
+    setUploads((current) => current.map((item, i) => (i === index ? { ...item, ...change } : item)));
 
   const uploadAll = async (files: File[]) => {
     const start = uploads.length;
 
-    setUploads(current => [...current, ...files.map(file => ({
-      name: file.name,
-      progress: 0,
-      state: "uploading" as const,
-    }))]);
+    setUploads((current) => [
+      ...current,
+      ...files.map((file) => ({
+        name: file.name,
+        progress: 0,
+        state: "uploading" as const,
+      })),
+    ]);
     for (const [offset, file] of files.entries()) {
       const index = start + offset;
 
       try {
-        const uploadId = await uploadFile(file, progress => update(index, { progress }));
+        const uploadId = await uploadFile(file, (progress) => update(index, { progress }));
 
         update(index, { state: "processing", progress: 1 });
 
@@ -344,9 +471,9 @@ export function AlbumEditor({ album, kinds, media = [], numbers = [], spexipedia
 
     const index = uploads.length;
 
-    setUploads(current => [...current, { name: file.name, progress: 0, state: "uploading" }]);
+    setUploads((current) => [...current, { name: file.name, progress: 0, state: "uploading" }]);
     try {
-      const uploadId = await uploadFile(file, progress => update(index, { progress }));
+      const uploadId = await uploadFile(file, (progress) => update(index, { progress }));
 
       update(index, { state: "processing", progress: 1 });
 
@@ -360,7 +487,7 @@ export function AlbumEditor({ album, kinds, media = [], numbers = [], spexipedia
   };
 
   const move = (index: number, delta: number) => {
-    const ids = album.tracks.map(track => track.id);
+    const ids = album.tracks.map((track) => track.id);
     const target = index + delta;
 
     if (target < 0 || target >= ids.length) {
@@ -370,44 +497,86 @@ export function AlbumEditor({ album, kinds, media = [], numbers = [], spexipedia
     run(() => reorderAction(album.id, ids));
   };
 
-  const uploadCover = (file: File, back = false) => run(async () => {
-    const form = new FormData();
+  const uploadCover = (file: File, back = false) =>
+    run(async () => {
+      const form = new FormData();
 
-    form.append("file", file);
+      form.append("file", file);
 
-    const response = await fetch(`/api/cover-upload/${album.id}${back ? "?side=back" : ""}`, { method: "POST", body: form });
-    const body = await response.json().catch(() => ({})) as { message?: string };
+      const response = await fetch(`/api/cover-upload/${album.id}${back ? "?side=back" : ""}`, {
+        method: "POST",
+        body: form,
+      });
+      const body = (await response.json().catch(() => ({}))) as { message?: string };
 
-    return response.ok ? { ok: true } : { ok: false, message: body.message ?? t("failed") };
-  }, t("saved"));
+      return response.ok ? { ok: true } : { ok: false, message: body.message ?? t("failed") };
+    }, t("saved"));
 
   return (
     <div className="space-y-10">
       <section className="flex flex-col gap-6 lg:flex-row">
         <div className="w-48 shrink-0 space-y-2">
-          <CoverImage key={String(album.hasCover)} albumId={album.id} title={album.title}
-                      className="w-48 rounded-lg shadow" />
-          <input ref={coverInput} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" name="cover" aria-label={t("uploadCover")}
-                 onChange={event => event.target.files?.[0] && uploadCover(event.target.files[0])} />
+          <CoverImage
+            key={String(album.hasCover)}
+            albumId={album.id}
+            title={album.title}
+            className="w-48 rounded-lg shadow"
+          />
+          <input
+            ref={coverInput}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            name="cover"
+            aria-label={t("uploadCover")}
+            onChange={(event) => event.target.files?.[0] && uploadCover(event.target.files[0])}
+          />
           <div className="flex flex-col gap-2">
-            <Button variant="outline" size="sm" disabled={pending} onClick={() => coverInput.current?.click()}>
-              <ImageUp />{album.hasCover ? t("replaceCover") : t("uploadCover")}
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pending}
+              onClick={() => coverInput.current?.click()}
+            >
+              <ImageUp />
+              {album.hasCover ? t("replaceCover") : t("uploadCover")}
             </Button>
             {album.hasCover && (
-              <Button variant="ghost" size="sm" disabled={pending}
-                      onClick={() => run(() => removeCoverAction(album.id))}>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={pending}
+                onClick={() => run(() => removeCoverAction(album.id))}
+              >
                 {t("removeCover")}
               </Button>
             )}
-            {!album.hasCover && <p className="text-xs text-muted-foreground">{t("posterFallback")}</p>}
-            <input ref={backCoverInput} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" name="back-cover" aria-label={t("uploadBackCover")}
-                   onChange={event => event.target.files?.[0] && uploadCover(event.target.files[0], true)} />
-            <Button variant="outline" size="sm" disabled={pending} onClick={() => backCoverInput.current?.click()}>
-              <ImageUp />{album.hasBackCover ? t("replaceBackCover") : t("uploadBackCover")}
+            {!album.hasCover && <p className="text-muted-foreground text-xs">{t("posterFallback")}</p>}
+            <input
+              ref={backCoverInput}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              name="back-cover"
+              aria-label={t("uploadBackCover")}
+              onChange={(event) => event.target.files?.[0] && uploadCover(event.target.files[0], true)}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pending}
+              onClick={() => backCoverInput.current?.click()}
+            >
+              <ImageUp />
+              {album.hasBackCover ? t("replaceBackCover") : t("uploadBackCover")}
             </Button>
             {album.hasBackCover && (
-              <Button variant="ghost" size="sm" disabled={pending}
-                      onClick={() => run(() => removeBackCoverAction(album.id))}>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={pending}
+                onClick={() => run(() => removeBackCoverAction(album.id))}
+              >
                 {t("removeBackCover")}
               </Button>
             )}
@@ -415,108 +584,168 @@ export function AlbumEditor({ album, kinds, media = [], numbers = [], spexipedia
         </div>
         <div className="flex-1 space-y-6">
           <label className="flex items-center gap-3 rounded-lg border p-3">
-            <Switch checked={album.published} disabled={pending}
-                    onCheckedChange={checked => {
-                      trackEvent("album-publish", { published: checked });
-                      run(() => publishAlbumAction(album.id, checked));
-                    }} />
+            <Switch
+              checked={album.published}
+              disabled={pending}
+              onCheckedChange={(checked) => {
+                trackEvent("album-publish", { published: checked });
+                run(() => publishAlbumAction(album.id, checked));
+              }}
+            />
             <span>
-                            <span
-                              className="block font-medium">{album.published ? t("published") : t("unpublished")}</span>
-                            <span className="block text-xs text-muted-foreground">{t("publishText")}</span>
-                        </span>
+              <span className="block font-medium">{album.published ? t("published") : t("unpublished")}</span>
+              <span className="text-muted-foreground block text-xs">{t("publishText")}</span>
+            </span>
           </label>
-          <AlbumForm kinds={kinds} media={media} spexipediaUrl={spexipediaUrl} submitLabel={t("save")}
-                     initial={{
-                       spex: album.spex,
-                       title: album.title,
-                       year: album.year,
-                       kindId: album.kind.id,
-                       description: album.description,
-                       catalogueNumber: album.catalogueNumber,
-                       mediumId: album.medium?.id ?? null,
-                       released: album.released,
-                       recorded: album.recorded,
-                       conductor: album.conductor,
-                     }}
-                     onSubmit={async input => {
-                       const result = await updateAlbumAction(album.id, input);
+          <AlbumForm
+            kinds={kinds}
+            media={media}
+            spexipediaUrl={spexipediaUrl}
+            submitLabel={t("save")}
+            initial={{
+              spex: album.spex,
+              title: album.title,
+              year: album.year,
+              kindId: album.kind.id,
+              description: album.description,
+              catalogueNumber: album.catalogueNumber,
+              mediumId: album.medium?.id ?? null,
+              released: album.released,
+              recorded: album.recorded,
+              conductor: album.conductor,
+            }}
+            onSubmit={async (input) => {
+              const result = await updateAlbumAction(album.id, input);
 
-                       if (result.ok) {
-                         toast.success(t("saved"));
-                         router.refresh();
-                       } else {
-                         toast.error(result.message);
-                       }
-                       return result.ok;
-                     }} />
+              if (result.ok) {
+                toast.success(t("saved"));
+                router.refresh();
+              } else {
+                toast.error(result.message);
+              }
+              return result.ok;
+            }}
+          />
         </div>
       </section>
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold">{t("tracks")}</h2>
-          <Button variant="outline" size="sm" disabled={pending} onClick={() => setAdding({
-            id: "", discNumber: 1, trackNumber: album.tracks.length + 1, title: "", lyricsSynced: false, fileSize: 0, durationMs: 0,
-            published: true, listed: false, fileMissing: false, hasAudio: false, creditsFromNumber: false, credits: [],
-          })}><Plus />{t("addTrackWithoutAudio")}</Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={pending}
+            onClick={() =>
+              setAdding({
+                id: "",
+                discNumber: 1,
+                trackNumber: album.tracks.length + 1,
+                title: "",
+                lyricsSynced: false,
+                fileSize: 0,
+                durationMs: 0,
+                published: true,
+                listed: false,
+                fileMissing: false,
+                hasAudio: false,
+                creditsFromNumber: false,
+                credits: [],
+              })
+            }
+          >
+            <Plus />
+            {t("addTrackWithoutAudio")}
+          </Button>
         </div>
         <div
           className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 text-center ${dragging ? "border-primary bg-accent" : ""}`}
-          onDragOver={event => {
+          onDragOver={(event) => {
             event.preventDefault();
             setDragging(true);
           }}
           onDragLeave={() => setDragging(false)}
-          onDrop={event => {
+          onDrop={(event) => {
             event.preventDefault();
             setDragging(false);
             void uploadAll(Array.from(event.dataTransfer.files));
-          }}>
-          <Upload className="size-6 text-muted-foreground" />
+          }}
+        >
+          <Upload className="text-muted-foreground size-6" />
           <p className="text-sm">{t("dropFiles")}</p>
-          <p className="text-xs text-muted-foreground">{t("formats")}</p>
-          <label className="cursor-pointer text-sm text-link hover:text-link/80">
+          <p className="text-muted-foreground text-xs">{t("formats")}</p>
+          <label className="text-link hover:text-link/80 cursor-pointer text-sm">
             {t("chooseFiles")}
-            <input type="file" multiple accept={ACCEPT} className="sr-only"
-                   onChange={event => {
-                     const files = Array.from(event.target.files ?? []);
+            <input
+              type="file"
+              multiple
+              accept={ACCEPT}
+              className="sr-only"
+              onChange={(event) => {
+                const files = Array.from(event.target.files ?? []);
 
-                     event.target.value = "";
-                     void uploadAll(files);
-                   }} />
+                event.target.value = "";
+                void uploadAll(files);
+              }}
+            />
           </label>
         </div>
-        <input ref={replaceInput} type="file" accept={ACCEPT} className="hidden"
-               onChange={event => {
-                 const file = event.target.files?.[0];
+        <input
+          ref={replaceInput}
+          type="file"
+          accept={ACCEPT}
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
 
-                 event.target.value = "";
-                 if (file) {
-                   void replaceAudio(file);
-                 }
-               }} />
+            event.target.value = "";
+            if (file) {
+              void replaceAudio(file);
+            }
+          }}
+        />
         {uploads.length > 0 && (
-          <ul className="space-y-1" aria-live="polite">
+          <ul
+            className="space-y-1"
+            aria-live="polite"
+          >
             {uploads.map((item, i) => (
-              <li key={`${item.name}-${i}`} className="flex items-center gap-3 text-sm">
+              <li
+                key={`${item.name}-${i}`}
+                className="flex items-center gap-3 text-sm"
+              >
                 <span className="min-w-0 flex-1 truncate">{item.name}</span>
-                {item.state === "uploading" &&
-                  <progress max={1} value={item.progress} className="w-32" aria-label={item.name} />}
+                {item.state === "uploading" && (
+                  <progress
+                    max={1}
+                    value={item.progress}
+                    className="w-32"
+                    aria-label={item.name}
+                  />
+                )}
                 <span className={item.state === "failed" ? "text-destructive" : "text-muted-foreground"}>
-                                    {item.state === "failed" ? item.message : t(`upload.${item.state}`)}
-                                </span>
+                  {item.state === "failed" ? item.message : t(`upload.${item.state}`)}
+                </span>
               </li>
             ))}
           </ul>
         )}
-        {album.tracks.length === 0 ? <DataEmpty title={t("noTracks")} description={null} /> : (
+        {album.tracks.length === 0 ? (
+          <DataEmpty
+            title={t("noTracks")}
+            description={null}
+          />
+        ) : (
           <ol className="divide-y rounded-lg border">
             {album.tracks.map((track, index) => (
-              <li key={track.id} className="flex flex-wrap items-center gap-2 px-3 py-2">
-                                <span className="w-10 text-sm tabular-nums text-muted-foreground">
-                                    {album.tracks.some(other => other.discNumber > 1) ? `${track.discNumber}.` : ""}{track.trackNumber}
-                                </span>
+              <li
+                key={track.id}
+                className="flex flex-wrap items-center gap-2 px-3 py-2"
+              >
+                <span className="text-muted-foreground w-10 text-sm tabular-nums">
+                  {album.tracks.some((other) => other.discNumber > 1) ? `${track.discNumber}.` : ""}
+                  {track.trackNumber}
+                </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">{track.title}</span>
@@ -524,39 +753,84 @@ export function AlbumEditor({ album, kinds, media = [], numbers = [], spexipedia
                     {!track.hasAudio && <Badge variant="secondary">{t("noAudio")}</Badge>}
                     {!track.published && <Badge variant="outline">{t("unpublished")}</Badge>}
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {[track.side && t("sideLabel", { side: track.side }), track.performers,
-                      ...(track.hasAudio ? [track.format, formatDuration(track.durationMs / 1000), `${(track.fileSize / 1024 / 1024).toFixed(1)} MB`] : [])]
-                      .filter(Boolean).join(" · ")}
+                  <div className="text-muted-foreground text-xs">
+                    {[
+                      track.side && t("sideLabel", { side: track.side }),
+                      track.performers,
+                      ...(track.hasAudio
+                        ? [
+                            track.format,
+                            formatDuration(track.durationMs / 1000),
+                            `${(track.fileSize / 1024 / 1024).toFixed(1)} MB`,
+                          ]
+                        : []),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </div>
                 </div>
-                <Switch checked={track.published} disabled={pending}
-                        aria-label={t("publishTrack", { title: track.title })}
-                        onCheckedChange={checked => run(() => publishTrackAction(album.id, track.id, checked))} />
-                <Button variant="ghost" size="icon" disabled={pending || index === 0}
-                        aria-label={t("moveUp", { title: track.title })}
-                        onClick={() => move(index, -1)}><ArrowUp /></Button>
-                <Button variant="ghost" size="icon" disabled={pending || index === album.tracks.length - 1}
-                        aria-label={t("moveDown", { title: track.title })} onClick={() => move(index, 1)}><ArrowDown /></Button>
+                <Switch
+                  checked={track.published}
+                  disabled={pending}
+                  aria-label={t("publishTrack", { title: track.title })}
+                  onCheckedChange={(checked) => run(() => publishTrackAction(album.id, track.id, checked))}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  disabled={pending || index === 0}
+                  aria-label={t("moveUp", { title: track.title })}
+                  onClick={() => move(index, -1)}
+                >
+                  <ArrowUp />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  disabled={pending || index === album.tracks.length - 1}
+                  aria-label={t("moveDown", { title: track.title })}
+                  onClick={() => move(index, 1)}
+                >
+                  <ArrowDown />
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger
-                    render={<Button variant="ghost" size="icon" aria-label={t("more", { title: track.title })} />}>
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={t("more", { title: track.title })}
+                      />
+                    }
+                  >
                     <MoreHorizontal />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setEditing(track)}><Pencil />{t("edit")}</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setEditing(track)}>
+                      <Pencil />
+                      {t("edit")}
+                    </DropdownMenuItem>
                     {track.hasAudio && (
                       <DropdownMenuItem render={<Link href={`/manage/tracks/${track.id}/lyrics`} />}>
-                        <TextQuote />{t("editLyrics")}
+                        <TextQuote />
+                        {t("editLyrics")}
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem onClick={() => {
-                      replaceFor.current = track.id;
-                      replaceInput.current?.click();
-                    }}><RefreshCw />{track.hasAudio ? t("replaceAudio") : t("uploadAudio")}</DropdownMenuItem>
-                    <DropdownMenuItem variant="destructive"
-                                      onClick={() => run(() => trashTrackAction(album.id, track.id, true), t("trashed"))}>
-                      <Trash2 />{t("toTrash")}
+                    <DropdownMenuItem
+                      onClick={() => {
+                        replaceFor.current = track.id;
+                        replaceInput.current?.click();
+                      }}
+                    >
+                      <RefreshCw />
+                      {track.hasAudio ? t("replaceAudio") : t("uploadAudio")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => run(() => trashTrackAction(album.id, track.id, true), t("trashed"))}
+                    >
+                      <Trash2 />
+                      {t("toTrash")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -566,29 +840,53 @@ export function AlbumEditor({ album, kinds, media = [], numbers = [], spexipedia
         )}
       </section>
 
-      <section className="space-y-2 rounded-lg border border-destructive/40 p-4">
+      <section className="border-destructive/40 space-y-2 rounded-lg border p-4">
         <h2 className="font-semibold">{t("trashAlbum")}</h2>
-        <p className="text-sm text-muted-foreground">{t("trashAlbumText")}</p>
-        <Button variant="destructive" disabled={pending} onClick={async () => {
-          if (await confirm({
-            title: t("confirmTrashAlbum", { title: album.title }),
-            confirmLabel: t("toTrash"),
-            destructive: true,
-          })) {
-            run(async () => {
-              const result = await trashAlbumAction(album.id, true);
+        <p className="text-muted-foreground text-sm">{t("trashAlbumText")}</p>
+        <Button
+          variant="destructive"
+          disabled={pending}
+          onClick={async () => {
+            if (
+              await confirm({
+                title: t("confirmTrashAlbum", { title: album.title }),
+                confirmLabel: t("toTrash"),
+                destructive: true,
+              })
+            ) {
+              run(async () => {
+                const result = await trashAlbumAction(album.id, true);
 
-              if (result.ok) {
-                router.push("/manage/albums");
-              }
-              return result;
-            }, t("trashed"));
-          }
-        }}><Trash2 />{t("toTrash")}</Button>
+                if (result.ok) {
+                  router.push("/manage/albums");
+                }
+                return result;
+              }, t("trashed"));
+            }
+          }}
+        >
+          <Trash2 />
+          {t("toTrash")}
+        </Button>
       </section>
 
-      {editing && <TrackDialog albumId={album.id} track={editing} numbers={numbers} onClose={() => setEditing(null)} />}
-      {adding && <TrackDialog albumId={album.id} track={adding} numbers={numbers} adding onClose={() => setAdding(null)} />}
+      {editing && (
+        <TrackDialog
+          albumId={album.id}
+          track={editing}
+          numbers={numbers}
+          onClose={() => setEditing(null)}
+        />
+      )}
+      {adding && (
+        <TrackDialog
+          albumId={album.id}
+          track={adding}
+          numbers={numbers}
+          adding
+          onClose={() => setAdding(null)}
+        />
+      )}
     </div>
   );
 }

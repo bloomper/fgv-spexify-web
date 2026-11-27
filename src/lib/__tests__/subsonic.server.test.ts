@@ -23,12 +23,17 @@ const apiFetch = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/api.server", () => ({ apiFetch }));
 
 const answer = (payload: object, status = "ok") =>
-  apiFetch.mockResolvedValueOnce(new Response(JSON.stringify({
-    "subsonic-response": {
-      status,
-      version: "1.16.1", ...payload,
-    },
-  })));
+  apiFetch.mockResolvedValueOnce(
+    new Response(
+      JSON.stringify({
+        "subsonic-response": {
+          status,
+          version: "1.16.1",
+          ...payload,
+        },
+      })
+    )
+  );
 const calledWith = () => new URL(`http://x${apiFetch.mock.calls.at(-1)?.[0]}`);
 
 describe("the Subsonic client", () => {
@@ -85,10 +90,13 @@ describe("the Subsonic client", () => {
     answer({
       album: {
         id: "al-1",
-        song: [{ id: "nd-1", title: "Ouvertyr", playCount: 3, played: "2026-10-31T18:00:00Z" }, {
-          id: "nd-2",
-          title: "Final",
-        }],
+        song: [
+          { id: "nd-1", title: "Ouvertyr", playCount: 3, played: "2026-10-31T18:00:00Z" },
+          {
+            id: "nd-2",
+            title: "Final",
+          },
+        ],
       },
     });
     const songs = await getAlbumSongs("al-1");
